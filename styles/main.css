@@ -24,6 +24,16 @@
   --card: #fffdf8;
 }
 
+[data-theme="dark"] {
+  --bg: #101014;
+  --ink: #f0f0f2;
+  --muted: #8a8a93;
+  --line: #26262c;
+  --input-line: #33333b;
+  --cell: #17171c;
+  --card: #17171c;
+}
+
 body {
   background: var(--bg);
   color: var(--ink);

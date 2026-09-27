@@ -549,7 +549,8 @@ window.pullCalendar = async function () {
   if (st) {
     const now = new Date();
     const tag = res.cached ? "Cached" : "Synced";
-    st.textContent = `${date} · ${tag} · ${n} events`;
+    const dg = res.diag ? ` · cal:${res.diag.ev}/${res.diag.cals}` : "";
+    st.textContent = `${date} · ${tag} · ${n} events${dg}`;
   }
   renderReminders(res.todos || []);
 };
