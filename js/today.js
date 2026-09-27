@@ -281,8 +281,29 @@ function renderMonthTodos() {
 }
 $("addTodo").onclick = () => { todos.push({ id: uid(), t: "", done: false, editing: true }); renderTodos(); };
 $("addMonthTodo").onclick = () => { monthTodos.push({ id: uid(), t: "", done: false, editing: true }); renderMonthTodos(); };
+$("pasteOpen").onclick = () => {
+  const b = $("pasteBox");
+  b.style.display = b.style.display === "none" ? "block" : "none";
+  $("pasteDone").style.display = b.style.display === "none" ? "none" : "inline-block";
+  if (b.style.display === "block") b.focus();
+};
+$("pasteDone").onclick = () => {
+  const lines = $("pasteBox").value.split("\n").map(x => x.trim()).filter(Boolean);
+  let n = 0;
+  lines.forEach(ln => {
+    const m = ln.match(/^(\d{4}-\d{2}-\d{2})\s+(.*)$/);
+    const t = m ? m[2] : ln;
+    if (!t) return;
+    todos.push({ id: uid(), t, done: false });
+    n++;
+  });
+  $("pasteBox").value = "";
+  $("pasteBox").style.display = "none";
+  $("pasteDone").style.display = "none";
+  save(); renderTodos();
+  if (n) $("habitRate").textContent = `+${n} imported`;
+};
 $("loadMonthCal").onclick = async () => {
-  const ym = date.slice(0, 7);
   const box = $("monthCals");
   box.innerHTML = "<p class='hint'>Loading…</p>";
   try {
