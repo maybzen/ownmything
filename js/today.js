@@ -105,36 +105,47 @@ function apply(d) {
   if (!$("sleepH").value) { autoSleepCalc(); paintSleepGrid(); }
 }
 
-// --- select time input (desktop; touch uses native) ---
-function fillTimeSelects() {
-  document.querySelectorAll(".hm").forEach(box => {
-    const hs = box.querySelector('[data-p="h"]'), ms = box.querySelector('[data-p="m"]');
-    hs.innerHTML = '<option value="">--</option>' + Array.from({ length: 24 }, (_, h) => `<option value="${String(h).padStart(2, "0")}">${String(h).padStart(2, "0")}</option>`).join("");
-    ms.innerHTML = '<option value="">--</option>' + Array.from({ length: 12 }, (_, i) => { const m = String(i * 5).padStart(2, "0"); return `<option value="${m}">${m}</option>`; }).join("");
-    hs.onchange = ms.onchange = () => {
-      const id = box.dataset.for;
-      $(id).value = (hs.value && ms.value) ? `${hs.value}:${ms.value}` : "";
-      syncTimeUI();
-      autoSleepCalc(); paintSleepGrid(); save();
-    };
-  });
+// --- time input: [-] [07:30] [+]  · typing allowed ---
+function parseHM(v) {
+  const d = String(v || "").replace(/[^\d]/g, "");
+  if (!d) return "";
+  if (d.length <= 2) return d.padStart(2, "0") + ":00";
+  const h = d.slice(0, d.length - 2);
+  const m = d.slice(-2);
+  return `${h.padStart(2, "0").slice(0, 2)}:${m.padStart(2, "0").slice(0, 2)}`;
 }
 function syncTimeUI() {
   ["lastSleep", "wake"].forEach(id => {
     const box = document.querySelector(`.hm[data-for="${id}"]`);
     if (box) {
-      const [h, m] = ($(id).value || ":").split(":");
-      box.querySelector('[data-p="h"]').value = h || "";
-      let mm = m || "";
-      if (mm && Number(mm) % 5 !== 0) mm = String(Math.round(Number(mm) / 5) * 5 % 60).padStart(2, "0");
-      box.querySelector('[data-p="m"]').value = mm;
+      const t = box.querySelector(".hm-t");
+      if (t && document.activeElement !== t) t.value = $(id).value || "";
     }
     const nat = $(id + "-native");
     if (nat && nat.value !== $(id).value) nat.value = $(id).value;
   });
 }
-fillTimeSelects();
-// touch: native spinner instead of selects
+function setTime(id, v) {
+  $(id).value = v;
+  syncTimeUI();
+  autoSleepCalc(); paintSleepGrid(); save();
+}
+function stepTime(id, dir) {
+  let t = toMin($(id).value);
+  if (t === null) t = dir > 0 ? 0 : 1430;
+  else t = (t + dir * 10 + 1440) % 1440;
+  setTime(id, `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`);
+}
+document.querySelectorAll(".hm").forEach(box => {
+  const id = box.dataset.for;
+  const t = box.querySelector(".hm-t");
+  box.querySelectorAll("button").forEach(b => b.onclick = () => stepTime(id, Number(b.dataset.d)));
+  const apply = () => setTime(id, parseHM(t.value));
+  t.addEventListener("change", apply);
+  t.addEventListener("blur", apply);
+  t.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); apply(); } });
+});
+// touch: native spinner
 const IS_TOUCH = ("ontouchstart" in window) || navigator.maxTouchPoints > 0;
 if (IS_TOUCH) {
   ["lastSleep", "wake"].forEach(id => {
@@ -143,11 +154,7 @@ if (IS_TOUCH) {
     nat.type = "time";
     nat.id = id + "-native";
     nat.value = hidden.value;
-    nat.addEventListener("change", () => {
-      hidden.value = nat.value;
-      syncTimeUI();
-      autoSleepCalc(); paintSleepGrid(); save();
-    });
+    nat.addEventListener("change", () => setTime(id, nat.value));
     const box = hidden.parentElement.querySelector(".hm");
     if (box) box.replaceWith(nat);
   });

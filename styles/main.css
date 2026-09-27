@@ -151,8 +151,9 @@ h1, h2 {
 .foot a { font-size: 0.9rem; }
 .page-title { margin-top: 22px; }
 .holiday { color: #c0392b; }
-.hm { display: flex; gap: 4px; align-items: center; min-width: 0; }
-.hm select { flex: 1; min-width: 0; width: 100%; border: 1px solid var(--input-line); background: var(--card); color: var(--ink); border-radius: 8px; padding: 8px 2px; font-size: 0.9rem; font-family: inherit; }
+.hm { display: flex; gap: 4px; align-items: stretch; min-width: 0; }
+.hm button { flex: none; width: 34px; border: 1px solid var(--input-line); background: var(--cell); color: var(--ink); border-radius: 8px; font-size: 1rem; cursor: pointer; }
+.hm .hm-t { flex: 1; min-width: 0; text-align: center; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; padding: 8px 4px !important; }
 .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .menu-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 40px; }
 .menu-list { display: flex; flex-direction: column; gap: 18px; text-align: center; }

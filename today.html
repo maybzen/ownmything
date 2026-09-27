@@ -34,13 +34,17 @@
       <div class="row2">
         <label>Sleep
           <div class="hm" data-for="lastSleep">
-            <select data-p="h"></select><span>:</span><select data-p="m"></select>
+            <button data-d="-1">−</button>
+            <input class="hm-t" type="text" inputmode="numeric" placeholder="--:--" maxlength="5" />
+            <button data-d="1">+</button>
           </div>
           <input id="lastSleep" type="hidden" />
         </label>
         <label>Wake
           <div class="hm" data-for="wake">
-            <select data-p="h"></select><span>:</span><select data-p="m"></select>
+            <button data-d="-1">−</button>
+            <input class="hm-t" type="text" inputmode="numeric" placeholder="--:--" maxlength="5" />
+            <button data-d="1">+</button>
           </div>
           <input id="wake" type="hidden" />
         </label>
