@@ -463,7 +463,49 @@ window.pullCalendar = async function () {
   Store.set("d:" + date, s);
   paintAll(); renderBlocks(); save();
   renderReminders(res.todos || []);
+  pullMonth(date.slice(0, 7));
 };
+let lastMonthPulled = "";
+async function pullMonth(ym) {
+  if (!window.Auth || !Auth.sb || ym === lastMonthPulled) return;
+  let session = null;
+  try { session = await Auth.session(); } catch (e) { return; }
+  if (!session) return;
+  lastMonthPulled = ym;
+  let res;
+  try {
+    const r = await Auth.sb.functions.invoke("calendar-sync", { body: { month: ym } });
+    res = r.data;
+  } catch (e) { return; }
+  if (!res || res.error || !Array.isArray(res.events)) return;
+  const box = $("monthCals");
+  box.innerHTML = "";
+  const items = res.events
+    .filter(ev => /정현|하트|[❤♥💜💛💚💙]/.test(ev.cal || ""))
+    .sort((a, b) => (a.day + a.start) < (b.day + b.start) ? -1 : 1);
+  if (!items.length) return;
+  let lastDay = "";
+  items.forEach(ev => {
+    if (ev.day !== lastDay) {
+      lastDay = ev.day;
+      const dh = document.createElement("p");
+      dh.className = "hint";
+      dh.textContent = ev.day.slice(5);
+      box.appendChild(dh);
+    }
+    const l = document.createElement("div");
+    l.className = "todo-check";
+    const dot = document.createElement("span");
+    dot.className = "dot " + calColor(ev);
+    const s = document.createElement("span");
+    const hh = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+    s.textContent = `${hh(ev.start)} ${calTitle(ev.title)}`;
+    l.append(dot, s);
+    l.style.cursor = "pointer";
+    l.onclick = () => { save(); date = ev.day; picker.value = ev.day; lastMonthPulled = ""; apply(date); pullCalendar(); };
+    box.appendChild(l);
+  });
+}
 function renderReminders(list) {
   const card = $("remCard"), box = $("rems");
   box.innerHTML = "";
@@ -525,7 +567,8 @@ function renderHabitRate() {
 // --- photo moved to Night page ---
 
 ["weight", "sleepH", "braindump"].forEach(id => $(id).addEventListener("input", save));
-picker.onchange = () => { save(); date = picker.value; apply(date); };
+picker.onchange = () => { save(); date = picker.value; apply(date); if (window.pullCalendar) pullCalendar(); };
+$("goToday").onclick = () => { save(); date = todayStr(); picker.value = date; apply(date); if (window.pullCalendar) pullCalendar(); };
 $("goToday").onclick = () => { save(); date = todayStr(); picker.value = date; apply(date); };
 
 apply(date);
