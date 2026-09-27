@@ -22,10 +22,9 @@ function apply(d) {
 function save() {
   const s = load(date);
   s.oneline = $("oneline").value;
-  const src = $("photoPrev").src;
-  s.photo = src.startsWith("data:") ? src : (s.photo || "");
+  const attr = $("photoPrev").getAttribute("src") || "";
+  s.photo = attr.startsWith("data:") ? attr : "";
   Store.set("d:" + date, s);
-  renderSummary(s);
   renderCal();
 }
 $("photo").onchange = (e) => {
