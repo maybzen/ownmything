@@ -53,14 +53,31 @@ function apply(d) {
   migrateHabits(s);
   habitDone = s.habitDone || {};
   paintAll(); renderBlocks(); renderTodos(); renderMonthTodos(); renderHabitRate();
+  syncSteppers();
   title.textContent = d;
   if (!$("sleepH").value) { autoSleepCalc(); paintSleepGrid(); }
 }
 
-// --- native time inputs (iOS spinner / desktop picker) ---
-["lastSleep", "wake"].forEach(id => $(id).addEventListener("change", () => {
+// --- stepper time input (10-min steps, no typing) ---
+function syncSteppers() {
+  ["lastSleep", "wake"].forEach(id => {
+    const sp = document.querySelector(`[data-for="${id}"] span`);
+    if (sp) sp.textContent = $(id).value || "—";
+  });
+}
+function stepVal(id, dir) {
+  const el = $(id);
+  let t = toMin(el.value);
+  if (t === null) t = dir > 0 ? 0 : 1430;
+  else t = (t + dir * 10 + 1440) % 1440;
+  el.value = `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
+  syncSteppers();
   autoSleepCalc(); paintSleepGrid(); save();
-}));
+}
+document.querySelectorAll(".stepper").forEach(s => {
+  const id = s.dataset.for;
+  s.querySelectorAll("button").forEach(b => b.onclick = () => stepVal(id, Number(b.dataset.d)));
+});
 
 // --- sleep ---
 function toMin(t) {

@@ -122,7 +122,9 @@ h1, h2 {
 .dot.work { background: #d9dee9; } .dot.promise { background: #dad5e9; }
 .dot.personal { background: #f0e7de; } .dot.family { background: #efdcd4; }
 .dot.obok, .dot.obokwalk { background: #dce5d8; } .dot.sleep { background: #d9e7ea; }
-.foot { margin: 24px 0 40px; }
+.stepper { display: flex; gap: 4px; align-items: stretch; border: 1px solid var(--input-line); background: var(--card); border-radius: 8px; padding: 4px; }
+.stepper button { flex: 1; border: none; background: var(--cell); color: var(--ink); border-radius: 6px; padding: 8px 0; font-size: 1rem; cursor: pointer; }
+.stepper span { flex: 2; text-align: center; align-self: center; font-weight: 600; font-variant-numeric: tabular-nums; }
 .foot a { font-size: 0.9rem; }
 .menu-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 40px; }
 .menu-list { display: flex; flex-direction: column; gap: 18px; text-align: center; }

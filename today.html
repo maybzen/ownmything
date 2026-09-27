@@ -31,8 +31,18 @@
     <section class="card">
       <h3>Log</h3>
       <div class="row2">
-        <label>Sleep <input id="lastSleep" type="time" /></label>
-        <label>Wake <input id="wake" type="time" /></label>
+        <label>Sleep
+          <div class="stepper" data-for="lastSleep">
+            <button data-d="-1">−</button><span>—</span><button data-d="1">+</button>
+          </div>
+          <input id="lastSleep" type="hidden" />
+        </label>
+        <label>Wake
+          <div class="stepper" data-for="wake">
+            <button data-d="-1">−</button><span>—</span><button data-d="1">+</button>
+          </div>
+          <input id="wake" type="hidden" />
+        </label>
       </div>
       <div class="row2" style="margin-top:8px">
         <label>Weight<input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="kg" /></label>
