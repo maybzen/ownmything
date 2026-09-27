@@ -342,7 +342,7 @@ function runs() {
   if (cur) out.push(cur);
   return out;
 }
-const CNAMES = { work: "Work", promise: "Meet", personal: "Me", family: "Family", obok: "Obok", sleep: "Sleep" };
+const CNAMES = { work: "Work", promise: "Meet", personal: "Me", family: "Family", obok: "Obok", sleep: "Rest" };
 function cellEl(id) {
   return tt.querySelector(`[data-id="${id}"]`);
 }
