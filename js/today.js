@@ -589,30 +589,20 @@ let monthCache = null;
 function renderMonthCals(events, ym) {
   const box = $("monthCals");
   box.innerHTML = "";
+  const WD = ["일", "월", "화", "수", "목", "금", "토"];
   const items = events
     .filter(ev => ev.day && ev.day.slice(0, 7) === ym)
     .sort((a, b) => (a.day + String(a.start).padStart(4, "0")) < (b.day + String(b.start).padStart(4, "0")) ? -1 : 1);
   if (!items.length) { box.innerHTML = "<p class='hint'>No events</p>"; return; }
-  let lastDay = "";
-  items.forEach(ev => {
-    if (ev.day !== lastDay) {
-      lastDay = ev.day;
-      const dh = document.createElement("p");
-      dh.className = "hint";
-      dh.textContent = ev.day.slice(5);
-      box.appendChild(dh);
-    }
-    const l = document.createElement("div");
-    l.className = "todo-check";
-    const dot = document.createElement("span");
-    dot.className = "dot " + calColor(ev);
-    const s = document.createElement("span");
-    s.className = "txt";
-    const hh = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
-    s.textContent = ev.allDay ? ev.title : `${hh(ev.start)} ${calTitle(ev.title)}`;
-    l.append(dot, s);
-    box.appendChild(l);
-  });
+  const p = document.createElement("p");
+  p.className = "mlist";
+  p.innerHTML = items.map(ev => {
+    const d = new Date(ev.day + "T12:00:00");
+    const wk = WD[d.getDay()];
+    const t = ev.allDay ? "" : `${String(Math.floor(ev.start / 60)).padStart(2, "0")} `;
+    return `<span class="ml ${calColor(ev)}">${d.getDate()}${wk} ${t}${calTitle(ev.title)}</span>`;
+  }).join("<i>·</i>");
+  box.appendChild(p);
 }
 function renderReminders(list) {
   const box = $("remsBox");
