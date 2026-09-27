@@ -549,7 +549,7 @@ window.pullCalendar = async function () {
   if (st) {
     const now = new Date();
     const tag = res.cached ? "Cached" : "Synced";
-    st.textContent = n ? `${tag} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} · ${n} events` : "No events today";
+    st.textContent = `${date} · ${tag} · ${n} events`;
   }
   renderReminders(res.todos || []);
 };
