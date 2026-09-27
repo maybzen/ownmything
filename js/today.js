@@ -180,9 +180,9 @@ function todoRow(item, list, render, box, opts) {
     line.className = "divline";
     const del = document.createElement("button");
     del.textContent = "×";
-    del.onclick = () => { list.splice(list.indexOf(item), 1); save(); render(); };
+    del.onclick = () => { list.splice(list.indexOf(item), 1); commit(); render(); };
     l.append(grip, line, del);
-    bindGrip(grip, l, box, list);
+    bindGrip(grip, l, box, list, item);
     return l;
   }
   const cb = document.createElement("input");
@@ -192,7 +192,7 @@ function todoRow(item, list, render, box, opts) {
   grip0.className = "grip";
   grip0.textContent = "⋮⋮";
   l.append(grip0, cb);
-  bindGrip(grip0, l, box, list);
+  bindGrip(grip0, l, box, list, item);
   if (item.editing) {
     const inp = document.createElement("input");
     inp.className = "todo-edit";
@@ -224,22 +224,38 @@ function todoRow(item, list, render, box, opts) {
     const s = document.createElement("span");
     s.textContent = item.t;
     s.className = "txt" + (item.done ? " done" : "");
-    s.onclick = () => { item.editing = true; render(); };
+    s.onclick = () => { if (!item.editing) { item.editing = true; render(); } };
     const del = document.createElement("button");
     del.textContent = "×";
-    del.onclick = () => { list.splice(list.indexOf(item), 1); save(); render(); };
+    del.onclick = () => { list.splice(list.indexOf(item), 1); commit(); render(); };
     l.append(s, del);
   }
   return l;
 }
-function bindGrip(grip, row, box, list) {
+function bindGrip(grip, row, box, list, item) {
+  const otherBox = () => (box === $("todos") ? $("monthTodos") : $("todos"));
+  const otherArr = () => (box === $("todos") ? monthTodos : todos);
+  const otherRender = () => (box === $("todos") ? renderMonthTodos() : renderTodos());
   grip.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     row.classList.add("dragging");
+    let crossed = false;
     const move = (ev) => {
       const el = document.elementFromPoint(ev.clientX, ev.clientY);
-      const over = el ? el.closest(".todo-check") : null;
+      if (!el) return;
+      const ob = otherBox();
+      if (el.closest("#" + ob.id)) {
+        crossed = true;
+        row.classList.add("over-other");
+        const r = ob.getBoundingClientRect();
+        const after = (ev.clientY - r.top) > r.height / 2;
+        ob.insertBefore(row, after ? ob.lastElementChild : ob.firstElementChild);
+        return;
+      }
+      const over = el.closest(".todo-check");
       if (over && over !== row && over.parentElement === box) {
+        crossed = false;
+        row.classList.remove("over-other");
         const r = over.getBoundingClientRect();
         const after = (ev.clientY - r.top) > r.height / 2;
         box.insertBefore(row, after ? over.nextSibling : over);
@@ -249,10 +265,19 @@ function bindGrip(grip, row, box, list) {
       document.removeEventListener("pointermove", move);
       document.removeEventListener("pointerup", up);
       document.removeEventListener("pointercancel", up);
-      row.classList.remove("dragging");
+      row.classList.remove("dragging", "over-other");
+      if (crossed) {
+        const i = list.indexOf(item);
+        if (i !== -1) list.splice(i, 1);
+        otherArr().push(item);
+        otherRender();
+        render();
+        commit();
+        return;
+      }
       const order = Array.from(box.children).map(c => c.dataset.id);
       list.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
-      save();
+      commit();
     };
     document.addEventListener("pointermove", move);
     document.addEventListener("pointerup", up);
@@ -264,8 +289,9 @@ function renderTodos() {
   box.innerHTML = "";
   todos.forEach(t => box.appendChild(todoRow(t, todos, renderTodos, box, { chain: true })));
   if (!todos.some(t => t.editing)) {
-    todos.push({ id: uid(), t: "", done: false, editing: true });
-    box.appendChild(todoRow(todos[todos.length - 1], todos, renderTodos, box, { chain: true, draft: true }));
+    const d = { id: uid(), t: "", done: false, editing: true };
+    todos.push(d);
+    box.appendChild(todoRow(d, todos, renderTodos, box, { chain: true, draft: true }));
   }
 }
 function renderMonthTodos() {
@@ -278,8 +304,9 @@ function renderMonthTodos() {
     marks.forEach(m => { if (m && !seen.has(m)) monthTodos.push({ id: uid(), t: m, done: false }); });
   }
   if (!monthTodos.some(t => t.editing)) {
-    monthTodos.push({ id: uid(), t: "", done: false, editing: true });
-    box.appendChild(todoRow(monthTodos[monthTodos.length - 1], monthTodos, renderMonthTodos, box, { chain: true, draft: true }));
+    const d = { id: uid(), t: "", done: false, editing: true };
+    monthTodos.push(d);
+    box.appendChild(todoRow(d, monthTodos, renderMonthTodos, box, { chain: true, draft: true }));
   }
 }
 $("loadMonthCal").onclick = () => { autoMonthDone = ""; autoMonth(); pullCalendar(); };

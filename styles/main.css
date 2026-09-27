@@ -132,6 +132,8 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .todo-check span.done { text-decoration: line-through; color: var(--muted); }
 .todo-check button { border: none; background: none; cursor: pointer; color: var(--muted); font-size: 0.8rem; padding: 2px 4px; }
 .todo-check.dragging { opacity: 0.6; }
+.todo-check.over-other { background: var(--cell); border-radius: 6px; outline: 1px dashed var(--muted); }
+.todo-check span.txt { cursor: text; }
 .grip { cursor: grab; color: var(--muted); touch-action: none; padding: 4px 2px; flex: none; }
 .todo-check.divider { position: relative; border-bottom: none; padding: 10px 0; }
 .todo-check.divider .divline { position: absolute; left: 0; right: 0; top: 50%; border-bottom: 1px solid var(--line); height: 0; }
