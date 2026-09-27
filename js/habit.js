@@ -1,39 +1,28 @@
 const $ = (id) => document.getElementById(id);
-const DEFS_KEY = "ownmything:habit-defs";
-const dayKey = (d) => `ownmything:${d}`;
+const DEFS_KEY = "habit-defs";
+const LEGACY_DEFS = "ownmything:habit-defs";
 const fmt = (d) => d.toISOString().slice(0, 10);
+const todayDs = fmt(new Date());
 
 function getDefs() {
-  try {
-    const d = JSON.parse(localStorage.getItem(DEFS_KEY)) || [];
-    if (d.length) {
-      let changed = false;
-      d.forEach(x => { if (!x.slot) { x.slot = "anytime"; changed = true; } });
-      if (changed) localStorage.setItem(DEFS_KEY, JSON.stringify(d));
-      return d;
-    }
-  } catch {}
-  const init = [
-    { id: "h-vent", t: "🪟 환기하기", slot: "morning" },
-    { id: "h-bed", t: "🧺 이불 정리", slot: "morning" },
-    { id: "h-water", t: "🥛 공복 물 한잔", slot: "morning" },
-    { id: "h-weight", t: "🎀 체중 기록", slot: "morning" },
-    { id: "h-sleepj", t: "🛏️ Sleep Journal", slot: "morning" },
-    { id: "h-daily", t: "🌱 Daily Plan", slot: "morning" },
-    { id: "h-read", t: "📚 식후 독서·양치", slot: "anytime" },
-    { id: "h-pill", t: "💊 영양제 먹기", slot: "anytime" },
-    { id: "h-ex", t: "🧷 운동", slot: "anytime" },
-    { id: "h-bath", t: "🚽 화장실", slot: "anytime" },
-    { id: "h-walk", t: "🐕 오복 산책", slot: "night" },
-    { id: "h-log", t: "⏳ 기록", slot: "night" },
-    { id: "h-write", t: "🖊️ 필사", slot: "night" },
-  ];
-  localStorage.setItem(DEFS_KEY, JSON.stringify(init));
-  return init;
+  let d = Store.get(DEFS_KEY, LEGACY_DEFS) || [];
+  if (!d.length) {
+    d = [
+      { id: "h-water", t: "공복 물 한잔", slot: "morning" },
+      { id: "h-walk", t: "오복 산책", slot: "night" },
+      { id: "h-read", t: "독서 10분", slot: "anytime" },
+    ];
+    Store.set(DEFS_KEY, d);
+    return d;
+  }
+  let changed = false;
+  d.forEach(x => { if (!x.slot) { x.slot = "anytime"; changed = true; } });
+  if (changed) Store.set(DEFS_KEY, d);
+  return d;
 }
-function setDefs(d) { localStorage.setItem(DEFS_KEY, JSON.stringify(d)); }
+function setDefs(d) { Store.set(DEFS_KEY, d); }
 function dayData(ds) {
-  try { return JSON.parse(localStorage.getItem(dayKey(ds))) || {}; } catch { return {}; }
+  return Store.get("d:" + ds, "ownmything:" + ds) || {};
 }
 function isDone(ds, def) {
   const s = dayData(ds);
@@ -43,6 +32,37 @@ function isDone(ds, def) {
     if (m) return !!m.done;
   }
   return false;
+}
+function setDone(ds, def, v) {
+  const s = dayData(ds);
+  s.habitDone = s.habitDone || {};
+  s.habitDone[def.id] = v;
+  Store.set("d:" + ds, s);
+}
+
+const SLOTS = [["morning", "Morning"], ["anytime", "Anytime"], ["night", "Night"]];
+function renderToday() {
+  const box = $("todayCheck");
+  box.innerHTML = "";
+  const defs = getDefs();
+  SLOTS.forEach(([slot, label]) => {
+    const items = defs.filter(d => (d.slot || "anytime") === slot);
+    if (!items.length) return;
+    const col = document.createElement("div");
+    col.className = "hcol";
+    const h = document.createElement("h4");
+    h.className = "slot-" + slot;
+    h.textContent = label;
+    col.appendChild(h);
+    items.forEach(def => {
+      const b = document.createElement("button");
+      b.className = "pill" + (isDone(todayDs, def) ? " done" : "");
+      b.textContent = def.t;
+      b.onclick = () => { setDone(todayDs, def, !isDone(todayDs, def)); renderToday(); renderWeek(); renderMonth(); };
+      col.appendChild(b);
+    });
+    box.appendChild(col);
+  });
 }
 
 function renderDefs() {
@@ -61,7 +81,7 @@ function renderDefs() {
     sel.onchange = () => {
       const d = getDefs();
       const m = d.find(x => x.id === h.id);
-      if (m) { m.slot = sel.value; setDefs(d); renderWeek(); }
+      if (m) { m.slot = sel.value; setDefs(d); renderToday(); renderWeek(); }
     };
     const s = document.createElement("span");
     s.textContent = h.t;
@@ -146,5 +166,5 @@ function renderMonth() {
 }
 $("monthPicker").onchange = renderMonth;
 
-function renderAll() { renderDefs(); renderWeek(); renderMonth(); }
+function renderAll() { renderToday(); renderDefs(); renderWeek(); renderMonth(); }
 renderAll();

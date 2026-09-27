@@ -1,9 +1,9 @@
-const CACHE = "ownmything-v1";
+const CACHE = "ownmything-v2";
 const ASSETS = [
   "./", "./index.html", "./today.html",
   "./styles/main.css",
-  "./js/theme.js", "./js/today.js", "./js/habit.js", "./js/ledger.js", "./js/reading.js", "./js/pwa.js",
-  "./pages/habit.html", "./pages/ledger.html", "./pages/reading.html",
+  "./js/theme.js", "./js/store.js", "./js/today.js", "./js/habit.js", "./js/ledger.js", "./js/reading.js", "./js/pwa.js", "./js/settings.js",
+  "./pages/habit.html", "./pages/ledger.html", "./pages/reading.html", "./pages/settings.html",
   "./manifest.webmanifest"
 ];
 self.addEventListener("install", (e) => {

@@ -1,50 +1,133 @@
 const $ = (id) => document.getElementById(id);
 const picker = $("datePicker"), title = $("dateTitle");
 const todayStr = () => new Date().toISOString().slice(0, 10);
-const key = (d) => `ownmything:${d}`;
+const uid = () => "t" + Date.now().toString(36) + Math.floor(Math.random() * 99);
 
 let date = todayStr();
 picker.value = date;
 
 function load(d) {
-  try { return JSON.parse(localStorage.getItem(key(d))) || {}; }
-  catch { return {}; }
+  return Store.get("d:" + d, "ownmything:" + d) || {};
 }
 function save() {
-  const data = {
-    lastSleep: $("lastSleep").value, wake: $("wake").value, sleepPlan: $("sleepPlan").value,
-    braindump: $("braindump").value,
-    am: $("am").value, pm: $("pm").value, eve: $("eve").value,
-    amDone: $("amDone").checked, pmDone: $("pmDone").checked, eveDone: $("eveDone").checked,
-    cells: cells, weight: $("weight").value, sleepH: $("sleepH").value,
-    oneline: $("oneline").value, photo: $("photoPrev").src.startsWith("data:") ? $("photoPrev").src : "",
-    habitDone: habitDone, exps: exps,
-  };
-  localStorage.setItem(key(date), JSON.stringify(data));
+  Store.set("d:" + date, {
+    lastSleep: $("lastSleep").value, wake: $("wake").value,
+    weight: $("weight").value, sleepH: $("sleepH").value,
+    cells: cells, memos: memos,
+    todos: todos,
+    oneline: $("oneline").value,
+    photo: $("photoPrev").src.startsWith("data:") ? $("photoPrev").src : "",
+    habitDone: habitDone,
+  });
+  saveMonthTodos();
 }
+function monthKey(d) { return "month:" + d.slice(0, 7); }
+function loadMonthTodos() {
+  monthTodos = Store.get(monthKey(date)) || [];
+  const m = Number(date.slice(5, 7));
+  $("monthTitle").textContent = m + "월";
+}
+function saveMonthTodos() {
+  Store.set(monthKey(date), monthTodos);
+}
+
+let cells = {}, memos = {}, todos = [], monthTodos = [];
+
 function apply(d) {
   const s = load(d);
   $("lastSleep").value = s.lastSleep || "";
-  $("wake").value = s.wake || ""; $("sleepPlan").value = s.sleepPlan || "";
-  $("braindump").value = s.braindump || "";
-  $("am").value = s.am || ""; $("pm").value = s.pm || ""; $("eve").value = s.eve || "";
-  $("amDone").checked = !!s.amDone; $("pmDone").checked = !!s.pmDone; $("eveDone").checked = !!s.eveDone;
+  $("wake").value = s.wake || "";
+  $("weight").value = s.weight || "";
+  $("sleepH").value = s.sleepH || "";
+  if (!$("sleepH").value) autoSleep();
   cells = s.cells || {};
-  $("weight").value = s.weight || ""; $("sleepH").value = s.sleepH || "";
+  memos = s.memos || {};
+  todos = Array.isArray(s.todos) ? s.todos : migrateLegacyTodos(s);
   $("oneline").value = s.oneline || "";
   $("photoPrev").src = s.photo || "";
   migrateHabits(s);
   habitDone = s.habitDone || {};
-  exps = s.exps || [];
-  paintAll(); renderHabits(); renderExps();
+  loadMonthTodos();
+  paintAll(); paintMemos(); renderTodos(); renderMonthTodos(); renderHabitRate();
   title.textContent = d;
 }
+// 구버전 오전/오후/저녁 → To Do로 1회 이관
+function migrateLegacyTodos(s) {
+  const out = [];
+  [["오전", s.am, s.amDone], ["오후", s.pm, s.pmDone], ["저녁", s.eve, s.eveDone]].forEach(([pre, t, done]) => {
+    if (t && t.trim()) out.push({ id: uid(), t: t.trim(), done: !!done });
+  });
+  return out;
+}
 
-// --- timetable: 06:00 -> +24h, 10min = 144 cells ---
+// --- sleep auto ---
+function toMin(t) {
+  if (!t || !t.includes(":")) return null;
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+function autoSleep() {
+  const s = toMin($("lastSleep").value), w = toMin($("wake").value);
+  if (s === null || w === null) return;
+  let diff = w - s;
+  if (diff <= 0) diff += 24 * 60;
+  $("sleepH").value = (diff / 60).toFixed(1);
+}
+["lastSleep", "wake"].forEach(id => $(id).addEventListener("input", () => { autoSleep(); save(); }));
+
+// --- todo list (monthly + daily, movable) ---
+function todoRow(item, list, render) {
+  const l = document.createElement("label");
+  l.className = "todo-check";
+  const cb = document.createElement("input");
+  cb.type = "checkbox"; cb.checked = !!item.done;
+  cb.onchange = () => { item.done = cb.checked; save(); render(); };
+  const s = document.createElement("span");
+  s.textContent = item.t;
+  if (item.done) s.className = "done";
+  const up = document.createElement("button");
+  up.textContent = "↑"; up.title = "위로";
+  up.onclick = () => { const i = list.indexOf(item); if (i > 0) { list.splice(i, 1); list.splice(i - 1, 0, item); save(); render(); } };
+  const dn = document.createElement("button");
+  dn.textContent = "↓"; dn.title = "아래로";
+  dn.onclick = () => { const i = list.indexOf(item); if (i < list.length - 1) { list.splice(i, 1); list.splice(i + 1, 0, item); save(); render(); } };
+  const del = document.createElement("button");
+  del.textContent = "×";
+  del.onclick = () => { list.splice(list.indexOf(item), 1); save(); render(); };
+  l.append(cb, s, up, dn, del);
+  return l;
+}
+function renderTodos() {
+  const box = $("todos");
+  box.innerHTML = "";
+  todos.forEach(t => box.appendChild(todoRow(t, todos, renderTodos)));
+}
+function renderMonthTodos() {
+  const box = $("monthTodos");
+  box.innerHTML = "";
+  monthTodos.forEach(t => box.appendChild(todoRow(t, monthTodos, renderMonthTodos)));
+}
+$("addTodo").onclick = () => {
+  const v = $("newTodo").value.trim();
+  if (!v) return;
+  todos.push({ id: uid(), t: v, done: false });
+  $("newTodo").value = "";
+  save(); renderTodos();
+};
+$("newTodo").addEventListener("keydown", (e) => { if (e.key === "Enter") $("addTodo").onclick(); });
+$("addMonthTodo").onclick = () => {
+  const v = $("newMonthTodo").value.trim();
+  if (!v) return;
+  monthTodos.push({ id: uid(), t: v, done: false });
+  $("newMonthTodo").value = "";
+  save(); renderMonthTodos();
+};
+$("newMonthTodo").addEventListener("keydown", (e) => { if (e.key === "Enter") $("addMonthTodo").onclick(); });
+
+// --- timetable ---
 const tt = $("timetable");
-let cells = {};
 let curColor = "work";
-let painting = false, eraseDrag = false;
+let painting = false;
 
 document.querySelectorAll("#palette .sw").forEach(b => {
   b.onclick = () => {
@@ -58,16 +141,17 @@ const hours = [];
 for (let i = 0; i < 24; i++) hours.push((6 + i) % 24);
 
 hours.forEach(h => {
+  const hh = String(h).padStart(2, "0");
   const row = document.createElement("div");
   row.className = "trow";
   const lab = document.createElement("div");
   lab.className = "tlabel";
-  lab.textContent = String(h).padStart(2, "0");
+  lab.textContent = hh;
   row.appendChild(lab);
   const grid = document.createElement("div");
   grid.className = "tgrid";
   for (let m = 0; m < 60; m += 10) {
-    const id = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    const id = `${hh}:${String(m).padStart(2, "0")}`;
     const c = document.createElement("div");
     c.className = "cell";
     c.dataset.id = id;
@@ -81,6 +165,12 @@ hours.forEach(h => {
     grid.appendChild(c);
   }
   row.appendChild(grid);
+  const memo = document.createElement("input");
+  memo.className = "tmemo";
+  memo.placeholder = hh + "시 일정";
+  memo.dataset.hour = hh;
+  memo.addEventListener("input", () => { memos[hh] = memo.value; save(); });
+  row.appendChild(memo);
   tt.appendChild(row);
 });
 document.addEventListener("pointerup", () => { painting = false; save(); });
@@ -102,8 +192,10 @@ function paintCell(c) {
 function paintAll() {
   tt.querySelectorAll(".cell").forEach(paintCell);
 }
+function paintMemos() {
+  tt.querySelectorAll(".tmemo").forEach(m => { m.value = memos[m.dataset.hour] || ""; });
+}
 
-// --- 회사 고정 스케줄: 평일 9:30-17:30 업무, 점심 11:40-13:00 개인 ---
 function slotsBetween(start, end) {
   const out = [];
   let [h, m] = start.split(":").map(Number);
@@ -121,15 +213,13 @@ $("fillWork").onclick = () => {
   paintAll(); save();
 };
 
-// --- habits (global defs + per-day done) ---
-const DEFS_KEY = "ownmything:habit-defs";
+// --- habits (rate only on today) ---
+const DEFS_KEY = "habit-defs";
+const LEGACY_DEFS = "ownmything:habit-defs";
 let habitDefs = [];
 let habitDone = {};
-function getDefs() {
-  try { return JSON.parse(localStorage.getItem(DEFS_KEY)) || []; }
-  catch { return []; }
-}
-function setDefs(d) { localStorage.setItem(DEFS_KEY, JSON.stringify(d)); }
+function getDefs() { return Store.get(DEFS_KEY, LEGACY_DEFS) || []; }
+function setDefs(d) { Store.set(DEFS_KEY, d); }
 function migrateHabits(s) {
   habitDefs = getDefs();
   if (habitDefs.length === 0) {
@@ -140,19 +230,9 @@ function migrateHabits(s) {
       s.habitDone = done;
     } else {
       habitDefs = [
-        { id: "h-vent", t: "🪟 환기하기", slot: "morning" },
-        { id: "h-bed", t: "🧺 이불 정리", slot: "morning" },
-        { id: "h-water", t: "🥛 공복 물 한잔", slot: "morning" },
-        { id: "h-weight", t: "🎀 체중 기록", slot: "morning" },
-        { id: "h-sleepj", t: "🛏️ Sleep Journal", slot: "morning" },
-        { id: "h-daily", t: "🌱 Daily Plan", slot: "morning" },
-        { id: "h-read", t: "📚 식후 독서·양치", slot: "anytime" },
-        { id: "h-pill", t: "💊 영양제 먹기", slot: "anytime" },
-        { id: "h-ex", t: "🧷 운동", slot: "anytime" },
-        { id: "h-bath", t: "🚽 화장실", slot: "anytime" },
-        { id: "h-walk", t: "🐕 오복 산책", slot: "night" },
-        { id: "h-log", t: "⏳ 기록", slot: "night" },
-        { id: "h-write", t: "🖊️ 필사", slot: "night" },
+        { id: "h-water", t: "공복 물 한잔", slot: "morning" },
+        { id: "h-walk", t: "오복 산책", slot: "night" },
+        { id: "h-read", t: "독서 10분", slot: "anytime" },
       ];
     }
     setDefs(habitDefs);
@@ -162,68 +242,13 @@ function migrateHabits(s) {
     if (changed) setDefs(habitDefs);
   }
 }
-const SLOTS = [["morning", "Morning"], ["anytime", "Anytime"], ["night", "Night"]];
-function renderHabits() {
-  const box = $("habits");
-  box.innerHTML = "";
-  SLOTS.forEach(([slot, label]) => {
-    const col = document.createElement("div");
-    col.className = "hcol";
-    const h = document.createElement("h4");
-    h.className = "slot-" + slot;
-    h.textContent = label;
-    col.appendChild(h);
-    habitDefs.filter(x => (x.slot || "anytime") === slot).forEach((x) => {
-      const b = document.createElement("button");
-      b.className = "pill" + (habitDone[x.id] ? " done" : "");
-      b.textContent = x.t;
-      b.onclick = () => { habitDone[x.id] = !habitDone[x.id]; save(); renderHabits(); };
-      col.appendChild(b);
-    });
-    box.appendChild(col);
-  });
+function renderHabitRate() {
+  const el = $("habitRate");
+  if (!el) return;
   const rate = habitDefs.length
     ? Math.round(100 * habitDefs.filter(h => habitDone[h.id]).length / habitDefs.length) : 0;
-  $("habitRate").textContent = `오늘 달성률 ${rate}%`;
+  el.textContent = `오늘 ${rate}% →`;
 }
-$("addHabit").onclick = () => {
-  const v = $("newHabit").value.trim();
-  if (!v) return;
-  habitDefs = getDefs();
-  habitDefs.push({ id: "h" + Date.now().toString(36), t: v, slot: "anytime" });
-  setDefs(habitDefs);
-  $("newHabit").value = "";
-  save(); renderHabits();
-};
-
-// --- expenses quick ---
-let exps = [];
-function renderExps() {
-  const ul = $("expList");
-  ul.innerHTML = "";
-  exps.forEach((e, i) => {
-    const li = document.createElement("li");
-    li.textContent = `${e.what} — ${Number(e.amt).toLocaleString()}원`;
-    const b = document.createElement("button");
-    b.textContent = "×";
-    b.onclick = () => { exps.splice(i, 1); save(); renderExps(); };
-    li.appendChild(b);
-    ul.appendChild(li);
-  });
-}
-$("addExp").onclick = () => {
-  const w = $("expWhat").value.trim(), a = $("expAmt").value;
-  if (!w || !a) return;
-  exps.push({ what: w, amt: Number(a) });
-  try {
-    const k = "ownmything:ledger-txns";
-    const txns = JSON.parse(localStorage.getItem(k)) || [];
-    txns.push({ id: "t" + Date.now().toString(36), date, kind: "expense", cat: "기타", amt: Number(a), method: "현금", memo: w });
-    localStorage.setItem(k, JSON.stringify(txns));
-  } catch {}
-  $("expWhat").value = ""; $("expAmt").value = "";
-  save(); renderExps();
-};
 
 // --- photo ---
 $("photo").onchange = (e) => {
@@ -234,26 +259,7 @@ $("photo").onchange = (e) => {
   r.readAsDataURL(f);
 };
 
-// --- sleep auto: 어제 취침 -> 오늘 기상 ---
-function toMin(t) {
-  if (!t || !t.includes(":")) return null;
-  const [h, m] = t.split(":").map(Number);
-  return h * 60 + m;
-}
-function autoSleep() {
-  const s = toMin($("lastSleep").value), w = toMin($("wake").value);
-  if (s === null || w === null) return;
-  let diff = w - s;
-  if (diff <= 0) diff += 24 * 60;
-  $("sleepH").value = (diff / 60).toFixed(1);
-}
-["lastSleep", "wake"].forEach(id => $(id).addEventListener("input", () => { autoSleep(); save(); }));
-
-// --- generic autosave ---
-["sleepPlan", "braindump", "am", "pm", "eve", "weight", "sleepH", "oneline"]
-  .forEach(id => $(id).addEventListener("input", save));
-["amDone", "pmDone", "eveDone"].forEach(id => $(id).addEventListener("change", save));
-
+["weight", "sleepH", "oneline"].forEach(id => $(id).addEventListener("input", save));
 picker.onchange = () => { save(); date = picker.value; apply(date); };
 
 apply(date);

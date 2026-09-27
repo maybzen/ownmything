@@ -1,11 +1,17 @@
 const $ = (id) => document.getElementById(id);
-const TXN = "ownmything:ledger-txns";
-const LOAN = "ownmything:ledger-loans";
+const TXN = "ledger-txns";
+const LOAN = "ledger-loans";
+const LEGACY_TXN = "ownmything:ledger-txns";
+const LEGACY_LOAN = "ownmything:ledger-loans";
 const EXP_CATS = ["식비", "교통", "주거", "의료", "오복", "가족", "개인", "업무", "기타"];
 const INC_CATS = ["급여", "기타소득"];
 
-const load = (k, fb) => { try { return JSON.parse(localStorage.getItem(k)) || fb; } catch { return fb; } };
-const store = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+const legacyFor = (k) => k === TXN ? LEGACY_TXN : LEGACY_LOAN;
+const load = (k, fb) => {
+  const v = Store.get(k, legacyFor(k));
+  return v !== undefined ? v : fb;
+};
+const store = (k, v) => Store.set(k, v);
 const uid = () => "t" + Date.now().toString(36) + Math.floor(Math.random() * 99);
 const ym = (ds) => ds.slice(0, 7);
 

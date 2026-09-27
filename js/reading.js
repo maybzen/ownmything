@@ -1,7 +1,8 @@
 const $ = (id) => document.getElementById(id);
-const K = "ownmything:books";
-const load = () => { try { return JSON.parse(localStorage.getItem(K)) || []; } catch { return []; } };
-const store = (v) => localStorage.setItem(K, JSON.stringify(v));
+const K = "books";
+const LEGACY_K = "ownmything:books";
+const load = () => Store.get(K, LEGACY_K) || [];
+const store = (v) => Store.set(K, v);
 $("addBook").onclick = () => {
   const title = $("bTitle").value.trim();
   if (!title) return;

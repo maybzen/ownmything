@@ -17,36 +17,46 @@
 </head>
 <body>
   <div class="page today">
-    <a class="back" href="./index.html">← ownmything</a>
-    <div class="theme-switch" style="justify-content:flex-end;margin-top:8px">
-      <button data-set-theme="mono">무채색</button>
-      <button data-set-theme="warm">웜</button>
-    </div>
     <header class="today-head">
       <div>
         <h2 id="dateTitle">오늘</h2>
-        <p class="hint">데일리플랜 + 10분 타임플랜 + 몸기록</p>
       </div>
-      <input type="date" id="datePicker" />
+      <div class="head-right">
+        <input type="date" id="datePicker" />
+        <a class="gear" href="./pages/settings.html">⚙</a>
+      </div>
     </header>
 
+    <div class="day-grid">
     <section class="card">
-      <h3>Daily plan — 기상 후 브레인덤프</h3>
-      <div class="row3">
-        <label>어제 취침 <input type="time" id="lastSleep" /></label>
-        <label>오늘 기상 <input type="time" id="wake" /></label>
-        <label>취침예정 <input type="time" id="sleepPlan" /></label>
+      <h3>BrainDump</h3>
+      <div class="row2">
+        <label>잠든 시간 <input type="time" id="lastSleep" /></label>
+        <label>기상 시간 <input type="time" id="wake" /></label>
       </div>
-      <textarea id="braindump" rows="5" placeholder="오만 거 다 적기 — 머리 속에 있는 거 전부"></textarea>
-      <div class="todolist">
-        <label class="todo"><input type="checkbox" id="amDone" /><input id="am" placeholder="오전 — 대충 뭐하는지" /></label>
-        <label class="todo"><input type="checkbox" id="pmDone" /><input id="pm" placeholder="오후 — 대충 뭐하는지" /></label>
-        <label class="todo"><input type="checkbox" id="eveDone" /><input id="eve" placeholder="저녁 — 대충 뭐하는지" /></label>
+      <div class="row2" style="margin-top:8px">
+        <label>몸무게(kg)<input id="weight" type="number" step="0.1" placeholder="0.0" /></label>
+        <label>수면시간(h)<input id="sleepH" type="number" step="0.5" placeholder="자동 계산" /></label>
+      </div>
+      <h4 class="sub" id="monthTitle">할일</h4>
+      <div id="monthTodos"></div>
+      <div class="row2">
+        <input id="newMonthTodo" placeholder="이번 달 할일 추가" />
+        <button id="addMonthTodo">추가</button>
+      </div>
+      <h4 class="sub">To Do</h4>
+      <div id="todos"></div>
+      <div class="row2">
+        <input id="newTodo" placeholder="오늘 할일 추가" />
+        <button id="addTodo">추가</button>
       </div>
     </section>
 
     <section class="card">
-      <h3>Time plan — 10분 단위 색칠 <span class="hint">드래그로 칠하기 / 같은 칸 다시 누르면 지워짐</span></h3>
+      <div class="card-head">
+        <h3>Time plan</h3>
+        <button id="fillWork" class="ghost-btn" title="평일 9:30–17:30, 점심 11:40–13:00">🗓 회사 시간</button>
+      </div>
       <div class="palette" id="palette">
         <button data-c="work" class="sw work on">업무</button>
         <button data-c="promise" class="sw promise">약속</button>
@@ -57,45 +67,23 @@
         <button data-c="" class="sw erase">지우개</button>
       </div>
       <div id="timetable" class="timetable"></div>
-      <div class="row2">
-        <button id="fillWork">평일 회사 스케줄 채우기 (9:30–17:30)</button>
-        <span class="hint">점심 11:40–13:00은 개인으로 칠해짐</span>
-      </div>
-      <p class="hint">한 칸 = 10분. 병원=개인, 집=가족, 오복+산책 통합.</p>
     </section>
+    </div>
 
     <section class="card">
-      <h3>몸 + 하루 한줄 + 한장</h3>
-      <div class="row3">
-        <label>몸무게(kg)<input id="weight" type="number" step="0.1" placeholder="0.0" /></label>
-        <label>수면시간(h)<input id="sleepH" type="number" step="0.5" placeholder="0" /></label>
-        <label>한줄일기<input id="oneline" placeholder="오늘 한 줄" /></label>
-      </div>
-      <label class="photo">하루 한장 사진 <input type="file" id="photo" accept="image/*" /></label>
+      <h3>Night</h3>
+      <label>한줄일기<input id="oneline" placeholder="오늘 한 줄" /></label>
+      <label class="photo" style="margin-top:8px">하루 한장 <input type="file" id="photo" accept="image/*" /></label>
       <img id="photoPrev" class="photo-prev" alt="" />
     </section>
 
-    <section class="card">
-      <h3>해빗 — 매일 체크 <span class="hint" id="habitRate"></span> <a class="back" href="./pages/habit.html">주간·월간 보기 →</a></h3>
-      <div id="habits" class="habit-board"></div>
-      <div class="row2">
-        <input id="newHabit" placeholder="새 해빗 추가 (Anytime으로 들어감)" />
-        <button id="addHabit">추가</button>
-      </div>
-    </section>
-
-    <section class="card">
-      <h3>오늘 가계부 퀵입력 <span class="hint">상세는 가계부 페이지에서 천천히</span></h3>
-      <div class="row3">
-        <input id="expWhat" placeholder="뭐 샀는지" />
-        <input id="expAmt" type="number" placeholder="금액" />
-        <button id="addExp">추가</button>
-      </div>
-      <ul id="expList"></ul>
-    </section>
-
-    <p class="hint">자동 저장됨 (이 브라우저 로컬). 나중에 비번·공유 붙일 자리 비워둠.</p>
+    <nav class="menu sub foot">
+      <a href="./pages/habit.html">Habit Tracker <span id="habitRate"></span></a>
+      <a href="./pages/ledger.html">가계부</a>
+      <a href="./pages/reading.html">서재</a>
+    </nav>
   </div>
+  <script src="./js/store.js"></script>
   <script src="./js/today.js"></script>
 </body>
 </html>
