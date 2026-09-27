@@ -131,6 +131,9 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .todo-check span.txt { flex: 1; text-align: left; }
 .todo-check span.done { text-decoration: line-through; color: var(--muted); }
 .todo-check button { border: none; background: none; cursor: pointer; color: var(--muted); font-size: 0.8rem; padding: 2px 4px; }
+.tsel { flex: none; width: 15px; height: 15px; border: 1px solid var(--input-line); border-radius: 4px; font-size: 10px; line-height: 13px; text-align: center; color: #fff; cursor: pointer; user-select: none; }
+.tsel.on { background: var(--ink); border-color: var(--ink); }
+.todo-check .tsel.on + .grip + input + .txt, .todo-check:has(.tsel.on) { background: color-mix(in srgb, var(--cell) 60%, transparent); }
 .todo-check.dragging { opacity: 0.6; }
 .todo-check.over-other { background: var(--cell); border-radius: 6px; outline: 1px dashed var(--muted); }
 .todo-check span.txt { cursor: text; }

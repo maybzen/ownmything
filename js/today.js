@@ -188,10 +188,15 @@ function todoRow(item, list, render, box, opts) {
   const cb = document.createElement("input");
   cb.type = "checkbox"; cb.checked = !!item.done;
   cb.onchange = () => { item.done = cb.checked; save(); render(); };
+  const sel = document.createElement("span");
+  sel.className = "tsel" + (item.sel ? " on" : "");
+  sel.textContent = item.sel ? "✓" : "";
+  sel.title = "Select";
+  sel.onclick = (e) => { e.stopPropagation(); item.sel = !item.sel; render(); };
   const grip0 = document.createElement("span");
   grip0.className = "grip";
   grip0.textContent = "⋮⋮";
-  l.append(grip0, cb);
+  l.append(sel, grip0, cb);
   bindGrip(grip0, l, box, list, item);
   if (item.editing) {
     const inp = document.createElement("input");
@@ -326,21 +331,36 @@ async function autoMonth() {
   finally { autoMonthBusy = false; }
 }
 $("addDiv").onclick = () => { todos.push({ id: uid(), div: true }); save(); renderTodos(); };
+const TSEL = ".tsel";
+function selectedIn(list) { return list.filter(t => t.sel && t.t.trim()); }
+function clearSel(list) { list.forEach(t => { delete t.sel; }); }
 $("moveMonth").onclick = () => {
-  const items = todos.filter(t => !t.div && t.t.trim());
+  const picked = selectedIn(todos);
+  const items = picked.length ? picked : todos.filter(t => !t.div && t.t.trim() && !t.done);
   if (!items.length) return;
   if (!confirm(`Move ${items.length} item(s) to this month?`)) return;
   monthTodos.push(...items.map(t => ({ id: uid(), t: t.t, done: t.done })));
-  todos = todos.filter(t => t.div);
+  todos = todos.filter(t => items.indexOf(t) === -1);
   commit(); renderTodos(); renderMonthTodos();
 };
 $("moveToday").onclick = () => {
-  const items = monthTodos.filter(t => !t.div && t.t.trim() && !t.done);
+  const picked = selectedIn(monthTodos);
+  const items = picked.length ? picked : monthTodos.filter(t => !t.div && t.t.trim() && !t.done);
   if (!items.length) return;
   if (!confirm(`Move ${items.length} item(s) to today?`)) return;
-  todos.push(...items.map(t => ({ id: uid(), t: t.t, done: false })));
+  todos.push(...items.map(t => ({ id: uid(), t: t.t, done: t.done })));
   monthTodos = monthTodos.filter(t => items.indexOf(t) === -1);
   commit(); renderTodos(); renderMonthTodos();
+};
+$("selToday").onclick = () => {
+  const on = !todos.some(t => t.sel);
+  todos.forEach(t => { if (t.t.trim() && !t.div) t.sel = on; });
+  renderTodos();
+};
+$("selMonth").onclick = () => {
+  const on = !monthTodos.some(t => t.sel);
+  monthTodos.forEach(t => { if (t.t.trim() && !t.div) t.sel = on; });
+  renderMonthTodos();
 };
 $("saveBtn").onclick = () => { commit(); };
 $("wipeBtn").onclick = () => {
