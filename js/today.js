@@ -4,6 +4,10 @@ const todayStr = () => new Date().toISOString().slice(0, 10);
 const uid = () => "t" + Date.now().toString(36) + Math.floor(Math.random() * 99);
 
 let date = todayStr();
+try {
+  const q = new URLSearchParams(location.search).get("date");
+  if (q && /^\d{4}-\d{2}-\d{2}$/.test(q)) date = q;
+} catch (e) {}
 picker.value = date;
 
 const HOURS = [];
