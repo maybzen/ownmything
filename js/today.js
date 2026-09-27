@@ -600,7 +600,7 @@ function renderMonthCals(events, ym) {
     const d = new Date(ev.day + "T12:00:00");
     const wk = WD[d.getDay()];
     const t = ev.allDay ? "" : `${String(Math.floor(ev.start / 60)).padStart(2, "0")} `;
-    return `<span class="ml ${calColor(ev)}">${d.getDate()}${wk} ${t}${calTitle(ev.title)}</span>`;
+    return `<span class="ml">${d.getDate()}${wk} ${t}${calTitle(ev.title)}</span>`;
   }).join("<i>·</i>");
   box.appendChild(p);
   box.style.opacity = "0.6";
