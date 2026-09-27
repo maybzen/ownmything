@@ -7,7 +7,6 @@
   <meta name="theme-color" content="#121316" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="./styles/main.css" />
@@ -16,8 +15,18 @@
   <script src="./js/pwa.js"></script>
 </head>
 <body>
-  <main class="center">
-    <a class="landing" href="./menu.html">ownmything</a>
-  </main>
+  <div class="page menu-page">
+    <div class="menu-list">
+      <a href="./today.html">Today</a>
+      <a href="./pages/habit.html">Habit Tracker</a>
+      <a href="./pages/ledger.html">Ledger</a>
+      <a href="./pages/reading.html">Library</a>
+    </div>
+    <a class="gear foot-gear" href="./pages/settings.html">⚙</a>
+  </div>
+  <script src="./js/store.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./js/auth.js"></script>
+  <script>Auth.guard();</script>
 </body>
 </html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - ownmything</title>
+  <meta name="theme-color" content="#121316" />
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="../styles/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="../js/theme.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="page" style="max-width:380px">
+    <h2>Login</h2>
+    <section class="card">
+      <label>Email<input id="email" type="email" placeholder="you@mail.com" autocomplete="email" /></label>
+      <label style="margin-top:8px">Password<input id="pw" type="password" placeholder="••••••••" autocomplete="current-password" /></label>
+      <p id="msg" class="hint" style="margin-top:8px"></p>
+      <div class="row2" style="margin-top:12px">
+        <button id="signin">Login</button>
+        <button id="signup">Sign up</button>
+      </div>
+    </section>
+  </div>
+  <script>
+    const sb = window.supabase.createClient(
+      "https://fxfzpkhsfvstutdmndyc.supabase.co",
+      "sb_publishable_pnREwJ9hLSj54xtKVGtXWg_50fdSJWN"
+    );
+    const $ = (id) => document.getElementById(id);
+    async function go() { location.href = "../today.html"; }
+    (async () => {
+      try {
+        const { data } = await sb.auth.getSession();
+        if (data.session) go();
+      } catch (e) {}
+    })();
+    $("signin").onclick = async () => {
+      $("msg").textContent = "";
+      const { error } = await sb.auth.signInWithPassword({ email: $("email").value.trim(), password: $("pw").value });
+      if (error) $("msg").textContent = error.message;
+      else go();
+    };
+    $("signup").onclick = async () => {
+      $("msg").textContent = "";
+      const { error } = await sb.auth.signUp({ email: $("email").value.trim(), password: $("pw").value });
+      if (error) { $("msg").textContent = error.message; return; }
+      const { error: e2 } = await sb.auth.signInWithPassword({ email: $("email").value.trim(), password: $("pw").value });
+      if (e2) $("msg").textContent = "Check your email to confirm, then login.";
+      else go();
+    };
+  </script>
+</body>
+</html>

@@ -6,6 +6,14 @@ const uid = () => "t" + Date.now().toString(36) + Math.floor(Math.random() * 99)
 let date = todayStr();
 picker.value = date;
 
+const HOURS = [];
+for (let i = 0; i < 24; i++) HOURS.push((6 + i) % 24);
+const SLOT_IDS = [];
+HOURS.forEach(h => {
+  const hh = String(h).padStart(2, "0");
+  for (let m = 0; m < 60; m += 10) SLOT_IDS.push(`${hh}:${String(m).padStart(2, "0")}`);
+});
+
 function load(d) {
   return Store.get("d:" + d, "ownmything:" + d) || {};
 }
@@ -13,25 +21,18 @@ function save() {
   Store.set("d:" + date, {
     lastSleep: $("lastSleep").value, wake: $("wake").value,
     weight: $("weight").value, sleepH: $("sleepH").value,
-    cells: cells, memos: memos,
+    braindump: $("braindump").value,
+    cells: cells, labels: labels, autoSleep: autoSleepIds,
     todos: todos,
     oneline: $("oneline").value,
     photo: $("photoPrev").src.startsWith("data:") ? $("photoPrev").src : "",
     habitDone: habitDone,
   });
-  saveMonthTodos();
-}
-function monthKey(d) { return "month:" + d.slice(0, 7); }
-function loadMonthTodos() {
-  monthTodos = Store.get(monthKey(date)) || [];
-  const m = Number(date.slice(5, 7));
-  $("monthTitle").textContent = m + "월";
-}
-function saveMonthTodos() {
   Store.set(monthKey(date), monthTodos);
 }
+function monthKey(d) { return "month:" + d.slice(0, 7); }
 
-let cells = {}, memos = {}, todos = [], monthTodos = [];
+let cells = {}, labels = {}, autoSleepIds = [], todos = [], monthTodos = [];
 
 function apply(d) {
   const s = load(d);
@@ -39,62 +40,135 @@ function apply(d) {
   $("wake").value = s.wake || "";
   $("weight").value = s.weight || "";
   $("sleepH").value = s.sleepH || "";
-  if (!$("sleepH").value) autoSleep();
+  $("braindump").value = s.braindump || "";
   cells = s.cells || {};
-  memos = s.memos || {};
-  todos = Array.isArray(s.todos) ? s.todos : migrateLegacyTodos(s);
+  Object.keys(cells).forEach(id => {
+    if (cells[id] === "obokwalk" || cells[id] === "walk") cells[id] = "obok";
+  });
+  labels = s.labels || {};
+  autoSleepIds = s.autoSleep || [];
+  todos = Array.isArray(s.todos) ? s.todos : [];
+  monthTodos = Store.get(monthKey(d)) || [];
+  const mn = ["January","February","March","April","May","June","July","August","September","October","November","December"][Number(d.slice(5, 7)) - 1];
+  $("monthTitleSide").textContent = mn;
   $("oneline").value = s.oneline || "";
   $("photoPrev").src = s.photo || "";
   migrateHabits(s);
   habitDone = s.habitDone || {};
-  loadMonthTodos();
-  paintAll(); paintMemos(); renderTodos(); renderMonthTodos(); renderHabitRate();
+  paintAll(); renderBlocks(); renderTodos(); renderMonthTodos(); renderHabitRate();
   title.textContent = d;
-}
-// 구버전 오전/오후/저녁 → To Do로 1회 이관
-function migrateLegacyTodos(s) {
-  const out = [];
-  [["오전", s.am, s.amDone], ["오후", s.pm, s.pmDone], ["저녁", s.eve, s.eveDone]].forEach(([pre, t, done]) => {
-    if (t && t.trim()) out.push({ id: uid(), t: t.trim(), done: !!done });
-  });
-  return out;
+  if (!$("sleepH").value) { autoSleepCalc(); paintSleepGrid(); }
 }
 
-// --- sleep auto ---
+// --- drum time picker ---
+let drumTarget = null;
+function buildDrum(el, n, val) {
+  el.innerHTML = "";
+  el.dataset.count = n;
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement("div");
+    d.className = "drum-item";
+    d.textContent = String(i).padStart(2, "0");
+    el.appendChild(d);
+  }
+  requestAnimationFrame(() => { el.scrollTop = val * 34; });
+}
+function drumVal(el) {
+  const i = Math.round(el.scrollTop / 34);
+  return String(Math.max(0, Math.min(Number(el.dataset.count) - 1, i))).padStart(2, "0");
+}
+function openDrum(input) {
+  drumTarget = input;
+  const [h, m] = (input.value || "07:00").split(":").map(Number);
+  buildDrum($("drumH"), 24, h || 0);
+  buildDrum($("drumM"), 60, m || 0);
+  $("drumModal").style.display = "flex";
+}
+$("drumCancel").onclick = () => { $("drumModal").style.display = "none"; };
+$("drumOk").onclick = () => {
+  if (drumTarget) {
+    drumTarget.value = drumVal($("drumH")) + ":" + drumVal($("drumM"));
+    autoSleepCalc(); paintSleepGrid(); save();
+  }
+  $("drumModal").style.display = "none";
+};
+$("lastSleep").onclick = () => openDrum($("lastSleep"));
+$("wake").onclick = () => openDrum($("wake"));
+
+// --- sleep ---
 function toMin(t) {
   if (!t || !t.includes(":")) return null;
   const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
 }
-function autoSleep() {
+function autoSleepCalc() {
   const s = toMin($("lastSleep").value), w = toMin($("wake").value);
   if (s === null || w === null) return;
   let diff = w - s;
   if (diff <= 0) diff += 24 * 60;
   $("sleepH").value = (diff / 60).toFixed(1);
 }
-["lastSleep", "wake"].forEach(id => $(id).addEventListener("input", () => { autoSleep(); save(); }));
+function slotsBetweenMin(a, b) {
+  const out = [];
+  let t = a - (a % 10);
+  while (t < b) {
+    const h = Math.floor(t / 60) % 24, m = t % 60;
+    out.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+    t += 10;
+  }
+  return out;
+}
+function paintSleepGrid() {
+  autoSleepIds.forEach(id => { if (cells[id] === "sleep") delete cells[id]; });
+  autoSleepIds = [];
+  const s = toMin($("lastSleep").value), w = toMin($("wake").value);
+  if (s === null || w === null) { paintAll(); renderBlocks(); return; }
+  let e = w;
+  if (e <= s) e += 24 * 60;
+  autoSleepIds = slotsBetweenMin(s, e);
+  autoSleepIds.forEach(id => { cells[id] = "sleep"; });
+  paintAll(); renderBlocks();
+}
 
-// --- todo list (monthly + daily, movable) ---
+// --- todo (notion-style) ---
 function todoRow(item, list, render) {
-  const l = document.createElement("label");
+  const l = document.createElement("div");
   l.className = "todo-check";
   const cb = document.createElement("input");
   cb.type = "checkbox"; cb.checked = !!item.done;
   cb.onchange = () => { item.done = cb.checked; save(); render(); };
-  const s = document.createElement("span");
-  s.textContent = item.t;
-  if (item.done) s.className = "done";
-  const up = document.createElement("button");
-  up.textContent = "↑"; up.title = "위로";
-  up.onclick = () => { const i = list.indexOf(item); if (i > 0) { list.splice(i, 1); list.splice(i - 1, 0, item); save(); render(); } };
-  const dn = document.createElement("button");
-  dn.textContent = "↓"; dn.title = "아래로";
-  dn.onclick = () => { const i = list.indexOf(item); if (i < list.length - 1) { list.splice(i, 1); list.splice(i + 1, 0, item); save(); render(); } };
-  const del = document.createElement("button");
-  del.textContent = "×";
-  del.onclick = () => { list.splice(list.indexOf(item), 1); save(); render(); };
-  l.append(cb, s, up, dn, del);
+  l.appendChild(cb);
+  if (item.editing) {
+    const inp = document.createElement("input");
+    inp.className = "todo-edit";
+    inp.value = item.t || "";
+    inp.placeholder = "To do";
+    const commit = () => {
+      item.t = inp.value.trim();
+      delete item.editing;
+      if (!item.t) list.splice(list.indexOf(item), 1);
+      save(); render();
+    };
+    inp.onkeydown = (e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") { list.splice(list.indexOf(item), 1); save(); render(); } };
+    inp.onblur = commit;
+    l.appendChild(inp);
+    requestAnimationFrame(() => inp.focus());
+  } else {
+    const s = document.createElement("span");
+    s.textContent = item.t;
+    if (item.done) s.className = "done";
+    s.onclick = () => { item.editing = true; render(); };
+    const up = document.createElement("button");
+    up.textContent = "↑";
+    up.onclick = () => { const i = list.indexOf(item); if (i > 0) { list.splice(i, 1); list.splice(i - 1, 0, item); save(); render(); } };
+    const dn = document.createElement("button");
+    dn.textContent = "↓";
+    dn.onclick = () => { const i = list.indexOf(item); if (i < list.length - 1) { list.splice(i, 1); list.splice(i + 1, 0, item); save(); render(); } };
+    const del = document.createElement("button");
+    del.textContent = "×";
+    del.onclick = () => { list.splice(list.indexOf(item), 1); save(); render(); };
+    l.append(s, up, dn, del);
+  }
   return l;
 }
 function renderTodos() {
@@ -107,22 +181,8 @@ function renderMonthTodos() {
   box.innerHTML = "";
   monthTodos.forEach(t => box.appendChild(todoRow(t, monthTodos, renderMonthTodos)));
 }
-$("addTodo").onclick = () => {
-  const v = $("newTodo").value.trim();
-  if (!v) return;
-  todos.push({ id: uid(), t: v, done: false });
-  $("newTodo").value = "";
-  save(); renderTodos();
-};
-$("newTodo").addEventListener("keydown", (e) => { if (e.key === "Enter") $("addTodo").onclick(); });
-$("addMonthTodo").onclick = () => {
-  const v = $("newMonthTodo").value.trim();
-  if (!v) return;
-  monthTodos.push({ id: uid(), t: v, done: false });
-  $("newMonthTodo").value = "";
-  save(); renderMonthTodos();
-};
-$("newMonthTodo").addEventListener("keydown", (e) => { if (e.key === "Enter") $("addMonthTodo").onclick(); });
+$("addTodo").onclick = () => { todos.push({ id: uid(), t: "", done: false, editing: true }); renderTodos(); };
+$("addMonthTodo").onclick = () => { monthTodos.push({ id: uid(), t: "", done: false, editing: true }); renderMonthTodos(); };
 
 // --- timetable ---
 const tt = $("timetable");
@@ -137,10 +197,7 @@ document.querySelectorAll("#palette .sw").forEach(b => {
   };
 });
 
-const hours = [];
-for (let i = 0; i < 24; i++) hours.push((6 + i) % 24);
-
-hours.forEach(h => {
+HOURS.forEach(h => {
   const hh = String(h).padStart(2, "0");
   const row = document.createElement("div");
   row.className = "trow";
@@ -165,19 +222,13 @@ hours.forEach(h => {
     grid.appendChild(c);
   }
   row.appendChild(grid);
-  const memo = document.createElement("input");
-  memo.className = "tmemo";
-  memo.placeholder = hh + "시 일정";
-  memo.dataset.hour = hh;
-  memo.addEventListener("input", () => { memos[hh] = memo.value; save(); });
-  row.appendChild(memo);
   tt.appendChild(row);
 });
-document.addEventListener("pointerup", () => { painting = false; save(); });
+document.addEventListener("pointerup", () => { if (painting) { painting = false; save(); renderBlocks(); } });
 
 function toggleCell(c, drag) {
   const id = c.dataset.id;
-  if (!curColor) { delete cells[id]; }
+  if (!curColor) { delete cells[id]; delete labels[id]; }
   else if (!drag && cells[id] === curColor) { delete cells[id]; }
   else {
     if (drag && cells[id] === curColor) return;
@@ -192,28 +243,44 @@ function paintCell(c) {
 function paintAll() {
   tt.querySelectorAll(".cell").forEach(paintCell);
 }
-function paintMemos() {
-  tt.querySelectorAll(".tmemo").forEach(m => { m.value = memos[m.dataset.hour] || ""; });
-}
 
-function slotsBetween(start, end) {
+// painted runs → label rows
+function runs() {
   const out = [];
-  let [h, m] = start.split(":").map(Number);
-  const [eh, em] = end.split(":").map(Number);
-  while (h * 60 + m < eh * 60 + em) {
-    out.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-    m += 10;
-    if (m >= 60) { m -= 60; h++; }
-  }
+  let cur = null;
+  SLOT_IDS.forEach(id => {
+    const v = cells[id];
+    if (v && cur && cur.color === v) { cur.end = id; }
+    else {
+      if (cur) out.push(cur);
+      cur = v ? { color: v, start: id, end: id } : null;
+    }
+  });
+  if (cur) out.push(cur);
   return out;
 }
-$("fillWork").onclick = () => {
-  slotsBetween("09:30", "17:30").forEach(id => { cells[id] = "work"; });
-  slotsBetween("11:40", "13:00").forEach(id => { cells[id] = "personal"; });
-  paintAll(); save();
-};
+const CNAMES = { work: "Work", promise: "Meet", personal: "Me", family: "Family", obok: "Obok", sleep: "Sleep" };
+function renderBlocks() {
+  const box = $("blocks");
+  box.innerHTML = "";
+  runs().forEach(r => {
+    const row = document.createElement("div");
+    row.className = "block-row";
+    const dot = document.createElement("span");
+    dot.className = "dot " + r.color;
+    const range = document.createElement("span");
+    range.className = "hint";
+    range.textContent = `${r.start}–${r.end} · ${CNAMES[r.color] || r.color}`;
+    const inp = document.createElement("input");
+    inp.placeholder = "memo";
+    inp.value = labels[r.start] || "";
+    inp.oninput = () => { labels[r.start] = inp.value; save(); };
+    row.append(dot, range, inp);
+    box.appendChild(row);
+  });
+}
 
-// --- habits (rate only on today) ---
+// --- habits rate ---
 const DEFS_KEY = "habit-defs";
 const LEGACY_DEFS = "ownmything:habit-defs";
 let habitDefs = [];
@@ -230,9 +297,9 @@ function migrateHabits(s) {
       s.habitDone = done;
     } else {
       habitDefs = [
-        { id: "h-water", t: "공복 물 한잔", slot: "morning" },
-        { id: "h-walk", t: "오복 산책", slot: "night" },
-        { id: "h-read", t: "독서 10분", slot: "anytime" },
+        { id: "h-water", t: "Water", slot: "morning" },
+        { id: "h-walk", t: "Obok walk", slot: "night" },
+        { id: "h-read", t: "Read 10m", slot: "anytime" },
       ];
     }
     setDefs(habitDefs);
@@ -247,7 +314,7 @@ function renderHabitRate() {
   if (!el) return;
   const rate = habitDefs.length
     ? Math.round(100 * habitDefs.filter(h => habitDone[h.id]).length / habitDefs.length) : 0;
-  el.textContent = `오늘 ${rate}% →`;
+  el.textContent = `${rate}% →`;
 }
 
 // --- photo ---
@@ -259,7 +326,7 @@ $("photo").onchange = (e) => {
   r.readAsDataURL(f);
 };
 
-["weight", "sleepH", "oneline"].forEach(id => $(id).addEventListener("input", save));
+["weight", "sleepH", "oneline", "braindump"].forEach(id => $(id).addEventListener("input", save));
 picker.onchange = () => { save(); date = picker.value; apply(date); };
 
 apply(date);

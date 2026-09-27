@@ -28,12 +28,10 @@
     </section>
 
     <section class="card">
-      <h3>계정</h3>
-      <p class="hint">계정별로 기록이 따로 저장돼. 나중에 친구랑 나눠 쓸 때 사용.</p>
-      <div id="profileList"></div>
+      <h3>Account</h3>
+      <p id="accountEmail" class="hint"></p>
       <div class="row2" style="margin-top:8px">
-        <input id="newProfile" placeholder="새 계정 이름" />
-        <button id="addProfile">추가</button>
+        <button id="logoutBtn" class="ghost-btn">Logout</button>
       </div>
     </section>
 
@@ -43,6 +41,8 @@
     </section>
   </div>
   <script src="../js/store.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
   <script src="../js/settings.js"></script>
 </body>
 </html>
