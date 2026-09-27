@@ -195,26 +195,18 @@ function todoRow(item, list, render, box) {
   l.dataset.id = item.id;
   if (item.div) {
     l.classList.add("divider");
-    const grip = document.createElement("span");
-    grip.className = "grip";
-    grip.textContent = "⋮⋮";
     const line = document.createElement("span");
     line.className = "divline";
     const del = document.createElement("button");
     del.textContent = "×";
     del.onclick = () => { list.splice(list.indexOf(item), 1); save(); render(); };
-    l.append(grip, line, del);
-    bindGrip(grip, l, box, list);
+    l.append(line, del);
     return l;
   }
   const cb = document.createElement("input");
   cb.type = "checkbox"; cb.checked = !!item.done;
   cb.onchange = () => { item.done = cb.checked; save(); render(); };
-  const grip0 = document.createElement("span");
-  grip0.className = "grip";
-  grip0.textContent = "⋮⋮";
-  l.append(grip0, cb);
-  bindGrip(grip0, l, box, list);
+  l.appendChild(cb);
   if (item.editing) {
     const inp = document.createElement("input");
     inp.className = "todo-edit";
@@ -231,9 +223,6 @@ function todoRow(item, list, render, box) {
     l.appendChild(inp);
     requestAnimationFrame(() => inp.focus());
   } else {
-    const grip = document.createElement("span");
-    grip.className = "grip";
-    grip.textContent = "⋮⋮";
     const s = document.createElement("span");
     s.textContent = item.t;
     if (item.done) s.className = "done";
@@ -241,8 +230,7 @@ function todoRow(item, list, render, box) {
     const del = document.createElement("button");
     del.textContent = "×";
     del.onclick = () => { list.splice(list.indexOf(item), 1); save(); render(); };
-    l.append(grip, s, del);
-    bindGrip(grip, l, box, list);
+    l.append(s, del);
   }
   return l;
 }
@@ -483,16 +471,19 @@ function slotsFor(startMin, endMin) {
   return out;
 }
 window.pullCalendar = async function () {
-  if (!window.Auth || !Auth.sb) return;
+  const st = $("calStatus");
+  if (st) st.textContent = "Syncing…";
+  if (!window.Auth || !Auth.sb) { if (st) st.textContent = "Sync off"; return; }
   let session = null;
-  try { session = await Auth.session(); } catch (e) { return; }
-  if (!session) return;
+  try { session = await Auth.session(); } catch (e) { if (st) st.textContent = "Sync failed (session)"; return; }
+  if (!session) { if (st) st.textContent = "Sync off"; return; }
   let res;
   try {
     const r = await Auth.sb.functions.invoke("calendar-sync", { body: { date } });
+    if (r.error) throw r.error;
     res = r.data;
-  } catch (e) { return; }
-  if (!res || res.error) return;
+  } catch (e) { if (st) st.textContent = "Sync failed (network)"; return; }
+  if (!res || res.error) { if (st) st.textContent = "Sync failed: " + (res ? res.error : "?"); return; }
   // clear previous auto-fill
   const prev = load(date).autoCal || {};
   Object.keys(prev).forEach(id => { if (cells[id] === prev[id]) delete cells[id]; });
@@ -508,6 +499,11 @@ window.pullCalendar = async function () {
   s.autoCal = autoCal;
   Store.set("d:" + date, s);
   paintAll(); renderBlocks(); save();
+  const n = (res.events || []).length;
+  if (st) {
+    const now = new Date();
+    st.textContent = n ? `Synced ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} · ${n} events` : "No events today";
+  }
   renderReminders(res.todos || []);
   pullMonth(date.slice(0, 7));
 };
