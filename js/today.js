@@ -403,7 +403,82 @@ function renderBlocks() {
   });
 }
 
-// --- habits rate ---
+// --- iCloud calendar + reminders ---
+const CALMAP = [
+  [/\[업무\]|\[work\]/i, "work"],
+  [/\[약속\]|\[meet\]/i, "promise"],
+  [/\[개인\]|\[me\]/i, "personal"],
+  [/\[가족\]/, "family"],
+  [/\[오복\]/, "obok"],
+  [/\[수면\]|\[sleep\]/i, "sleep"],
+];
+function calColor(title) {
+  for (const [re, c] of CALMAP) if (re.test(title)) return c;
+  return "promise";
+}
+function calTitle(title) {
+  return title.replace(/^\[[^\]]+\]\s*/, "").trim() || title;
+}
+function slotsFor(startMin, endMin) {
+  const out = [];
+  let t = Math.floor(startMin / 10) * 10;
+  const e = Math.min(1440, Math.max(t + 10, endMin));
+  while (t < e) {
+    out.push(`${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`);
+    t += 10;
+  }
+  return out;
+}
+window.pullCalendar = async function () {
+  if (!window.Auth || !Auth.sb) return;
+  let session = null;
+  try { session = await Auth.session(); } catch (e) { return; }
+  if (!session) return;
+  let res;
+  try {
+    const r = await Auth.sb.functions.invoke("calendar-sync", { body: { date } });
+    res = r.data;
+  } catch (e) { return; }
+  if (!res || res.error) return;
+  // clear previous auto-fill
+  const prev = load(date).autoCal || {};
+  Object.keys(prev).forEach(id => { if (cells[id] === prev[id]) delete cells[id]; });
+  const autoCal = {};
+  (res.events || []).forEach(ev => {
+    const color = calColor(ev.title);
+    const memo = calTitle(ev.title);
+    const ids = slotsFor(ev.start, ev.end).filter(id => !cells[id]);
+    ids.forEach(id => { cells[id] = color; autoCal[id] = color; });
+    if (ids.length && memo && !labels[ids[0]]) labels[ids[0]] = memo;
+  });
+  const s = load(date);
+  s.autoCal = autoCal;
+  Store.set("d:" + date, s);
+  paintAll(); renderBlocks(); save();
+  renderReminders(res.todos || []);
+};
+function renderReminders(list) {
+  const card = $("remCard"), box = $("rems");
+  box.innerHTML = "";
+  if (!list.length) { card.style.display = "none"; return; }
+  card.style.display = "";
+  list.slice(0, 20).forEach(t => {
+    const l = document.createElement("div");
+    l.className = "todo-check";
+    const s = document.createElement("span");
+    s.textContent = t.title + (t.due ? ` (${t.due.slice(0, 10)})` : "");
+    const add = document.createElement("button");
+    add.textContent = "+ To Do";
+    add.onclick = () => {
+      todos.push({ id: uid(), t: t.title, done: false });
+      save(); renderTodos();
+    };
+    l.append(s, add);
+    box.appendChild(l);
+  });
+}
+
+// --- habits rate ---;
 const DEFS_KEY = "habit-defs";
 const LEGACY_DEFS = "ownmything:habit-defs";
 let habitDefs = [];

@@ -87,6 +87,11 @@
     </section>
     </div>
 
+    <section class="card" id="remCard" style="display:none">
+      <h3>Reminders</h3>
+      <div id="rems"></div>
+    </section>
+
     <nav class="menu sub foot">
       <a href="./pages/habit.html">Habit Tracker <span id="habitRate"></span></a>
       <a href="./pages/ledger.html">Ledger</a>
@@ -99,6 +104,6 @@
   <script src="./js/today.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./js/auth.js"></script>
-  <script>Auth.guard();</script>
+  <script>Auth.guard().then(s => { if (s && window.pullCalendar) pullCalendar(); });</script>
 </body>
 </html>
