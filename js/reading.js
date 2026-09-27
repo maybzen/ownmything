@@ -7,7 +7,7 @@ $("addBook").onclick = () => {
   const title = $("bTitle").value.trim();
   if (!title) return;
   const b = load();
-  b.unshift({ id: "b" + Date.now().toString(36), title, author: $("bAuthor").value.trim(), status: $("bStatus").value, memo: $("bMemo").value.trim(), date: new Date().toISOString().slice(0, 10) });
+  b.unshift({ id: "b" + Date.now().toString(36), title, author: $("bAuthor").value.trim(), status: $("bStatus").value, memo: $("bMemo").value.trim(), date: Store.today() });
   store(b);
   $("bTitle").value = ""; $("bAuthor").value = ""; $("bMemo").value = "";
   render();

@@ -1,6 +1,6 @@
 const $ = (id) => document.getElementById(id);
 const picker = $("datePicker"), title = $("dateTitle");
-const todayStr = () => new Date().toISOString().slice(0, 10);
+const todayStr = () => Store.today();
 const uid = () => "t" + Date.now().toString(36) + Math.floor(Math.random() * 99);
 
 let date = todayStr();

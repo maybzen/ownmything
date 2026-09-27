@@ -27,11 +27,11 @@ $("tMethod").onchange = () => {
 function addMonths(ds, n) {
   const [y, m, d] = ds.split("-").map(Number);
   const dt = new Date(y, m - 1 + n, Math.min(d, 28));
-  return dt.toISOString().slice(0, 10);
+  return Store.day(dt);
 }
 
 $("addTxn").onclick = () => {
-  const date = $("tDate").value || new Date().toISOString().slice(0, 10);
+  const date = $("tDate").value || Store.today();
   const kind = $("tKind").value, cat = $("tCat").value;
   const amt = Number($("tAmt").value), memo = $("tMemo").value.trim();
   const method = $("tMethod").value;
@@ -54,7 +54,7 @@ $("addTxn").onclick = () => {
 };
 
 function render() {
-  const mv = $("mPicker").value || new Date().toISOString().slice(0, 7);
+  const mv = $("mPicker").value || Store.today().slice(0, 7);
   $("mPicker").value = mv;
   const txns = load(TXN, []).filter(t => ym(t.date) === mv).sort((a, b) => a.date.localeCompare(b.date));
   const inc = txns.filter(t => t.kind === "income").reduce((a, t) => a + t.amt, 0);
@@ -117,7 +117,7 @@ function renderLoans() {
       if (!amt) return;
       l.paid += amt;
       const txns = load(TXN, []);
-      txns.push({ id: uid(), date: new Date().toISOString().slice(0, 10), kind: "expense", cat: "주거", amt, method: "계좌", memo: `${l.name} 상환` });
+      txns.push({ id: uid(), date: Store.today(), kind: "expense", cat: "주거", amt, method: "계좌", memo: `${l.name} 상환` });
       store(TXN, txns); store(LOAN, loans); render();
     };
     const del = document.createElement("button");
@@ -129,6 +129,6 @@ function renderLoans() {
 }
 
 $("mPicker").onchange = render;
-$("tDate").value = new Date().toISOString().slice(0, 10);
+$("tDate").value = Store.today();
 cats();
 render();

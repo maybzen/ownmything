@@ -9,6 +9,9 @@ window.Store = (() => {
     catch (e) { return [{ id: "me", name: "나" }]; }
   };
   const k = (s) => `ownmything:${profile()}:${s}`;
+  const p2 = (n) => String(n).padStart(2, "0");
+  const day = (d) => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+  const today = () => day(new Date());
   const get = (nk, legacy) => {
     try {
       const v = localStorage.getItem(k(nk));
@@ -25,6 +28,6 @@ window.Store = (() => {
     profile, profiles,
     saveProfiles: (p) => localStorage.setItem(LKEY, JSON.stringify(p)),
     setProfile: (id) => localStorage.setItem(PKEY, id),
-    k, get, set,
+    k, get, set, day, today,
   };
 })();

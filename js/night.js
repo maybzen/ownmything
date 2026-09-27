@@ -1,6 +1,6 @@
 const $ = (id) => document.getElementById(id);
 const picker = $("datePicker");
-const todayStr = () => new Date().toISOString().slice(0, 10);
+const todayStr = () => Store.today();
 let date = todayStr();
 picker.value = date;
 let calYM = date.slice(0, 7);

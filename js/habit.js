@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const DEFS_KEY = "habit-defs";
 const LEGACY_DEFS = "ownmything:habit-defs";
-const fmt = (d) => d.toISOString().slice(0, 10);
+const fmt = (d) => Store.day(d);
 const todayDs = fmt(new Date());
 
 function getDefs() {
