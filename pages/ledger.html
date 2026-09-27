@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>가계부 - ownmything</title>
+  <title>Ledger - ownmything</title>
   <meta name="theme-color" content="#121316" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="../manifest.webmanifest" />
   <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="../styles/main.css" />
@@ -18,51 +17,71 @@
 <body>
   <div class="page">
     <a class="back" href="../menu.html">← Menu</a> · <a class="back" href="../today.html">Today</a>
-    <h2>가계부</h2>
-    <p class="hint">지출·소득 + 카드 할부 + 대출. 노션 복제 꼬임 없이 새로.</p>
+    <header class="today-head">
+      <h2>Ledger <span class="hint" id="headDate"></span></h2>
+      <div class="head-right">
+        <button id="goTodayDate" class="ghost-btn">Today</button>
+      </div>
+    </header>
 
     <section class="card">
-      <h3>월간 요약 <input type="month" id="mPicker" /></h3>
+      <h3>Summary <input type="month" id="mPicker" /></h3>
       <p id="summary" class="hint"></p>
     </section>
 
     <section class="card">
-      <h3>입력</h3>
+      <h3>Add</h3>
       <div class="lgrid">
         <input type="date" id="tDate" />
-        <select id="tKind"><option value="expense">지출</option><option value="income">소득</option></select>
+        <select id="tKind"><option value="expense">Out</option><option value="income">In</option></select>
         <select id="tCat"></select>
-        <input id="tAmt" type="number" placeholder="금액" />
-        <select id="tMethod"><option>현금</option><option>계좌</option><option>카드일시불</option><option>카드할부</option></select>
-        <input id="tMemo" placeholder="메모" />
+        <input id="tAmt" type="number" inputmode="decimal" placeholder="Amount" />
+        <select id="tMethod"><option>Cash</option><option>Account</option><option>Card</option><option>Installment</option></select>
+        <input id="tMemo" placeholder="Memo" />
       </div>
       <div class="lgrid" id="instRow" style="display:none">
-        <input id="tCard" placeholder="카드사 (예: 신한)" />
+        <input id="tCard" placeholder="Card (e.g. Shinhan)" />
         <input id="tMonths" type="number" min="2" max="36" value="6" />
-        <span class="hint">개월 할부 → 매달 자동 분할</span>
+        <span class="hint">months → split monthly</span>
       </div>
-      <button id="addTxn">추가</button>
+      <button id="addTxn">Add</button>
     </section>
 
     <section class="card">
-      <h3>이번 달 내역</h3>
+      <h3>List</h3>
       <ul id="txnList"></ul>
     </section>
 
     <section class="card">
-      <h3>카드 할부</h3>
+      <h3>Installments</h3>
       <div id="cardList"></div>
     </section>
 
     <section class="card">
-      <h3>대출</h3>
+      <h3>Statements</h3>
       <div class="lgrid">
-        <input id="loanName" placeholder="대출명 (예: 전세대출)" />
-        <input id="loanTotal" type="number" placeholder="원금" />
-        <input id="loanMonthly" type="number" placeholder="월 상환액" />
-        <button id="addLoan">등록</button>
+        <input type="month" id="sMonth" />
+        <input id="sCard" placeholder="Card" />
+        <input id="sAmt" type="number" inputmode="decimal" placeholder="Amount" />
+        <input id="sNote" placeholder="Note" />
       </div>
-      <div id="loanList"></div>
+      <button id="addStmt">Add</button>
+      <div id="stmtList" style="margin-top:8px"></div>
+    </section>
+
+    <section class="card">
+      <h3>Loans</h3>
+      <div class="lgrid">
+        <input id="loanName" placeholder="Name (e.g. deposit loan)" />
+        <input id="loanBank" placeholder="Bank" />
+        <input id="loanTotal" type="number" inputmode="decimal" placeholder="Principal" />
+        <input id="loanRate" type="number" step="0.1" inputmode="decimal" placeholder="Rate %" />
+        <input id="loanMonthly" type="number" inputmode="decimal" placeholder="Monthly" />
+        <input id="loanStart" type="month" />
+        <input id="loanMemo" placeholder="Memo" />
+        <button id="addLoan">Add</button>
+      </div>
+      <div id="loanList" style="margin-top:8px"></div>
     </section>
   </div>
   <script src="../js/store.js"></script>

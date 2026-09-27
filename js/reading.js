@@ -7,22 +7,39 @@ $("addBook").onclick = () => {
   const title = $("bTitle").value.trim();
   if (!title) return;
   const b = load();
-  b.unshift({ id: "b" + Date.now().toString(36), title, author: $("bAuthor").value.trim(), status: $("bStatus").value, memo: $("bMemo").value.trim(), date: Store.today() });
+  b.unshift({
+    id: "b" + Date.now().toString(36), title,
+    author: $("bAuthor").value.trim(), status: $("bStatus").value,
+    rating: Number($("bRating").value) || 0,
+    memo: $("bMemo").value.trim(), date: Store.today(),
+  });
   store(b);
-  $("bTitle").value = ""; $("bAuthor").value = ""; $("bMemo").value = "";
+  $("bTitle").value = ""; $("bAuthor").value = ""; $("bMemo").value = ""; $("bRating").value = "0";
   render();
 };
+function stars(n) { return n ? "★".repeat(n) + "☆".repeat(5 - n) : ""; }
 function render() {
-  const ul = $("bookList");
-  ul.innerHTML = "";
-  load().forEach(x => {
-    const li = document.createElement("li");
-    li.textContent = `${x.title}${x.author ? " · " + x.author : ""} [${x.status}]${x.memo ? " — " + x.memo : ""}`;
+  const g = $("bookGrid");
+  g.innerHTML = "";
+  const f = $("dateFilter").value;
+  $("headDate").textContent = f || "All";
+  const items = load().filter(x => !f || x.date === f);
+  if (!items.length) g.innerHTML = "<p class='hint'>No books</p>";
+  items.forEach(x => {
+    const d = document.createElement("div");
+    d.className = "book-card";
+    d.innerHTML = `<span class="chip">${x.status}</span>
+      <b>${x.title}</b>
+      <span class="hint">${x.author || ""}</span>
+      <span class="hint">${stars(x.rating)}${x.memo ? " · " + x.memo : ""}</span>
+      <span class="hint">${x.date || ""}</span>`;
     const b = document.createElement("button");
     b.textContent = "×";
     b.onclick = () => { store(load().filter(y => y.id !== x.id)); render(); };
-    li.appendChild(b);
-    ul.appendChild(li);
+    d.appendChild(b);
+    g.appendChild(d);
   });
 }
+$("dateFilter").onchange = render;
+$("goTodayDate").onclick = () => { $("dateFilter").value = ""; render(); };
 render();

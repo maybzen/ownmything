@@ -18,31 +18,37 @@
 <body>
   <div class="page">
     <a class="back" href="../menu.html">← Menu</a> · <a class="back" href="../today.html">Today</a>
-    <h2>Habit Tracker</h2>
+    <header class="today-head">
+      <h2>Habit Tracker <span class="hint" id="headDate"></span></h2>
+      <div class="head-right">
+        <button id="goTodayDate" class="ghost-btn">Today</button>
+        <input type="date" id="datePicker" />
+      </div>
+    </header>
 
     <section class="card">
-      <h3>오늘</h3>
+      <h3 id="checkTitle">Today</h3>
       <div id="todayCheck" class="habit-board"></div>
     </section>
 
     <section class="card">
-      <h3>주간 <span class="hint" id="weekLabel"></span></h3>
+      <h3>Week <span class="hint" id="weekLabel"></span></h3>
       <div id="weekTable" class="htable"></div>
       <div id="weekRates" class="rates"></div>
     </section>
 
     <section class="card">
-      <h3>월간 <span class="hint" id="monthLabel"></span></h3>
+      <h3>Month <span class="hint" id="monthLabel"></span></h3>
       <input type="month" id="monthPicker" />
       <div id="monthRates" class="rates"></div>
     </section>
 
     <details class="card">
-      <summary>관리</summary>
+      <summary>Manage</summary>
       <div id="defs" style="margin-top:8px"></div>
       <div class="row2">
-        <input id="newDef" placeholder="새 해빗" />
-        <button id="addDef">추가</button>
+        <input id="newDef" placeholder="New habit" />
+        <button id="addDef">Add</button>
       </div>
     </details>
   </div>

@@ -2,15 +2,16 @@ const $ = (id) => document.getElementById(id);
 const DEFS_KEY = "habit-defs";
 const LEGACY_DEFS = "ownmything:habit-defs";
 const fmt = (d) => Store.day(d);
-const todayDs = fmt(new Date());
+let selDate = Store.today();
+$("datePicker").value = selDate;
 
 function getDefs() {
   let d = Store.get(DEFS_KEY, LEGACY_DEFS) || [];
   if (!d.length) {
     d = [
-      { id: "h-water", t: "공복 물 한잔", slot: "morning" },
-      { id: "h-walk", t: "오복 산책", slot: "night" },
-      { id: "h-read", t: "독서 10분", slot: "anytime" },
+      { id: "h-water", t: "Water", slot: "morning" },
+      { id: "h-walk", t: "Obok walk", slot: "night" },
+      { id: "h-read", t: "Read 10m", slot: "anytime" },
     ];
     Store.set(DEFS_KEY, d);
     return d;
@@ -44,6 +45,8 @@ const SLOTS = [["morning", "Morning"], ["anytime", "Anytime"], ["night", "Night"
 function renderToday() {
   const box = $("todayCheck");
   box.innerHTML = "";
+  $("checkTitle").textContent = selDate === Store.today() ? "Today" : selDate;
+  $("headDate").textContent = selDate;
   const defs = getDefs();
   SLOTS.forEach(([slot, label]) => {
     const items = defs.filter(d => (d.slot || "anytime") === slot);
@@ -56,9 +59,9 @@ function renderToday() {
     col.appendChild(h);
     items.forEach(def => {
       const b = document.createElement("button");
-      b.className = "pill" + (isDone(todayDs, def) ? " done" : "");
+      b.className = "pill" + (isDone(selDate, def) ? " done" : "");
       b.textContent = def.t;
-      b.onclick = () => { setDone(todayDs, def, !isDone(todayDs, def)); renderToday(); renderWeek(); renderMonth(); };
+      b.onclick = () => { setDone(selDate, def, !isDone(selDate, def)); renderToday(); renderWeek(); renderMonth(); };
       col.appendChild(b);
     });
     box.appendChild(col);
@@ -118,7 +121,7 @@ function renderWeek() {
   t.innerHTML = "";
   const head = document.createElement("div");
   head.className = "hrow hhead";
-  head.innerHTML = `<span></span>` + days.map(d => `<span>${d.slice(5)}</span>`).join("") + `<span>달성</span>`;
+  head.innerHTML = `<span></span>` + days.map(d => `<span>${d.slice(5)}</span>`).join("") + `<span>Rate</span>`;
   t.appendChild(head);
   [["morning", "Morning"], ["anytime", "Anytime"], ["night", "Night"]].forEach(([slot, label]) => {
     const items = defs.filter(d => (d.slot || "anytime") === slot);
@@ -140,7 +143,7 @@ function renderWeek() {
   });
   const total = defs.length * days.length;
   const hit = defs.reduce((a, def) => a + days.filter(d => isDone(d, def)).length, 0);
-  $("weekRates").textContent = defs.length ? `주간 전체 ${Math.round(100 * hit / total)}% (${hit}/${total})` : "해빗을 추가해줘";
+  $("weekRates").textContent = defs.length ? `Weekly ${Math.round(100 * hit / total)}% (${hit}/${total})` : "Add habits";
 }
 
 function renderMonth() {
@@ -165,6 +168,8 @@ function renderMonth() {
   });
 }
 $("monthPicker").onchange = renderMonth;
+$("datePicker").onchange = () => { selDate = $("datePicker").value; renderToday(); };
+$("goTodayDate").onclick = () => { selDate = Store.today(); $("datePicker").value = selDate; renderToday(); };
 
 function renderAll() { renderToday(); renderDefs(); renderWeek(); renderMonth(); }
 renderAll();

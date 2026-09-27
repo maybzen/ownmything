@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>독서 - ownmything</title>
+  <title>Library - ownmything</title>
   <meta name="theme-color" content="#121316" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="../manifest.webmanifest" />
   <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="../styles/main.css" />
@@ -18,22 +17,25 @@
 <body>
   <div class="page">
     <a class="back" href="../menu.html">← Menu</a> · <a class="back" href="../today.html">Today</a>
-    <h2>독서 기록</h2>
-    <p class="hint">읽을 때 바로 입력. 따로 모아보기.</p>
-    <section class="card">
-      <h3>입력</h3>
-      <div class="lgrid">
-        <input id="bTitle" placeholder="책 제목" />
-        <input id="bAuthor" placeholder="저자" />
-        <select id="bStatus"><option>읽는 중</option><option>완독</option><option>읽고 싶음</option></select>
-        <input id="bMemo" placeholder="한줄 메모" />
+    <header class="today-head">
+      <h2>Library <span class="hint" id="headDate"></span></h2>
+      <div class="head-right">
+        <button id="goTodayDate" class="ghost-btn">All</button>
+        <input type="date" id="dateFilter" />
       </div>
-      <button id="addBook">추가</button>
-    </section>
+    </header>
     <section class="card">
-      <h3>목록</h3>
-      <ul id="bookList"></ul>
+      <h3>Add</h3>
+      <div class="lgrid">
+        <input id="bTitle" placeholder="Title" />
+        <input id="bAuthor" placeholder="Author" />
+        <select id="bStatus"><option>Reading</option><option>Done</option><option>Want</option></select>
+        <select id="bRating"><option value="0">★ -</option><option value="1">★ 1</option><option value="2">★ 2</option><option value="3">★ 3</option><option value="4">★ 4</option><option value="5">★ 5</option></select>
+        <input id="bMemo" placeholder="Memo" />
+        <button id="addBook">Add</button>
+      </div>
     </section>
+    <div id="bookGrid" class="book-grid"></div>
   </div>
   <script src="../js/store.js"></script>
   <script src="../js/reading.js"></script>

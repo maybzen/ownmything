@@ -16,6 +16,7 @@ function apply(d) {
   const s = load(d);
   $("oneline").value = s.oneline || "";
   $("photoPrev").src = s.photo || "";
+  $("headDate").textContent = d;
   $("goToday").href = `../today.html?date=${d}`;
 }
 function save() {
@@ -34,6 +35,13 @@ $("photo").onchange = (e) => {
   r.onload = () => { $("photoPrev").src = r.result; save(); };
   r.readAsDataURL(f);
 };
+$("delPhoto").onclick = () => {
+  if (!$("photoPrev").getAttribute("src")) return;
+  if (!confirm("Delete this photo?")) return;
+  $("photoPrev").setAttribute("src", "");
+  $("photo").value = "";
+  save();
+};
 $("oneline").addEventListener("input", save);
 picker.onchange = () => { date = picker.value; calYM = date.slice(0, 7); apply(date); renderCal(); };
 
@@ -50,7 +58,6 @@ function renderCal() {
     h.textContent = d;
     box.appendChild(h);
   });
-  renderGallery(y, m);
   const first = new Date(y, m - 1, 1).getDay();
   const days = new Date(y, m, 0).getDate();
   for (let i = 0; i < first; i++) box.appendChild(document.createElement("span"));
@@ -64,27 +71,6 @@ function renderCal() {
     c.onclick = () => { date = ds; picker.value = ds; apply(ds); renderCal(); };
     box.appendChild(c);
   }
-}
-function renderGallery(y, m) {
-  const box = $("gallery");
-  box.innerHTML = "";
-  const days = new Date(y, m, 0).getDate();
-  for (let d = days; d >= 1; d--) {
-    const ds = `${calYM}-${String(d).padStart(2, "0")}`;
-    const s = load(ds);
-    if (!s.photo) continue;
-    const item = document.createElement("button");
-    item.className = "gal-item";
-    const img = document.createElement("img");
-    img.src = s.photo;
-    img.loading = "lazy";
-    const cap = document.createElement("span");
-    cap.textContent = ds.slice(5);
-    item.append(img, cap);
-    item.onclick = () => { date = ds; picker.value = ds; apply(ds); renderCal(); window.scrollTo({ top: 0, behavior: "smooth" }); };
-    box.appendChild(item);
-  }
-  if (!box.children.length) box.innerHTML = "<p class='hint'>이번 달 사진 없음</p>";
 }
 function showTip(e, ds) {
   const s = load(ds);
@@ -118,6 +104,12 @@ $("calNext").onclick = () => {
   const d = new Date(y, m, 1);
   calYM = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   renderCal();
+};
+$("goTodayDate").onclick = () => {
+  date = Store.today();
+  picker.value = date;
+  calYM = date.slice(0, 7);
+  apply(date); renderCal();
 };
 
 apply(date);

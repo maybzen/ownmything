@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>설정 - ownmything</title>
+  <title>Settings - ownmything</title>
   <meta name="theme-color" content="#121316" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,13 +17,13 @@
 <body>
   <div class="page">
     <a class="back" href="../menu.html">← Menu</a> · <a class="back" href="../today.html">Today</a>
-    <h2>설정</h2>
+    <h2>Settings</h2>
 
     <section class="card">
-      <h3>테마</h3>
+      <h3>Theme</h3>
       <div class="theme-switch" style="justify-content:flex-start">
-        <button data-set-theme="mono">무채색</button>
-        <button data-set-theme="warm">웜</button>
+        <button data-set-theme="mono">Mono</button>
+        <button data-set-theme="warm">Warm</button>
       </div>
     </section>
 
@@ -39,15 +39,15 @@
       <h3>Members</h3>
       <div id="memberList"></div>
       <div class="row2" style="margin-top:8px">
-        <input id="inviteEmail" type="email" placeholder="초대할 이메일" />
+        <input id="inviteEmail" type="email" placeholder="Email to invite" />
         <button id="inviteBtn">Invite</button>
       </div>
       <p id="adminMsg" class="hint" style="margin-top:8px"></p>
     </section>
 
     <section class="card">
-      <h3>데이터</h3>
-      <button id="exportBtn" class="ghost-btn">내보내기 (JSON 저장)</button>
+      <h3>Data</h3>
+      <button id="exportBtn" class="ghost-btn">Export (JSON)</button>
     </section>
   </div>
   <script src="../js/store.js"></script>

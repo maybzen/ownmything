@@ -41,12 +41,12 @@ async function loadMembers() {
       const l = document.createElement("label");
       l.className = "habit";
       const s = document.createElement("span");
-      s.textContent = `${u.email}${u.confirmed ? "" : " (미확인)"}`;
+      s.textContent = `${u.email}${u.confirmed ? "" : " (pending)"}`;
       l.appendChild(s);
       const b = document.createElement("button");
       b.textContent = "×";
       b.onclick = async () => {
-        if (!confirm(`${u.email} 삭제할까? 기록도 함께 지워져.`)) return;
+        if (!confirm(`${u.email} Delete this member and all their data?`)) return;
         try { await callAdmin({ action: "delete", id: u.id }); loadMembers(); }
         catch (e) { $("adminMsg").textContent = e.message; }
       };
@@ -61,7 +61,7 @@ $("inviteBtn").onclick = async () => {
   $("adminMsg").textContent = "";
   try {
     await callAdmin({ action: "invite", email });
-    $("adminMsg").textContent = "초대 메일 발송됨";
+    $("adminMsg").textContent = "Invite sent";
     $("inviteEmail").value = "";
     loadMembers();
   } catch (e) { $("adminMsg").textContent = e.message; }

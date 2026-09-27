@@ -36,7 +36,7 @@ function save() {
 function monthKey(d) { return "month:" + d.slice(0, 7); }
 
 // --- weekday + holiday red ---
-const YO = ["일", "월", "화", "수", "목", "금", "토"];
+const YO = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const FALLBACK_HOL = ["01-01", "03-01", "05-05", "06-06", "08-15", "10-03", "10-09", "12-25"];
 let holSet = new Set(FALLBACK_HOL);
 async function loadHolidays() {
@@ -68,7 +68,7 @@ function renderDateTitle() {
   title.appendChild(s);
   if (hol && dt.getDay() !== 0) {
     const s2 = document.createElement("span");
-    s2.textContent = " · 휴일";
+    s2.textContent = " · Holiday";
     s2.className = "holiday";
     title.appendChild(s2);
   }

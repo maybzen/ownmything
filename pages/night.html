@@ -18,18 +18,21 @@
   <div class="page">
     <a class="back" href="../menu.html">← Menu</a> · <a class="back" href="../today.html">Today</a>
     <header class="today-head">
-      <h2>Night</h2>
-      <input type="date" id="datePicker" />
+      <h2>Night <span class="hint" id="headDate"></span></h2>
+      <div class="head-right">
+        <button id="goTodayDate" class="ghost-btn">Today</button>
+        <input type="date" id="datePicker" />
+      </div>
     </header>
     <section class="card">
       <label>One line<input id="oneline" placeholder="" /></label>
       <label class="photo" style="margin-top:8px">Photo <input type="file" id="photo" accept="image/*" /></label>
       <img id="photoPrev" class="photo-prev" alt="" />
-      <a id="goToday" class="hint" href="#">Today로 보기 →</a>
-    </section>
-    <section class="card">
-      <h3>Photos</h3>
-      <div id="gallery" class="gal"></div>
+      <div class="row2" style="margin-top:8px">
+        <span></span>
+        <button id="delPhoto" class="ghost-btn">Delete photo</button>
+      </div>
+      <a id="goToday" class="hint" href="#">Open in Today →</a>
     </section>
     <section class="card">
       <div class="card-head">

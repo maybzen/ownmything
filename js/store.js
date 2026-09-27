@@ -5,8 +5,8 @@ window.Store = (() => {
     try { return localStorage.getItem(PKEY) || "me"; } catch (e) { return "me"; }
   };
   const profiles = () => {
-    try { return JSON.parse(localStorage.getItem(LKEY)) || [{ id: "me", name: "나" }]; }
-    catch (e) { return [{ id: "me", name: "나" }]; }
+    try { return JSON.parse(localStorage.getItem(LKEY)) || [{ id: "me", name: "Me" }]; }
+    catch (e) { return [{ id: "me", name: "Me" }]; }
   };
   const k = (s) => `ownmything:${profile()}:${s}`;
   const p2 = (n) => String(n).padStart(2, "0");
