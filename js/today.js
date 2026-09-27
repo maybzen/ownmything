@@ -377,6 +377,32 @@ function paintCell(c) {
   const v = cells[c.dataset.id];
   c.className = "cell" + (v ? ` fill ${v}` : "");
 }
+function renderAllDay(list) {
+  let box = $("alldayBox");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "alldayBox";
+    $("blocks").parentElement.insertBefore(box, $("blocks"));
+  }
+  box.innerHTML = "";
+  if (!list.length) { box.style.display = "none"; return; }
+  box.style.display = "block";
+  const h = document.createElement("p");
+  h.className = "hint";
+  h.textContent = "All day";
+  box.appendChild(h);
+  list.forEach(ev => {
+    const l = document.createElement("div");
+    l.className = "todo-check";
+    const dot = document.createElement("span");
+    dot.className = "dot " + calColor(ev);
+    const sp = document.createElement("span");
+    sp.className = "txt";
+    sp.textContent = calTitle(ev.title);
+    l.append(dot, sp);
+    box.appendChild(l);
+  });
+}
 function paintAll() {
   tt.querySelectorAll(".cell").forEach(paintCell);
 }
@@ -534,7 +560,9 @@ window.pullCalendar = async function () {
   const prev = load(date).autoCal || {};
   Object.keys(prev).forEach(id => { if (cells[id] === prev[id]) delete cells[id]; });
   const autoCal = {};
+  const allDay = [];
   dayEvents.forEach(ev => {
+    if (ev.allDay) { allDay.push(ev); return; }
     const color = calColor(ev);
     const memo = calTitle(ev.title);
     const ids = slotsFor(ev.start, ev.end).filter(id => !cells[id]);
@@ -543,6 +571,7 @@ window.pullCalendar = async function () {
   });
   const s = load(date);
   s.autoCal = autoCal;
+  s.allDay = allDay.map(e => ({ title: calTitle(e.title), cal: e.cal }));
   Store.set("d:" + date, s);
   paintAll(); renderBlocks(); save();
   const n = dayEvents.length;
@@ -551,6 +580,7 @@ window.pullCalendar = async function () {
     st.textContent = `${date} · ${tag} · ${n} events`;
   }
   renderReminders(res.todos || []);
+  renderAllDay(allDay);
 };
 let lastMonthPulled = "";
 let monthCache = null;
