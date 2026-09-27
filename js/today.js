@@ -281,28 +281,6 @@ function renderMonthTodos() {
 }
 $("addTodo").onclick = () => { todos.push({ id: uid(), t: "", done: false, editing: true }); renderTodos(); };
 $("addMonthTodo").onclick = () => { monthTodos.push({ id: uid(), t: "", done: false, editing: true }); renderMonthTodos(); };
-$("pasteOpen").onclick = () => {
-  const b = $("pasteBox");
-  b.style.display = b.style.display === "none" ? "block" : "none";
-  $("pasteDone").style.display = b.style.display === "none" ? "none" : "inline-block";
-  if (b.style.display === "block") b.focus();
-};
-$("pasteDone").onclick = () => {
-  const lines = $("pasteBox").value.split("\n").map(x => x.trim()).filter(Boolean);
-  let n = 0;
-  lines.forEach(ln => {
-    const m = ln.match(/^(\d{4}-\d{2}-\d{2})\s+(.*)$/);
-    const t = m ? m[2] : ln;
-    if (!t) return;
-    todos.push({ id: uid(), t, done: false });
-    n++;
-  });
-  $("pasteBox").value = "";
-  $("pasteBox").style.display = "none";
-  $("pasteDone").style.display = "none";
-  save(); renderTodos();
-  if (n) $("habitRate").textContent = `+${n} imported`;
-};
 $("loadMonthCal").onclick = async () => {
   const box = $("monthCals");
   box.innerHTML = "<p class='hint'>Loading…</p>";
@@ -609,47 +587,30 @@ let monthCache = null;
 function renderMonthCals(events, ym) {
   const box = $("monthCals");
   box.innerHTML = "";
-  const byDay = {};
-  events.forEach(ev => {
-    if (!ev.day || ev.day.slice(0, 7) !== ym) return;
-    (byDay[ev.day] = byDay[ev.day] || []).push(ev);
-  });
-  const [y, m] = ym.split("-").map(Number);
-  const first = new Date(y, m - 1, 1).getDay();
-  const days = new Date(y, m, 0).getDate();
-  const grid = document.createElement("div");
-  grid.className = "mcal";
-  ["S","M","T","W","T","F","S"].forEach(d => {
-    const h = document.createElement("span");
-    h.className = "mcal-h";
-    h.textContent = d;
-    grid.appendChild(h);
-  });
-  for (let i = 0; i < first; i++) grid.appendChild(document.createElement("span"));
-  const today = Store.today();
-  for (let d = 1; d <= days; d++) {
-    const ds = `${ym}-${String(d).padStart(2, "0")}`;
-    const cell = document.createElement("div");
-    cell.className = "mcal-d" + (ds === today ? " cur" : "");
-    const n = document.createElement("b");
-    n.textContent = d;
-    cell.appendChild(n);
-    (byDay[ds] || []).slice(0, 3).forEach(ev => {
-      const e = document.createElement("i");
-      e.className = "mcal-e " + calColor(ev);
-      e.textContent = ev.allDay ? ev.title : `${String(Math.floor(ev.start / 60)).padStart(2, "0")} ${calTitle(ev.title)}`;
-      e.title = ev.title;
-      cell.appendChild(e);
-    });
-    const rest = (byDay[ds] || []).length - 3;
-    if (rest > 0) {
-      const r = document.createElement("u");
-      r.textContent = `+${rest}`;
-      cell.appendChild(r);
+  const items = events
+    .filter(ev => ev.day && ev.day.slice(0, 7) === ym)
+    .sort((a, b) => (a.day + String(a.start).padStart(4, "0")) < (b.day + String(b.start).padStart(4, "0")) ? -1 : 1);
+  if (!items.length) { box.innerHTML = "<p class='hint'>No events</p>"; return; }
+  let lastDay = "";
+  items.forEach(ev => {
+    if (ev.day !== lastDay) {
+      lastDay = ev.day;
+      const dh = document.createElement("p");
+      dh.className = "hint";
+      dh.textContent = ev.day.slice(5);
+      box.appendChild(dh);
     }
-    grid.appendChild(cell);
-  }
-  box.appendChild(grid);
+    const l = document.createElement("div");
+    l.className = "todo-check";
+    const dot = document.createElement("span");
+    dot.className = "dot " + calColor(ev);
+    const s = document.createElement("span");
+    s.className = "txt";
+    const hh = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+    s.textContent = ev.allDay ? ev.title : `${hh(ev.start)} ${calTitle(ev.title)}`;
+    l.append(dot, s);
+    box.appendChild(l);
+  });
 }
 function renderReminders(list) {
   const box = $("remsBox");
