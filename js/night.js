@@ -16,29 +16,7 @@ function apply(d) {
   const s = load(d);
   $("oneline").value = s.oneline || "";
   $("photoPrev").src = s.photo || "";
-  renderSummary(s);
-}
-function renderSummary(s) {
-  const parts = [];
-  if (s.lastSleep || s.wake) parts.push(`Sleep ${s.lastSleep || "?"} → ${s.wake || "?"}( ${s.sleepH || "?"}h )`);
-  if (Array.isArray(s.todos) && s.todos.length) {
-    const done = s.todos.filter(t => t.done).length;
-    parts.push(`To Do ${done}/${s.todos.length}`);
-  }
-  if (s.habitDone) {
-    const defs = Store.get("habit-defs", "ownmything:habit-defs") || [];
-    if (defs.length) {
-      const hit = defs.filter(h => s.habitDone[h.id]).length;
-      parts.push(`Habit ${Math.round(100 * hit / defs.length)}%`);
-    }
-  }
-  try {
-    const txns = Store.get("ledger-txns", "ownmything:ledger-txns") || [];
-    const exp = txns.filter(t => t.date === date && t.kind === "expense").reduce((a, t) => a + t.amt, 0);
-    if (exp) parts.push(`지출 ${exp.toLocaleString()}원`);
-  } catch (e) {}
-  $("daySummary").textContent = parts.join(" · ") || "기록 없음";
-  $("goToday").href = `../today.html?date=${date}`;
+  $("goToday").href = `../today.html?date=${d}`;
 }
 function save() {
   const s = load(date);
@@ -72,6 +50,7 @@ function renderCal() {
     h.textContent = d;
     box.appendChild(h);
   });
+  renderGallery(y, m);
   const first = new Date(y, m - 1, 1).getDay();
   const days = new Date(y, m, 0).getDate();
   for (let i = 0; i < first; i++) box.appendChild(document.createElement("span"));
@@ -85,6 +64,27 @@ function renderCal() {
     c.onclick = () => { date = ds; picker.value = ds; apply(ds); renderCal(); };
     box.appendChild(c);
   }
+}
+function renderGallery(y, m) {
+  const box = $("gallery");
+  box.innerHTML = "";
+  const days = new Date(y, m, 0).getDate();
+  for (let d = days; d >= 1; d--) {
+    const ds = `${calYM}-${String(d).padStart(2, "0")}`;
+    const s = load(ds);
+    if (!s.photo) continue;
+    const item = document.createElement("button");
+    item.className = "gal-item";
+    const img = document.createElement("img");
+    img.src = s.photo;
+    img.loading = "lazy";
+    const cap = document.createElement("span");
+    cap.textContent = ds.slice(5);
+    item.append(img, cap);
+    item.onclick = () => { date = ds; picker.value = ds; apply(ds); renderCal(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+    box.appendChild(item);
+  }
+  if (!box.children.length) box.innerHTML = "<p class='hint'>이번 달 사진 없음</p>";
 }
 function showTip(e, ds) {
   const s = load(ds);

@@ -249,7 +249,7 @@ const checkedRuns = new Set();
 
 $("clearDay").onclick = () => {
   if (!Object.keys(cells).length) return;
-  if (!confirm("오늘 타임플랜 다 지울까?")) return;
+  if (!confirm("Clear today's time plan?")) return;
   cells = {}; labels = {}; autoSleepIds = []; checkedRuns.clear();
   paintAll(); renderBlocks(); save();
 };
