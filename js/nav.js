@@ -7,9 +7,12 @@
   const cur = (f) => (path.endsWith(f) ? " on" : "");
   const links = [
     ["today.html", "view_day", "Today"],
-    ["pages/archive.html", "calendar_month", "Archive"],
     ["pages/habit.html", "checklist", "Habit"],
     ["pages/ledger.html", "account_balance_wallet", "Ledger"],
+    ["pages/reading.html", "auto_stories", "Library"],
+    ["pages/night.html", "bedtime", "Night"],
+    ["pages/archive.html", "calendar_month", "Archive"],
+    ["pages/settings.html", "settings", "Settings"],
   ];
 
   // bottom bar (mobile only, shown via CSS)
@@ -21,14 +24,11 @@
     '<span class="material-symbols-outlined">' + i + '</span>' + t + '</a>').join("");
   document.body.appendChild(el);
 
-  // footer (desktop)
+  // footer / bottom bar share the same list
   const f = document.createElement("div");
   f.id = "dfoot";
   f.className = "dfoot";
   f.innerHTML = links.map(([p, i, t]) =>
-    '<a href="' + base + p + '"' + (path.endsWith(p) ? ' class="on"' : '') + '>' + t + '</a>').join("") +
-    '<a href="' + base + 'pages/night.html"' + (path.endsWith("night.html") ? ' class="on"' : '') + '>Night</a>' +
-    '<a href="' + base + 'pages/reading.html"' + (path.endsWith("reading.html") ? ' class="on"' : '') + '>Library</a>' +
-    '<a href="' + base + 'pages/settings.html"' + (path.endsWith("settings.html") ? ' class="on"' : '') + '>Settings</a>';
+    '<a href="' + base + p + '"' + (path.endsWith(p) ? ' class="on"' : '') + '>' + t + '</a>').join("");
   document.body.appendChild(f);
 })();

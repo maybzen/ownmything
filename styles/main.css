@@ -153,7 +153,7 @@ h1, h2 {
 .holiday { color: #c0392b; }
 .hm { display: flex; gap: 4px; align-items: stretch; min-width: 0; }
 .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.menu-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 40px; }
+.menu-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 0 20px; }
 .menu-list { display: flex; flex-direction: column; gap: 18px; text-align: center; }
 .menu-list a { font-family: "Newsreader", Georgia, serif; font-size: 1.8rem; color: var(--ink); text-decoration: none; }
 .foot-gear { color: var(--muted); text-decoration: none; }
@@ -269,14 +269,13 @@ h1, h2 {
 .mlist .ml { white-space: nowrap; }
 .mlist i { color: var(--line); font-style: normal; margin: 0 7px; }
 .bnav { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: color-mix(in srgb, var(--card) 92%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
-.dfoot { display: none; }
 .dfoot a { font-size: 0.82rem; color: var(--muted); text-decoration: none; border-bottom: 1px solid transparent; }
 .dfoot a:hover { color: var(--ink); border-bottom-color: var(--line); }
 .dfoot a.on { color: var(--ink); border-bottom-color: var(--ink); }
-.bna { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0 9px; font-size: 0.62rem; color: var(--muted); text-decoration: none; letter-spacing: 0.03em; }
-.bna .material-symbols-outlined { font-size: 20px; }
+.bna { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 0 8px; font-size: 0.55rem; color: var(--muted); text-decoration: none; letter-spacing: 0.02em; min-width: 0; }
+.bna .material-symbols-outlined { font-size: 19px; }
 .bna.on { color: var(--ink); font-weight: 600; }
-@media (min-width: 900px) { .bnav { display: none; } .dfoot { display: flex; justify-content: center; gap: 20px; margin: 56px 0 32px; } }
+@media (min-width: 900px) { .bnav { display: none; } .dfoot { display: flex; } }
 @media (max-width: 899px) { .bnav { display: flex; } .dfoot { display: none; } .pad-b { height: 72px; } }
 .tog { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.9rem; padding: 7px 0; }
 .tog input { width: auto; }
