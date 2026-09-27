@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>가계부 - ownmything</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="../js/theme.js"></script>
+</head>
+<body>
+  <div class="page">
+    <a class="back" href="../today.html">← 오늘 하루</a>
+    <div class="theme-switch" style="justify-content:flex-end;margin-top:8px">
+      <button data-set-theme="mono">무채색</button>
+      <button data-set-theme="warm">웜</button>
+    </div>
+    <h2>가계부</h2>
+    <p class="hint">지출·소득 + 카드 할부 + 대출. 노션 복제 꼬임 없이 새로.</p>
+
+    <section class="card">
+      <h3>월간 요약 <input type="month" id="mPicker" /></h3>
+      <p id="summary" class="hint"></p>
+    </section>
+
+    <section class="card">
+      <h3>입력</h3>
+      <div class="lgrid">
+        <input type="date" id="tDate" />
+        <select id="tKind"><option value="expense">지출</option><option value="income">소득</option></select>
+        <select id="tCat"></select>
+        <input id="tAmt" type="number" placeholder="금액" />
+        <select id="tMethod"><option>현금</option><option>계좌</option><option>카드일시불</option><option>카드할부</option></select>
+        <input id="tMemo" placeholder="메모" />
+      </div>
+      <div class="lgrid" id="instRow" style="display:none">
+        <input id="tCard" placeholder="카드사 (예: 신한)" />
+        <input id="tMonths" type="number" min="2" max="36" value="6" />
+        <span class="hint">개월 할부 → 매달 자동 분할</span>
+      </div>
+      <button id="addTxn">추가</button>
+    </section>
+
+    <section class="card">
+      <h3>이번 달 내역</h3>
+      <ul id="txnList"></ul>
+    </section>
+
+    <section class="card">
+      <h3>카드 할부</h3>
+      <div id="cardList"></div>
+    </section>
+
+    <section class="card">
+      <h3>대출</h3>
+      <div class="lgrid">
+        <input id="loanName" placeholder="대출명 (예: 전세대출)" />
+        <input id="loanTotal" type="number" placeholder="원금" />
+        <input id="loanMonthly" type="number" placeholder="월 상환액" />
+        <button id="addLoan">등록</button>
+      </div>
+      <div id="loanList"></div>
+    </section>
+  </div>
+  <script src="../js/ledger.js"></script>
+</body>
+</html>

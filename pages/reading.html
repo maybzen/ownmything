@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>독서 - ownmything</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="../js/theme.js"></script>
+</head>
+<body>
+  <div class="page">
+    <a class="back" href="../today.html">← 오늘 하루</a>
+    <div class="theme-switch" style="justify-content:flex-end;margin-top:8px">
+      <button data-set-theme="mono">무채색</button>
+      <button data-set-theme="warm">웜</button>
+    </div>
+    <h2>독서 기록</h2>
+    <p class="hint">읽을 때 바로 입력. 따로 모아보기.</p>
+    <section class="card">
+      <h3>입력</h3>
+      <div class="lgrid">
+        <input id="bTitle" placeholder="책 제목" />
+        <input id="bAuthor" placeholder="저자" />
+        <select id="bStatus"><option>읽는 중</option><option>완독</option><option>읽고 싶음</option></select>
+        <input id="bMemo" placeholder="한줄 메모" />
+      </div>
+      <button id="addBook">추가</button>
+    </section>
+    <section class="card">
+      <h3>목록</h3>
+      <ul id="bookList"></ul>
+    </section>
+  </div>
+  <script src="../js/reading.js"></script>
+</body>
+</html>

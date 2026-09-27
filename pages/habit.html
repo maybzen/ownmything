@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Habit - ownmything</title>
+  <link rel="stylesheet" href="../styles/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="../js/theme.js"></script>
+</head>
+<body>
+  <div class="page">
+    <a class="back" href="../today.html">← 오늘 하루</a>
+    <div class="theme-switch" style="justify-content:flex-end;margin-top:8px">
+      <button data-set-theme="mono">무채색</button>
+      <button data-set-theme="warm">웜</button>
+    </div>
+    <h2>해빗 트래커</h2>
+    <p class="hint">노션처럼 매일 체크. 주간·월간 달성률.</p>
+
+    <section class="card">
+      <h3>해빗 관리</h3>
+      <div id="defs"></div>
+      <div class="row2">
+        <input id="newDef" placeholder="새 해빗" />
+        <button id="addDef">추가</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>주간 <span class="hint" id="weekLabel"></span></h3>
+      <div id="weekTable" class="htable"></div>
+      <div id="weekRates" class="rates"></div>
+    </section>
+
+    <section class="card">
+      <h3>월간 <span class="hint" id="monthLabel"></span></h3>
+      <input type="month" id="monthPicker" />
+      <div id="monthRates" class="rates"></div>
+    </section>
+  </div>
+  <script src="../js/habit.js"></script>
+</body>
+</html>
