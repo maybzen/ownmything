@@ -304,18 +304,19 @@ function renderBlocks() {
     if (txt) {
       const byHour = {};
       r.ids.forEach(id => { (byHour[id.slice(0, 2)] = byHour[id.slice(0, 2)] || []).push(id); });
-      Object.values(byHour).forEach(ids => {
-        const first = cellEl(ids[0]);
-        if (!first) return;
+      const segs = Object.values(byHour);
+      const mid = segs[Math.floor(segs.length / 2)];
+      const first = cellEl(mid[0]);
+      if (first) {
         const grid = first.parentElement;
-        const startIdx = Number(ids[0].slice(3)) / 10;
+        const startIdx = Number(mid[0].slice(3)) / 10;
         const o = document.createElement("div");
         o.className = "run-label";
         o.style.left = `calc(${(startIdx / 6) * 100}% + 1px)`;
-        o.style.width = `calc(${(ids.length / 6) * 100}% - 2px)`;
+        o.style.width = `calc(${(mid.length / 6) * 100}% - 2px)`;
         o.textContent = txt;
         grid.appendChild(o);
-      });
+      }
     }
     const row = document.createElement("div");
     row.className = "block-row";
