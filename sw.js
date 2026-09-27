@@ -1,4 +1,4 @@
-const CACHE = "ownmything-v5";
+const CACHE = "ownmything-v6";
 const ASSETS = [
   "./", "./index.html", "./menu.html", "./today.html",
   "./styles/main.css",
@@ -14,9 +14,9 @@ self.addEventListener("activate", (e) => {
 });
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET" || !e.request.url.startsWith(self.location.origin)) return;
-  e.respondWith(caches.match(e.request).then((hit) => hit || fetch(e.request).then((res) => {
+  e.respondWith(fetch(e.request).then((res) => {
     const copy = res.clone();
     caches.open(CACHE).then((c) => c.put(e.request, copy));
     return res;
-  }).catch(() => caches.match("./index.html"))));
+  }).catch(() => caches.match(e.request).then((hit) => hit || caches.match("./index.html"))));
 });
