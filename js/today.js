@@ -229,7 +229,7 @@ function todoRow(item, list, render, box) {
   } else {
     const s = document.createElement("span");
     s.textContent = item.t;
-    if (item.done) s.className = "done";
+    s.className = "txt" + (item.done ? " done" : "");
     s.onclick = () => { item.editing = true; render(); };
     const del = document.createElement("button");
     del.textContent = "×";
@@ -481,18 +481,25 @@ window.pullCalendar = async function () {
   let session = null;
   try { session = await Auth.session(); } catch (e) { if (st) st.textContent = "Sync failed (session)"; return; }
   if (!session) { if (st) st.textContent = "Sync off"; return; }
-  let res;
-  try {
-    const r = await Auth.sb.functions.invoke("calendar-sync", { body: { date } });
-    if (r.error) throw r.error;
-    res = r.data;
-  } catch (e) { if (st) st.textContent = "Sync failed (network)"; return; }
-  if (!res || res.error) { if (st) st.textContent = "Sync failed: " + (res ? res.error : "?"); return; }
+  const ym = date.slice(0, 7);
+  if (ym !== lastMonthPulled) {
+    let res;
+    try {
+      const r = await Auth.sb.functions.invoke("calendar-sync", { body: { month: ym } });
+      if (r.error) throw r.error;
+      res = r.data;
+    } catch (e) { if (st) st.textContent = "Sync failed (network)"; return; }
+    if (!res || res.error || !Array.isArray(res.events)) { if (st) st.textContent = "Sync failed: " + (res ? res.error : "?"); return; }
+    lastMonthPulled = ym;
+    monthCache = res;
+  }
+  const res = monthCache;
+  const dayEvents = (res.events || []).filter(ev => ev.day === date);
   // clear previous auto-fill
   const prev = load(date).autoCal || {};
   Object.keys(prev).forEach(id => { if (cells[id] === prev[id]) delete cells[id]; });
   const autoCal = {};
-  (res.events || []).forEach(ev => {
+  dayEvents.forEach(ev => {
     const color = calColor(ev);
     const memo = calTitle(ev.title);
     const ids = slotsFor(ev.start, ev.end).filter(id => !cells[id]);
@@ -503,27 +510,17 @@ window.pullCalendar = async function () {
   s.autoCal = autoCal;
   Store.set("d:" + date, s);
   paintAll(); renderBlocks(); save();
-  const n = (res.events || []).length;
+  const n = dayEvents.length;
   if (st) {
     const now = new Date();
     st.textContent = n ? `Synced ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} · ${n} events` : "No events today";
   }
   renderReminders(res.todos || []);
-  pullMonth(date.slice(0, 7));
+  renderMonthCals(res.events || [], ym);
 };
 let lastMonthPulled = "";
-async function pullMonth(ym) {
-  if (!window.Auth || !Auth.sb || ym === lastMonthPulled) return;
-  let session = null;
-  try { session = await Auth.session(); } catch (e) { return; }
-  if (!session) return;
-  lastMonthPulled = ym;
-  let res;
-  try {
-    const r = await Auth.sb.functions.invoke("calendar-sync", { body: { month: ym } });
-    res = r.data;
-  } catch (e) { return; }
-  if (!res || res.error || !Array.isArray(res.events)) return;
+let monthCache = null;
+function renderMonthCals(events, ym) {
   const box = $("monthCals");
   box.innerHTML = "";
   const items = res.events
@@ -544,6 +541,7 @@ async function pullMonth(ym) {
     const dot = document.createElement("span");
     dot.className = "dot " + calColor(ev);
     const s = document.createElement("span");
+    s.className = "txt";
     const hh = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
     s.textContent = `${hh(ev.start)} ${calTitle(ev.title)}`;
     l.append(dot, s);
@@ -553,14 +551,18 @@ async function pullMonth(ym) {
   });
 }
 function renderReminders(list) {
-  const card = $("remCard"), box = $("rems");
+  const box = $("remsBox");
   box.innerHTML = "";
-  if (!list.length) { card.style.display = "none"; return; }
-  card.style.display = "";
+  if (!list.length) return;
+  const hint = document.createElement("p");
+  hint.className = "hint";
+  hint.textContent = "Reminders";
+  box.appendChild(hint);
   list.slice(0, 20).forEach(t => {
     const l = document.createElement("div");
     l.className = "todo-check";
     const s = document.createElement("span");
+    s.className = "txt";
     s.textContent = t.title + (t.due ? ` (${t.due.slice(0, 10)})` : "");
     const add = document.createElement("button");
     add.textContent = "+ To Do";
