@@ -300,7 +300,7 @@ function renderMonthTodos() {
     box.appendChild(todoRow(monthTodos[monthTodos.length - 1], monthTodos, renderMonthTodos, box, { chain: true, draft: true }));
   }
 }
-$("loadMonthCal").onclick = () => autoMonth();
+$("loadMonthCal").onclick = () => { autoMonthDone = ""; autoMonth(); pullCalendar(); };
 let autoMonthBusy = false, autoMonthDone = "";
 async function autoMonth() {
   const ym = date.slice(0, 7);
@@ -568,17 +568,17 @@ async function invokeCal(body) {
 }
 window.pullCalendar = async function () {
   const st = $("calStatus");
-  if (st) st.textContent = "Syncing…";
-  if (!window.Auth || !Auth.sb) { if (st) st.textContent = "Sync off"; return; }
+  const say = (t) => { if (st) st.textContent = t; };
+  say("");
+  if (!window.Auth || !Auth.sb) { say(""); return; }
   let session = null;
-  try { session = await Auth.session(); } catch (e) { if (st) st.textContent = "Sync failed (session)"; return; }
-  if (!session) { if (st) st.textContent = "Sync off"; return; }
-  const ym = date.slice(0, 7);
+  try { session = await Auth.session(); } catch (e) { say(""); return; }
+  if (!session) { say(""); return; }
   let res = null;
   try {
     res = await invokeCal({ date });
-  } catch (e) { if (st) st.textContent = "Sync failed (network)"; return; }
-  if (!res || res.error || !Array.isArray(res.events)) { if (st) st.textContent = "Sync failed: " + (res ? res.error : "?"); return; }
+  } catch (e) { say(""); return; }
+  if (!res || res.error || !Array.isArray(res.events)) { say(""); return; }
   lastMonthPulled = "";
   const dayEvents = res.events;
   // clear previous auto-fill
@@ -601,10 +601,7 @@ window.pullCalendar = async function () {
   Store.set("d:" + date, s);
   paintAll(); renderBlocks(); save();
   const n = dayEvents.length;
-  if (st) {
-    const tag = res.cached ? "Cached" : "Synced";
-    st.textContent = `${date} · ${tag} · ${n} events`;
-  }
+  if (st) st.textContent = "";
   renderReminders(res.todos || []);
   renderAllDay(allDay);
   autoMonth();
