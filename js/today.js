@@ -220,8 +220,9 @@ function todoRow(item, list, render, box, opts) {
     const inp = document.createElement("input");
     inp.className = "todo-edit";
     inp.value = item.t || "";
-    inp.placeholder = "To do";
+    inp.placeholder = o.draft ? "To do" : "To do";
     const commit = () => {
+      if (o.draft && !item.t) { delete item.editing; list.splice(list.indexOf(item), 1); render(); return; }
       item.t = inp.value.trim();
       delete item.editing;
       if (!item.t) list.splice(list.indexOf(item), 1);
@@ -238,7 +239,8 @@ function todoRow(item, list, render, box, opts) {
       }
       if (e.key === "Escape") { list.splice(list.indexOf(item), 1); save(); render(); }
     };
-    inp.onblur = commit;
+    if (o.draft) inp.onblur = () => {};
+    else inp.onblur = commit;
     l.appendChild(inp);
     requestAnimationFrame(() => inp.focus());
   } else {
@@ -283,12 +285,20 @@ function bindGrip(grip, row, box, list) {
 function renderTodos() {
   const box = $("todos");
   box.innerHTML = "";
-  todos.forEach(t => box.appendChild(todoRow(t, todos, renderTodos, box)));
+  todos.forEach(t => box.appendChild(todoRow(t, todos, renderTodos, box, { chain: true })));
+  if (!todos.some(t => t.editing)) {
+    todos.push({ id: uid(), t: "", done: false, editing: true });
+    box.appendChild(todoRow(todos[todos.length - 1], todos, renderTodos, box, { chain: true, draft: true }));
+  }
 }
 function renderMonthTodos() {
   const box = $("monthTodos");
   box.innerHTML = "";
   monthTodos.forEach(t => box.appendChild(todoRow(t, monthTodos, renderMonthTodos, box, { chain: true })));
+  if (!monthTodos.some(t => t.editing)) {
+    monthTodos.push({ id: uid(), t: "", done: false, editing: true });
+    box.appendChild(todoRow(monthTodos[monthTodos.length - 1], monthTodos, renderMonthTodos, box, { chain: true, draft: true }));
+  }
 }
 $("addTodo").onclick = () => { todos.push({ id: uid(), t: "", done: false, editing: true }); renderTodos(); };
 $("addMonthTodo").onclick = () => { monthTodos.push({ id: uid(), t: "", done: false, editing: true }); renderMonthTodos(); };
