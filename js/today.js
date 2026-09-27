@@ -491,18 +491,26 @@ function slotsFor(startMin, endMin) {
   return out;
 }
 async function invokeCal(body) {
-  try {
+  const call = async () => {
     const r = await Auth.sb.functions.invoke("calendar-sync", { body });
-    if (r.error) throw r.error;
+    if (r.error) {
+      let status = 0;
+      try { status = r.error.context ? r.error.context.status : 0; } catch (_) {}
+      const err = new Error(r.error.message || "failed");
+      err.status = status;
+      throw err;
+    }
     return r.data;
+  };
+  try {
+    return await call();
   } catch (e) {
+    if (e.status !== 401) throw e;
     try { await Auth.sb.auth.refreshSession(); } catch (_) {}
     try {
-      const r2 = await Auth.sb.functions.invoke("calendar-sync", { body });
-      if (r2.error) throw r2.error;
-      return r2.data;
+      return await call();
     } catch (e2) {
-      Auth.logout();
+      if (e2.status === 401) Auth.logout();
       throw e2;
     }
   }
