@@ -282,13 +282,15 @@ function renderMonthTodos() {
 $("addTodo").onclick = () => { todos.push({ id: uid(), t: "", done: false, editing: true }); renderTodos(); };
 $("addMonthTodo").onclick = () => { monthTodos.push({ id: uid(), t: "", done: false, editing: true }); renderMonthTodos(); };
 $("loadMonthCal").onclick = async () => {
+  const ym = date.slice(0, 7);
   const box = $("monthCals");
   box.innerHTML = "<p class='hint'>Loading…</p>";
   try {
     const data = await invokeCal({ month: ym, onlyMe: true });
-    if (!data || data.error) throw new Error((data && data.error) || "failed");
+    if (!data) { box.innerHTML = "<p class='hint'>ERR empty</p>"; return; }
+    if (data.error) { box.innerHTML = `<p class='hint'>ERR ${data.error}</p>`; return; }
     renderMonthCals(data.events || [], ym);
-  } catch (e) { box.innerHTML = "<p class='hint'>Load failed</p>"; }
+  } catch (e) { box.innerHTML = `<p class='hint'>ERR ${String(e).slice(0, 50)}</p>`; }
 };
 $("addDiv").onclick = () => { todos.push({ id: uid(), div: true }); save(); renderTodos(); };
 
