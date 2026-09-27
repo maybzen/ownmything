@@ -150,8 +150,8 @@ h1, h2 {
 .foot a { font-size: 0.9rem; }
 .page-title { margin-top: 22px; }
 .holiday { color: #c0392b; }
-.hm { display: flex; gap: 4px; align-items: center; }
-.hm select { flex: 1; min-width: 0; border: 1px solid var(--input-line); background: var(--card); color: var(--ink); border-radius: 8px; padding: 8px 4px; font-size: 0.9rem; font-family: inherit; }
+.hm { display: flex; gap: 4px; align-items: center; min-width: 0; }
+.hm select { flex: 1; min-width: 0; width: 100%; border: 1px solid var(--input-line); background: var(--card); color: var(--ink); border-radius: 8px; padding: 8px 2px; font-size: 0.9rem; font-family: inherit; }
 .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .menu-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 40px; }
 .menu-list { display: flex; flex-direction: column; gap: 18px; text-align: center; }
@@ -164,6 +164,14 @@ h1, h2 {
 .cal-day.mrate { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; cursor: default; }
 .cal-day.mrate b { font-weight: 600; font-size: 0.8rem; }
 .cal-day.mrate i { font-style: normal; font-size: 0.62rem; color: var(--muted); }
+.cal-day.mrate.r100 { background: #c9dfc9; }
+.cal-day.mrate.r100 i { color: #2f4a32; }
+.cal-day.mrate.r70 { background: #e6eed9; }
+.cal-day.mrate.r30 { background: #f6efdc; }
+.cal-day.mrate.r0 { opacity: 0.55; }
+.legend { display: flex; gap: 10px; margin-top: 8px; font-size: 0.72rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 4px; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 .cal-tip { position: absolute; width: 180px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px; z-index: 40; box-shadow: 0 8px 24px rgba(18,19,22,0.12); font-size: 0.8rem; }
 .cal-tip img { width: 100%; border-radius: 6px; }
 .gal { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -240,6 +248,13 @@ h1, h2 {
 .todo input[type="checkbox"] { width: 18px; height: 18px; }
 .todo input[type="checkbox"]:checked + input { text-decoration: line-through; color: var(--muted); }
 
+.chart { width: 100%; height: auto; margin-top: 8px; }
+.bars { display: flex; gap: 4px; align-items: flex-end; height: 90px; margin-top: 8px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; height: 100%; }
+.bar-col i { display: block; width: 100%; background: var(--cell); border-radius: 3px 3px 0 0; }
+.bar-col i.good { background: #c9dfc9; }
+.bar-col i.low { background: #efdcd4; }
+.bar-col span { font-size: 0.6rem; color: var(--muted); }
 .habit { display: flex; gap: 8px; align-items: center; padding: 6px 0; font-size: 0.9rem; }
 .habit input { width: auto; }
 .habit input[type="text"], .habit input:not([type]) { flex: 1; }
@@ -278,6 +293,7 @@ button.btn:active { transform: scale(0.98); }
 @media (max-width: 640px) {
   .page { padding: 40px 14px 80px; }
   .center h1 { font-size: 2.4rem; }
+  .card textarea, .card input, .card select { font-size: 16px; }
   .row3 { grid-template-columns: 1fr; }
   .habit-board { grid-template-columns: 1fr; }
   .cell { height: 28px; }
@@ -289,3 +305,12 @@ button.btn:active { transform: scale(0.98); }
 .theme-switch { display: flex; gap: 8px; justify-content: center; }
 .theme-switch button { border: 1px solid var(--input-line); background: var(--card); color: var(--muted); border-radius: 999px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer; }
 .theme-switch button.on { color: var(--ink); border-color: var(--ink); }
+.theme-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.theme-card { border: 1px solid var(--input-line); background: var(--card); color: var(--ink); border-radius: 12px; padding: 12px 8px; font-size: 0.8rem; cursor: pointer; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.theme-card.on { border-color: var(--ink); }
+.theme-card i { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); }
+.theme-card i.t-mono { background: #f9f9fb; }
+.theme-card i.t-warm { background: #fbf6ee; }
+.theme-card i.t-dark { background: #101014; }
+.profile-row { display: flex; gap: 12px; align-items: center; }
+.avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--ink); color: var(--bg); display: flex; align-items: center; justify-content: center; font-family: "Newsreader", serif; font-size: 1.2rem; flex: none; }

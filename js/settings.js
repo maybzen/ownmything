@@ -13,11 +13,21 @@ $("exportBtn").onclick = () => {
   a.download = "ownmything-backup.json";
   a.click();
 };
+$("goalWeight").onchange = () => Store.set("goal-weight", $("goalWeight").value);
 
 (async () => {
   const s = await Auth.guard();
   if (!s) return;
   $("accountEmail").textContent = s.user.email || "";
+  $("avatar").textContent = (s.user.email || "o").charAt(0).toUpperCase();
+  const gw = Store.get("goal-weight", "");
+  if (gw !== undefined) $("goalWeight").value = gw;
+  let n = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i) || "";
+    if (k.indexOf("ownmything:" + Store.profile() + ":d:") === 0) n++;
+  }
+  $("dayCount").textContent = n ? `${n} days recorded` : "No records yet";
   if (s.user.email === "dlwjdgus417@gmail.com") {
     $("adminCard").style.display = "";
     loadMembers();

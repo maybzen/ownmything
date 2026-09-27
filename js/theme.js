@@ -6,7 +6,10 @@
   }
   function apply(t) {
     document.documentElement.setAttribute("data-theme", t);
-    document.querySelectorAll(".theme-switch button").forEach(function (b) {
+    sync(t);
+  }
+  function sync(t) {
+    document.querySelectorAll("[data-set-theme]").forEach(function (b) {
       b.classList.toggle("on", b.getAttribute("data-set-theme") === t);
     });
   }
@@ -16,8 +19,10 @@
   };
   apply(current());
   document.addEventListener("DOMContentLoaded", function () {
-    apply(current());
-    document.querySelectorAll(".theme-switch button").forEach(function (b) {
+    sync(current());
+    document.querySelectorAll("[data-set-theme]").forEach(function (b) {
+      if (b.dataset.themeBound) return;
+      b.dataset.themeBound = "1";
       b.addEventListener("click", function () { window.setTheme(b.getAttribute("data-set-theme")); });
     });
   });

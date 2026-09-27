@@ -196,8 +196,10 @@ function renderMonth() {
     defs.forEach(def => { if (isDone(ds, def)) hit++; });
     const rate = defs.length ? Math.round(100 * hit / defs.length) : 0;
     const c = document.createElement("div");
-    c.className = "cal-day mrate" + (ds === today ? " cur" : "");
+    const lvl = rate >= 100 ? "r100" : rate >= 70 ? "r70" : rate >= 30 ? "r30" : "r0";
+    c.className = "cal-day mrate " + lvl + (ds === today ? " cur" : "");
     c.innerHTML = `<b>${d}</b><i>${rate}%</i>`;
+    c.title = `${ds} · ${rate}%`;
     box.appendChild(c);
   }
 }
