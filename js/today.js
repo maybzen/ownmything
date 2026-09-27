@@ -206,7 +206,11 @@ function todoRow(item, list, render, box) {
   const cb = document.createElement("input");
   cb.type = "checkbox"; cb.checked = !!item.done;
   cb.onchange = () => { item.done = cb.checked; save(); render(); };
-  l.appendChild(cb);
+  const grip0 = document.createElement("span");
+  grip0.className = "grip";
+  grip0.textContent = "⋮⋮";
+  l.append(grip0, cb);
+  bindGrip(grip0, l, box, list);
   if (item.editing) {
     const inp = document.createElement("input");
     inp.className = "todo-edit";
