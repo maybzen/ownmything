@@ -268,11 +268,16 @@ h1, h2 {
 .mlist { font-size: 0.8rem; line-height: 1.9; color: var(--ink); }
 .mlist .ml { white-space: nowrap; }
 .mlist i { color: var(--line); font-style: normal; margin: 0 7px; }
-.bnav { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: color-mix(in srgb, var(--card) 92%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.bnav { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: color-mix(in srgb, var(--card) 92%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.dfoot { display: none; }
+.dfoot a { font-size: 0.82rem; color: var(--muted); text-decoration: none; border-bottom: 1px solid transparent; }
+.dfoot a:hover { color: var(--ink); border-bottom-color: var(--line); }
+.dfoot a.on { color: var(--ink); border-bottom-color: var(--ink); }
 .bna { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0 9px; font-size: 0.62rem; color: var(--muted); text-decoration: none; letter-spacing: 0.03em; }
 .bna .material-symbols-outlined { font-size: 20px; }
 .bna.on { color: var(--ink); font-weight: 600; }
-@media (min-width: 900px) { .bnav { display: none; } }
+@media (min-width: 900px) { .bnav { display: none; } .dfoot { display: flex; justify-content: center; gap: 20px; margin: 56px 0 32px; } }
+@media (max-width: 899px) { .bnav { display: flex; } .dfoot { display: none; } .pad-b { height: 72px; } }
 .tog { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.9rem; padding: 7px 0; }
 .tog input { width: auto; }
 .ghost-btn.danger { color: #b3402f; border-color: #e0c3bd; }
