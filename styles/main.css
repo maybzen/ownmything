@@ -116,6 +116,10 @@ h1, h2 {
 .todo-check input[type="checkbox"] { width: 17px; height: 17px; }
 .todo-check span.done { text-decoration: line-through; color: var(--muted); }
 .todo-check button { border: none; background: none; cursor: pointer; color: var(--muted); font-size: 0.8rem; padding: 2px 4px; }
+.todo-check.dragging { opacity: 0.6; }
+.grip { cursor: grab; color: var(--muted); touch-action: none; padding: 4px 2px; flex: none; }
+.todo-check.divider { border-bottom: none; padding: 2px 0; }
+.todo-check.divider .divline { flex: 1; border-bottom: 1px solid var(--line); height: 12px; }
 .todo-check span { flex: 1; }
 .todo-edit { border: none !important; background: transparent !important; flex: 1; padding: 0 !important; }
 .block-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }

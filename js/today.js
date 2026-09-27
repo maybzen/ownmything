@@ -90,6 +90,7 @@ function apply(d) {
   labels = s.labels || {};
   autoSleepIds = s.autoSleep || [];
   todos = Array.isArray(s.todos) ? s.todos : [];
+  if (!s.todos && !todos.length) todos = [{ id: uid(), div: true }, { id: uid(), div: true }];
   monthTodos = Store.get(monthKey(d)) || [];
   const mn = ["January","February","March","April","May","June","July","August","September","October","November","December"][Number(d.slice(5, 7)) - 1];
   $("monthTitleSide").textContent = mn;
@@ -188,9 +189,24 @@ function paintSleepGrid() {
 }
 
 // --- todo (notion-style) ---
-function todoRow(item, list, render) {
+function todoRow(item, list, render, box) {
   const l = document.createElement("div");
   l.className = "todo-check";
+  l.dataset.id = item.id;
+  if (item.div) {
+    l.classList.add("divider");
+    const grip = document.createElement("span");
+    grip.className = "grip";
+    grip.textContent = "⋮⋮";
+    const line = document.createElement("span");
+    line.className = "divline";
+    const del = document.createElement("button");
+    del.textContent = "×";
+    del.onclick = () => { list.splice(list.indexOf(item), 1); save(); render(); };
+    l.append(grip, line, del);
+    bindGrip(grip, l, box, list);
+    return l;
+  }
   const cb = document.createElement("input");
   cb.type = "checkbox"; cb.checked = !!item.done;
   cb.onchange = () => { item.done = cb.checked; save(); render(); };
@@ -211,35 +227,61 @@ function todoRow(item, list, render) {
     l.appendChild(inp);
     requestAnimationFrame(() => inp.focus());
   } else {
+    const grip = document.createElement("span");
+    grip.className = "grip";
+    grip.textContent = "⋮⋮";
     const s = document.createElement("span");
     s.textContent = item.t;
     if (item.done) s.className = "done";
     s.onclick = () => { item.editing = true; render(); };
-    const up = document.createElement("button");
-    up.textContent = "↑";
-    up.onclick = () => { const i = list.indexOf(item); if (i > 0) { list.splice(i, 1); list.splice(i - 1, 0, item); save(); render(); } };
-    const dn = document.createElement("button");
-    dn.textContent = "↓";
-    dn.onclick = () => { const i = list.indexOf(item); if (i < list.length - 1) { list.splice(i, 1); list.splice(i + 1, 0, item); save(); render(); } };
     const del = document.createElement("button");
     del.textContent = "×";
     del.onclick = () => { list.splice(list.indexOf(item), 1); save(); render(); };
-    l.append(s, up, dn, del);
+    l.append(grip, s, del);
+    bindGrip(grip, l, box, list);
   }
   return l;
+}
+function bindGrip(grip, row, box, list) {
+  grip.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    row.classList.add("dragging");
+    const move = (ev) => {
+      const el = document.elementFromPoint(ev.clientX, ev.clientY);
+      const over = el ? el.closest(".todo-check") : null;
+      if (over && over !== row && over.parentElement === box) {
+        const r = over.getBoundingClientRect();
+        const after = (ev.clientY - r.top) > r.height / 2;
+        box.insertBefore(row, after ? over.nextSibling : over);
+      }
+    };
+    const up = () => {
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", up);
+      document.removeEventListener("pointercancel", up);
+      row.classList.remove("dragging");
+      const order = Array.from(box.children).map(c => c.dataset.id);
+      list.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+      save();
+    };
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", up);
+    document.addEventListener("pointercancel", up);
+  });
 }
 function renderTodos() {
   const box = $("todos");
   box.innerHTML = "";
-  todos.forEach(t => box.appendChild(todoRow(t, todos, renderTodos)));
+  todos.forEach(t => box.appendChild(todoRow(t, todos, renderTodos, box)));
 }
 function renderMonthTodos() {
   const box = $("monthTodos");
   box.innerHTML = "";
-  monthTodos.forEach(t => box.appendChild(todoRow(t, monthTodos, renderMonthTodos)));
+  monthTodos.forEach(t => box.appendChild(todoRow(t, monthTodos, renderMonthTodos, box)));
 }
 $("addTodo").onclick = () => { todos.push({ id: uid(), t: "", done: false, editing: true }); renderTodos(); };
 $("addMonthTodo").onclick = () => { monthTodos.push({ id: uid(), t: "", done: false, editing: true }); renderMonthTodos(); };
+$("addDiv").onclick = () => { todos.push({ id: uid(), div: true }); save(); renderTodos(); };
 
 // --- timetable ---
 const tt = $("timetable");
