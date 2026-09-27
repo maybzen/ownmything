@@ -307,6 +307,14 @@ $("moveMonth").onclick = () => {
   todos = todos.filter(t => t.div);
   commit(); renderTodos(); renderMonthTodos();
 };
+$("moveToday").onclick = () => {
+  const items = monthTodos.filter(t => !t.div && t.t.trim() && !t.done);
+  if (!items.length) return;
+  if (!confirm(`Move ${items.length} item(s) to today?`)) return;
+  todos.push(...items.map(t => ({ id: uid(), t: t.t, done: false })));
+  monthTodos = monthTodos.filter(t => items.indexOf(t) === -1);
+  commit(); renderTodos(); renderMonthTodos();
+};
 $("saveBtn").onclick = () => { commit(); };
 $("wipeBtn").onclick = () => {
   if (!confirm(`Delete all records for ${date}?`)) return;
