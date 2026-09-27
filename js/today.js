@@ -172,36 +172,24 @@ $("addMonthTodo").onclick = () => { monthTodos.push({ id: uid(), t: "", done: fa
 const tt = $("timetable");
 let curColor = "work";
 let painting = false, erasing = false, eraseColor = null;
-let selectMode = false;
-const selected = new Set();
+const checkedRuns = new Set();
 
-$("selectMode").onclick = () => {
-  selectMode = !selectMode;
-  selected.clear();
-  $("selectMode").textContent = selectMode ? "Done" : "Select";
-  updateSelBar();
-};
 $("clearDay").onclick = () => {
   if (!Object.keys(cells).length) return;
   if (!confirm("오늘 타임플랜 다 지울까?")) return;
-  cells = {}; labels = {}; autoSleepIds = [];
+  cells = {}; labels = {}; autoSleepIds = []; checkedRuns.clear();
   paintAll(); renderBlocks(); save();
 };
-$("delSel").onclick = () => {
-  selected.forEach(id => { delete cells[id]; });
-  selected.clear();
-  selectMode = false;
-  $("selectMode").textContent = "Select";
-  updateSelBar();
-  paintAll(); renderBlocks(); save();
-};
-function updateSelBar() {
-  $("selBar").style.display = selectMode ? "grid" : "none";
-  $("selCount").textContent = selected.size ? `${selected.size} selected` : "탭해서 선택";
-  tt.querySelectorAll(".cell").forEach(c => {
-    c.classList.toggle("sel", selected.has(c.dataset.id));
+$("delChecked").onclick = () => {
+  if (!checkedRuns.size) return;
+  checkedRuns.forEach(start => {
+    const r = runs().find(x => x.start === start);
+    if (r) r.ids.forEach(id => { delete cells[id]; });
+    delete labels[start];
   });
-}
+  checkedRuns.clear();
+  paintAll(); renderBlocks(); save();
+};
 
 document.querySelectorAll("#palette .sw").forEach(b => {
   b.onclick = () => {
@@ -242,14 +230,6 @@ document.addEventListener("pointerup", () => { if (painting) { painting = false;
 
 function toggleCell(c, drag) {
   const id = c.dataset.id;
-  if (selectMode) {
-    if (!drag) {
-      if (selected.has(id)) selected.delete(id);
-      else if (cells[id]) selected.add(id);
-      updateSelBar();
-    }
-    return;
-  }
   const v = cells[id];
   if (!drag) {
     if (v === curColor) { delete cells[id]; }
@@ -293,33 +273,45 @@ const CNAMES = { work: "Work", promise: "Meet", personal: "Me", family: "Family"
 function cellEl(id) {
   return tt.querySelector(`[data-id="${id}"]`);
 }
+function paintOverlays(list) {
+  tt.querySelectorAll(".run-label").forEach(o => o.remove());
+  list.forEach(r => {
+    const txt = labels[r.start] || "";
+    if (!txt) return;
+    const byHour = {};
+    r.ids.forEach(id => { (byHour[id.slice(0, 2)] = byHour[id.slice(0, 2)] || []).push(id); });
+    const segs = Object.values(byHour);
+    const mid = segs[Math.floor(segs.length / 2)];
+    const first = cellEl(mid[0]);
+    if (!first) return;
+    const grid = first.parentElement;
+    const startIdx = Number(mid[0].slice(3)) / 10;
+    const o = document.createElement("div");
+    o.className = "run-label";
+    o.style.left = `calc(${(startIdx / 6) * 100}% + 1px)`;
+    o.style.width = `calc(${(mid.length / 6) * 100}% - 2px)`;
+    o.textContent = txt;
+    grid.appendChild(o);
+  });
+}
 function renderBlocks() {
   Object.keys(labels).forEach(k => { if (!cells[k]) delete labels[k]; });
   tt.querySelectorAll(".cell").forEach(c => { c.textContent = ""; c.classList.remove("labeled"); });
-  tt.querySelectorAll(".run-label").forEach(o => o.remove());
   const box = $("blocks");
   box.innerHTML = "";
-  runs().forEach(r => {
+  const list = runs();
+  paintOverlays(list);
+  list.forEach(r => {
     const txt = labels[r.start] || "";
-    if (txt) {
-      const byHour = {};
-      r.ids.forEach(id => { (byHour[id.slice(0, 2)] = byHour[id.slice(0, 2)] || []).push(id); });
-      const segs = Object.values(byHour);
-      const mid = segs[Math.floor(segs.length / 2)];
-      const first = cellEl(mid[0]);
-      if (first) {
-        const grid = first.parentElement;
-        const startIdx = Number(mid[0].slice(3)) / 10;
-        const o = document.createElement("div");
-        o.className = "run-label";
-        o.style.left = `calc(${(startIdx / 6) * 100}% + 1px)`;
-        o.style.width = `calc(${(mid.length / 6) * 100}% - 2px)`;
-        o.textContent = txt;
-        grid.appendChild(o);
-      }
-    }
     const row = document.createElement("div");
     row.className = "block-row";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = checkedRuns.has(r.start);
+    cb.onchange = () => {
+      if (cb.checked) checkedRuns.add(r.start);
+      else checkedRuns.delete(r.start);
+    };
     const dot = document.createElement("span");
     dot.className = "dot " + r.color;
     const range = document.createElement("span");
@@ -331,11 +323,9 @@ function renderBlocks() {
     inp.oninput = () => {
       if (inp.value) labels[r.start] = inp.value;
       else delete labels[r.start];
-      const mid2 = cellEl(r.ids[Math.floor(r.ids.length / 2)]);
-      if (mid2) { mid2.textContent = inp.value; mid2.classList.toggle("labeled", !!inp.value); }
-      save();
+      save(); paintOverlays(runs());
     };
-    row.append(dot, range, inp);
+    row.append(cb, dot, range, inp);
     box.appendChild(row);
   });
 }

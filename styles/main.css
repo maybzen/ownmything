@@ -116,6 +116,7 @@ h1, h2 {
 .todo-check span { flex: 1; }
 .todo-edit { border: none !important; background: transparent !important; flex: 1; padding: 0 !important; }
 .block-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.block-row input[type="checkbox"] { flex: none; width: 16px; }
 .block-row input { border: none !important; background: transparent !important; border-bottom: 1px solid var(--line) !important; border-radius: 0 !important; flex: 1; padding: 2px !important; font-size: 0.85rem; }
 .cell.labeled { overflow: visible; text-align: center; position: relative; z-index: 1; }
 .cell.sel { outline: 2px solid var(--ink); outline-offset: -2px; }
