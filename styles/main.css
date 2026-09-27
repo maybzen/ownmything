@@ -121,7 +121,7 @@ h1, h2 {
 .card-head h3 { margin-bottom: 0; }
 .ghost-btn { border: 1px solid var(--input-line); background: transparent; color: var(--muted); border-radius: 999px; padding: 5px 12px; font-size: 0.78rem; cursor: pointer; }
 .ghost-btn.sm { padding: 2px 10px; font-size: 0.7rem; }
-.sub { font-size: 1rem; margin: 16px 0 8px; }
+.sub { font-size: 1rem; margin: 16px 0 8px; display: flex; align-items: center; justify-content: space-between; }
 .tmemo { grid-column: 1 / -1; border: none !important; background: transparent !important; font-size: 0.8rem; padding: 2px 0 6px 36px !important; color: var(--ink); }
 .todo-check { display: flex; gap: 8px; align-items: center; padding: 7px 0; font-size: 0.92rem; border-bottom: 1px solid var(--line); }
 .todo-check input[type="checkbox"] { width: 17px; height: 17px; }
@@ -152,8 +152,6 @@ h1, h2 {
 .page-title { margin-top: 22px; }
 .holiday { color: #c0392b; }
 .hm { display: flex; gap: 4px; align-items: stretch; min-width: 0; }
-.hm button { flex: none; width: 34px; border: 1px solid var(--input-line); background: var(--cell); color: var(--ink); border-radius: 8px; font-size: 1rem; cursor: pointer; }
-.hm .hm-t { flex: 1; min-width: 0; text-align: center; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; padding: 8px 4px !important; }
 .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .menu-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 40px; }
 .menu-list { display: flex; flex-direction: column; gap: 18px; text-align: center; }

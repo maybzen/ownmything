@@ -32,22 +32,8 @@
     <section class="card">
       <h3>Log</h3>
       <div class="row2">
-        <label>Sleep
-          <div class="hm" data-for="lastSleep">
-            <button data-d="-1">−</button>
-            <input class="hm-t" type="text" inputmode="numeric" placeholder="--:--" maxlength="5" />
-            <button data-d="1">+</button>
-          </div>
-          <input id="lastSleep" type="hidden" />
-        </label>
-        <label>Wake
-          <div class="hm" data-for="wake">
-            <button data-d="-1">−</button>
-            <input class="hm-t" type="text" inputmode="numeric" placeholder="--:--" maxlength="5" />
-            <button data-d="1">+</button>
-          </div>
-          <input id="wake" type="hidden" />
-        </label>
+        <label>Sleep <input type="time" id="lastSleep" /></label>
+        <label>Wake <input type="time" id="wake" /></label>
       </div>
       <div class="row2" style="margin-top:8px">
         <label>Weight<input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="kg" /></label>
@@ -66,13 +52,12 @@
 
     <div class="day-grid">
     <section class="card">
-      <h3>BrainDump</h3>
-      <textarea id="braindump" rows="4" placeholder=""></textarea>
-      <h4 class="sub">To Do</h4>
-      <div id="todos"></div>
-      <div class="row2" style="margin-top:8px">
-        <button id="addDiv" class="ghost-btn">+ Line</button>
+      <div class="card-head">
+        <h3>BrainDump</h3>
       </div>
+      <textarea id="braindump" rows="4" placeholder=""></textarea>
+      <h4 class="sub">To Do <button id="addDiv" class="ghost-btn sm">+ Line</button></h4>
+      <div id="todos"></div>
       <div id="remsBox" style="margin-top:8px"></div>
     </section>
 
