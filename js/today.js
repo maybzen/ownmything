@@ -35,6 +35,45 @@ function save() {
 }
 function monthKey(d) { return "month:" + d.slice(0, 7); }
 
+// --- weekday + holiday red ---
+const YO = ["일", "월", "화", "수", "목", "금", "토"];
+const FALLBACK_HOL = ["01-01", "03-01", "05-05", "06-06", "08-15", "10-03", "10-09", "12-25"];
+let holSet = new Set(FALLBACK_HOL);
+async function loadHolidays() {
+  const y = date.slice(0, 4);
+  try {
+    const raw = localStorage.getItem("ownmything:hol:" + y);
+    if (raw) { holSet = new Set(JSON.parse(raw)); renderDateTitle(); return; }
+  } catch (e) {}
+  try {
+    const r = await fetch(`https://date.nager.at/api/v3/publicholidays/${y}/KR`);
+    if (r.ok) {
+      const arr = await r.json();
+      const mmdd = arr.map(h => h.date.slice(5));
+      holSet = new Set(mmdd);
+      try { localStorage.setItem("ownmything:hol:" + y, JSON.stringify(mmdd)); } catch (e) {}
+      renderDateTitle();
+    }
+  } catch (e) {}
+}
+function renderDateTitle() {
+  const dt = new Date(date + "T12:00:00");
+  const yo = YO[dt.getDay()];
+  const hol = dt.getDay() === 0 || holSet.has(date.slice(5));
+  title.innerHTML = "";
+  title.append(date + " ");
+  const s = document.createElement("span");
+  s.textContent = yo;
+  if (hol) s.className = "holiday";
+  title.appendChild(s);
+  if (hol && dt.getDay() !== 0) {
+    const s2 = document.createElement("span");
+    s2.textContent = " · 휴일";
+    s2.className = "holiday";
+    title.appendChild(s2);
+  }
+}
+
 let cells = {}, labels = {}, autoSleepIds = [], todos = [], monthTodos = [];
 
 function apply(d) {
@@ -57,34 +96,44 @@ function apply(d) {
   migrateHabits(s);
   habitDone = s.habitDone || {};
   paintAll(); renderBlocks(); renderTodos(); renderMonthTodos(); renderHabitRate();
-  syncSteppers();
+  syncTimeUI();
   title.textContent = d;
+  renderDateTitle();
+  loadHolidays();
+  if (!$("sleepH").value) { autoSleepCalc(); paintSleepGrid(); }
   if (!$("sleepH").value) { autoSleepCalc(); paintSleepGrid(); }
 }
 
-// --- stepper time input (10-min steps, no typing) ---
-function syncSteppers() {
+// --- select time input (desktop; touch uses native) ---
+function fillTimeSelects() {
+  document.querySelectorAll(".hm").forEach(box => {
+    const hs = box.querySelector('[data-p="h"]'), ms = box.querySelector('[data-p="m"]');
+    hs.innerHTML = '<option value="">--</option>' + Array.from({ length: 24 }, (_, h) => `<option value="${String(h).padStart(2, "0")}">${String(h).padStart(2, "0")}</option>`).join("");
+    ms.innerHTML = '<option value="">--</option>' + Array.from({ length: 12 }, (_, i) => { const m = String(i * 5).padStart(2, "0"); return `<option value="${m}">${m}</option>`; }).join("");
+    hs.onchange = ms.onchange = () => {
+      const id = box.dataset.for;
+      $(id).value = (hs.value && ms.value) ? `${hs.value}:${ms.value}` : "";
+      syncTimeUI();
+      autoSleepCalc(); paintSleepGrid(); save();
+    };
+  });
+}
+function syncTimeUI() {
   ["lastSleep", "wake"].forEach(id => {
-    const sp = document.querySelector(`[data-for="${id}"] span`);
-    if (sp) sp.textContent = $(id).value || "—";
+    const box = document.querySelector(`.hm[data-for="${id}"]`);
+    if (box) {
+      const [h, m] = ($(id).value || ":").split(":");
+      box.querySelector('[data-p="h"]').value = h || "";
+      let mm = m || "";
+      if (mm && Number(mm) % 5 !== 0) mm = String(Math.round(Number(mm) / 5) * 5 % 60).padStart(2, "0");
+      box.querySelector('[data-p="m"]').value = mm;
+    }
     const nat = $(id + "-native");
     if (nat && nat.value !== $(id).value) nat.value = $(id).value;
   });
 }
-function stepVal(id, dir) {
-  const el = $(id);
-  let t = toMin(el.value);
-  if (t === null) t = dir > 0 ? 0 : 1430;
-  else t = (t + dir * 10 + 1440) % 1440;
-  el.value = `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
-  syncSteppers();
-  autoSleepCalc(); paintSleepGrid(); save();
-}
-document.querySelectorAll(".stepper").forEach(s => {
-  const id = s.dataset.for;
-  s.querySelectorAll("button").forEach(b => b.onclick = () => stepVal(id, Number(b.dataset.d)));
-});
-// touch: native spinner instead of stepper
+fillTimeSelects();
+// touch: native spinner instead of selects
 const IS_TOUCH = ("ontouchstart" in window) || navigator.maxTouchPoints > 0;
 if (IS_TOUCH) {
   ["lastSleep", "wake"].forEach(id => {
@@ -95,10 +144,11 @@ if (IS_TOUCH) {
     nat.value = hidden.value;
     nat.addEventListener("change", () => {
       hidden.value = nat.value;
+      syncTimeUI();
       autoSleepCalc(); paintSleepGrid(); save();
     });
-    const st = hidden.parentElement.querySelector(".stepper");
-    if (st) st.replaceWith(nat);
+    const box = hidden.parentElement.querySelector(".hm");
+    if (box) box.replaceWith(nat);
   });
 }
 
@@ -394,5 +444,6 @@ function renderHabitRate() {
 
 ["weight", "sleepH", "braindump"].forEach(id => $(id).addEventListener("input", save));
 picker.onchange = () => { save(); date = picker.value; apply(date); };
+$("goToday").onclick = () => { save(); date = todayStr(); picker.value = date; apply(date); };
 
 apply(date);

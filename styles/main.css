@@ -127,7 +127,9 @@ h1, h2 {
 .stepper button { flex: 1; border: none; background: var(--cell); color: var(--ink); border-radius: 6px; padding: 8px 0; font-size: 1rem; cursor: pointer; }
 .stepper span { flex: 2; text-align: center; align-self: center; font-weight: 600; font-variant-numeric: tabular-nums; }
 .foot a { font-size: 0.9rem; }
-.foot { margin: 24px 0 40px; }
+.holiday { color: #c0392b; }
+.hm { display: flex; gap: 4px; align-items: center; }
+.hm select { flex: 1; min-width: 0; border: 1px solid var(--input-line); background: var(--card); color: var(--ink); border-radius: 8px; padding: 8px 4px; font-size: 0.9rem; font-family: inherit; }
 .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .menu-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 40px; }
 .menu-list { display: flex; flex-direction: column; gap: 18px; text-align: center; }
