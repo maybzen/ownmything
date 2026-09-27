@@ -28,11 +28,15 @@ function getDefs() {
     return d;
   }
   let changed = false;
+  const migrated = Store.get("habit-en-v1");
   d.forEach(x => {
     if (!x.slot) { x.slot = "anytime"; changed = true; }
-    const c = cleanHabit(x.t);
-    if (c !== x.t) { x.t = c; changed = true; }
+    if (!migrated) {
+      const c = cleanHabit(x.t);
+      if (c !== x.t) { x.t = c; changed = true; }
+    }
   });
+  if (!migrated) Store.set("habit-en-v1", true);
   if (changed) Store.set(DEFS_KEY, d);
   return d;
 }
@@ -70,7 +74,8 @@ function renderToday() {
     col.className = "hcol";
     const h = document.createElement("h4");
     h.className = "slot-" + slot;
-    h.textContent = label;
+    const hit = items.filter(d => isDone(selDate, d)).length;
+    h.textContent = `${label} · ${hit}/${items.length}`;
     col.appendChild(h);
     items.forEach(def => {
       const b = document.createElement("button");

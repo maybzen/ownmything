@@ -195,12 +195,16 @@ function todoRow(item, list, render, box) {
   l.dataset.id = item.id;
   if (item.div) {
     l.classList.add("divider");
+    const grip = document.createElement("span");
+    grip.className = "grip";
+    grip.textContent = "⋮⋮";
     const line = document.createElement("span");
     line.className = "divline";
     const del = document.createElement("button");
     del.textContent = "×";
     del.onclick = () => { list.splice(list.indexOf(item), 1); save(); render(); };
-    l.append(line, del);
+    l.append(grip, line, del);
+    bindGrip(grip, l, box, list);
     return l;
   }
   const cb = document.createElement("input");
@@ -328,16 +332,18 @@ HOURS.forEach(h => {
     c.title = id;
     c.addEventListener("pointerdown", (e) => {
       e.preventDefault();
-      painting = true;
-      toggleCell(c);
+      const id = c.dataset.id;
+      if (cells[id] === curColor) delete cells[id];
+      else cells[id] = curColor;
+      paintCell(c);
+      save(); renderBlocks();
     });
-    c.addEventListener("pointerenter", () => { if (painting) toggleCell(c, true); });
     grid.appendChild(c);
   }
   row.appendChild(grid);
   tt.appendChild(row);
 });
-document.addEventListener("pointerup", () => { if (painting) { painting = false; erasing = false; save(); renderBlocks(); } });
+document.addEventListener("pointerup", () => { painting = false; erasing = false; });
 
 function toggleCell(c, drag) {
   const id = c.dataset.id;
@@ -513,7 +519,8 @@ window.pullCalendar = async function () {
   const n = dayEvents.length;
   if (st) {
     const now = new Date();
-    st.textContent = n ? `Synced ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} · ${n} events` : "No events today";
+    const tag = res.cached ? "Cached" : "Synced";
+    st.textContent = n ? `${tag} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} · ${n} events` : "No events today";
   }
   renderReminders(res.todos || []);
   renderMonthCals(res.events || [], ym);
@@ -600,13 +607,17 @@ function migrateHabits(s) {
     setDefs(habitDefs);
   } else {
     let changed = false;
+    const migrated = Store.get("habit-en-v1");
     const strip = (t) => String(t || "").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/gu, "").trim();
     const map = { "환기하기": "Ventilate", "이불 정리": "Make bed", "공복 물 한잔": "Water", "체중 기록": "Weigh in", "Sleep Journal": "Sleep log", "Daily Plan": "Daily plan", "식후 독서·양치": "Read & brush", "영양제 먹기": "Vitamins", "운동": "Workout", "화장실": "Bathroom", "오복 산책": "Walk Obok", "기록": "Log", "필사": "Transcribe", "물 마시기": "Water", "독서 10분": "Read 10m" };
     habitDefs.forEach(h => {
       if (!h.slot) { h.slot = "anytime"; changed = true; }
-      const s = strip(h.t), c = map[s] || s;
-      if (c !== h.t) { h.t = c; changed = true; }
+      if (!migrated) {
+        const s = strip(h.t), c = map[s] || s;
+        if (c !== h.t) { h.t = c; changed = true; }
+      }
     });
+    if (!migrated) Store.set("habit-en-v1", true);
     if (changed) setDefs(habitDefs);
   }
 }
