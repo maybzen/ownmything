@@ -18,16 +18,15 @@ function load(d) {
   return Store.get("d:" + d, "ownmything:" + d) || {};
 }
 function save() {
-  Store.set("d:" + date, {
+  const prev = load(date);
+  Store.set("d:" + date, Object.assign({}, prev, {
     lastSleep: $("lastSleep").value, wake: $("wake").value,
     weight: $("weight").value, sleepH: $("sleepH").value,
     braindump: $("braindump").value,
     cells: cells, labels: labels, autoSleep: autoSleepIds,
     todos: todos,
-    oneline: $("oneline").value,
-    photo: $("photoPrev").src.startsWith("data:") ? $("photoPrev").src : "",
     habitDone: habitDone,
-  });
+  }));
   Store.set(monthKey(date), monthTodos);
 }
 function monthKey(d) { return "month:" + d.slice(0, 7); }
@@ -51,8 +50,6 @@ function apply(d) {
   monthTodos = Store.get(monthKey(d)) || [];
   const mn = ["January","February","March","April","May","June","July","August","September","October","November","December"][Number(d.slice(5, 7)) - 1];
   $("monthTitleSide").textContent = mn;
-  $("oneline").value = s.oneline || "";
-  $("photoPrev").src = s.photo || "";
   migrateHabits(s);
   habitDone = s.habitDone || {};
   paintAll(); renderBlocks(); renderTodos(); renderMonthTodos(); renderHabitRate();
@@ -63,6 +60,10 @@ function apply(d) {
 // --- drum time picker (desktop only; touch uses native) ---
 const IS_TOUCH = ("ontouchstart" in window) || navigator.maxTouchPoints > 0;
 let drumTarget = null;
+function markDrum(el) {
+  const i = Math.round(el.scrollTop / 34);
+  Array.from(el.children).forEach((d, j) => d.classList.toggle("sel", j === i));
+}
 function buildDrum(el, n, val) {
   el.innerHTML = "";
   el.dataset.count = n;
@@ -72,7 +73,8 @@ function buildDrum(el, n, val) {
     d.textContent = String(i).padStart(2, "0");
     el.appendChild(d);
   }
-  requestAnimationFrame(() => { el.scrollTop = val * 34; });
+  el.onscroll = () => markDrum(el);
+  requestAnimationFrame(() => { el.scrollTop = val * 34; markDrum(el); });
 }
 function drumVal(el) {
   const i = Math.round(el.scrollTop / 34);
@@ -196,7 +198,7 @@ $("addMonthTodo").onclick = () => { monthTodos.push({ id: uid(), t: "", done: fa
 // --- timetable ---
 const tt = $("timetable");
 let curColor = "work";
-let painting = false;
+let painting = false, erasing = false, eraseColor = null;
 
 document.querySelectorAll("#palette .sw").forEach(b => {
   b.onclick = () => {
@@ -233,15 +235,23 @@ HOURS.forEach(h => {
   row.appendChild(grid);
   tt.appendChild(row);
 });
-document.addEventListener("pointerup", () => { if (painting) { painting = false; save(); renderBlocks(); } });
+document.addEventListener("pointerup", () => { if (painting) { painting = false; erasing = false; save(); renderBlocks(); } });
 
 function toggleCell(c, drag) {
   const id = c.dataset.id;
-  if (!curColor) { delete cells[id]; delete labels[id]; }
-  else if (!drag && cells[id] === curColor) { delete cells[id]; }
-  else {
-    if (drag && cells[id] === curColor) return;
-    cells[id] = curColor;
+  const v = cells[id];
+  if (!drag) {
+    if (v === curColor) { delete cells[id]; }
+    else { cells[id] = curColor; erasing = false; }
+    if (!v) { painting = true; }
+    else if (v === curColor) { painting = true; erasing = true; eraseColor = v; }
+    else { painting = true; }
+  } else {
+    if (erasing) {
+      if (v === eraseColor) delete cells[id];
+    } else if (v !== curColor) {
+      cells[id] = curColor;
+    }
   }
   paintCell(c);
 }
@@ -253,26 +263,36 @@ function paintAll() {
   tt.querySelectorAll(".cell").forEach(paintCell);
 }
 
-// painted runs → label rows
+// painted runs → label rows + on-grid text
 function runs() {
   const out = [];
   let cur = null;
   SLOT_IDS.forEach(id => {
     const v = cells[id];
-    if (v && cur && cur.color === v) { cur.end = id; }
+    if (v && cur && cur.color === v) { cur.end = id; cur.ids.push(id); }
     else {
       if (cur) out.push(cur);
-      cur = v ? { color: v, start: id, end: id } : null;
+      cur = v ? { color: v, start: id, end: id, ids: [id] } : null;
     }
   });
   if (cur) out.push(cur);
   return out;
 }
 const CNAMES = { work: "Work", promise: "Meet", personal: "Me", family: "Family", obok: "Obok", sleep: "Sleep" };
+function cellEl(id) {
+  return tt.querySelector(`[data-id="${id}"]`);
+}
 function renderBlocks() {
+  Object.keys(labels).forEach(k => { if (!cells[k]) delete labels[k]; });
+  tt.querySelectorAll(".cell").forEach(c => { c.textContent = ""; });
   const box = $("blocks");
   box.innerHTML = "";
   runs().forEach(r => {
+    const txt = labels[r.start] || "";
+    if (txt) {
+      const mid = cellEl(r.ids[Math.floor(r.ids.length / 2)]);
+      if (mid) mid.textContent = txt;
+    }
     const row = document.createElement("div");
     row.className = "block-row";
     const dot = document.createElement("span");
@@ -282,8 +302,14 @@ function renderBlocks() {
     range.textContent = `${r.start}–${r.end} · ${CNAMES[r.color] || r.color}`;
     const inp = document.createElement("input");
     inp.placeholder = "memo";
-    inp.value = labels[r.start] || "";
-    inp.oninput = () => { labels[r.start] = inp.value; save(); };
+    inp.value = txt;
+    inp.oninput = () => {
+      if (inp.value) labels[r.start] = inp.value;
+      else delete labels[r.start];
+      const mid2 = cellEl(r.ids[Math.floor(r.ids.length / 2)]);
+      if (mid2) mid2.textContent = inp.value;
+      save();
+    };
     row.append(dot, range, inp);
     box.appendChild(row);
   });
@@ -326,16 +352,9 @@ function renderHabitRate() {
   el.textContent = `${rate}% →`;
 }
 
-// --- photo ---
-$("photo").onchange = (e) => {
-  const f = e.target.files[0];
-  if (!f) return;
-  const r = new FileReader();
-  r.onload = () => { $("photoPrev").src = r.result; save(); };
-  r.readAsDataURL(f);
-};
+// --- photo moved to Night page ---
 
-["weight", "sleepH", "oneline", "braindump"].forEach(id => $(id).addEventListener("input", save));
+["weight", "sleepH", "braindump"].forEach(id => $(id).addEventListener("input", save));
 picker.onchange = () => { save(); date = picker.value; apply(date); };
 
 apply(date);

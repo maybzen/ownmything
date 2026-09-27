@@ -124,8 +124,9 @@ h1, h2 {
 .drum-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
 .drum-box { background: var(--card); border-radius: 16px 16px 0 0; padding: 16px; width: 100%; max-width: 400px; }
 .drum-cols { display: flex; gap: 8px; height: 170px; }
-.drum-col { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; text-align: center; }
+.drum-col { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; text-align: center; padding: 68px 0; }
 .drum-item { height: 34px; line-height: 34px; scroll-snap-align: center; color: var(--muted); font-size: 1rem; }
+.drum-item.sel { color: var(--ink); font-weight: 700; }
 .drum-btns { display: flex; gap: 8px; margin-top: 12px; }
 .drum-btns button { flex: 1; border: 1px solid var(--input-line); background: var(--ink); color: var(--bg); border-radius: 10px; padding: 10px; }
 .foot { margin: 24px 0 40px; }
@@ -145,6 +146,7 @@ h1, h2 {
 .card h3 { font-size: 1rem; margin-bottom: 12px; }
 .card textarea, .card input {
   width: 100%;
+  min-width: 0;
   border: 1px solid var(--input-line);
   background: var(--card);
   color: var(--ink);
@@ -171,7 +173,8 @@ h1, h2 {
 .trow { display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: center; }
 .tlabel { font-size: 0.75rem; color: var(--muted); text-align: right; }
 .tgrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; }
-.cell { height: 22px; background: var(--cell); border: 1px solid var(--line); border-radius: 4px; cursor: pointer; }
+.cell { height: 22px; background: var(--cell); border: 1px solid var(--line); border-radius: 4px; cursor: pointer; font-size: 10px; line-height: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #3a3f47; padding: 0 3px; touch-action: none; }
+.timetable { touch-action: none; }
 .cell.fill.work, .cell.fill.study { background: #d9dee9; border-color: #c3cad9; }
 .cell.fill.promise { background: #dad5e9; border-color: #c2b9d9; }
 .cell.fill.personal, .cell.fill.move, .cell.fill.home { background: #f0e7de; border-color: #ddcbb8; }

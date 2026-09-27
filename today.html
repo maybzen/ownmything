@@ -35,8 +35,8 @@
         <label>Wake <input id="wake" readonly placeholder="--:--" /></label>
       </div>
       <div class="row2" style="margin-top:8px">
-        <label>Weight<input id="weight" type="number" step="0.1" placeholder="kg" /></label>
-        <label>Hours<input id="sleepH" type="number" step="0.5" placeholder="auto" /></label>
+        <label>Weight<input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="kg" /></label>
+        <label>Hours<input id="sleepH" type="number" inputmode="decimal" step="0.5" placeholder="auto" /></label>
       </div>
     </section>
 
@@ -60,7 +60,6 @@
         <button data-c="family" class="sw family">Family</button>
         <button data-c="obok" class="sw obokwalk">Obok</button>
         <button data-c="sleep" class="sw sleep">Sleep</button>
-        <button data-c="" class="sw erase">Erase</button>
       </div>
       <div id="timetable" class="timetable"></div>
       <div id="blocks"></div>
@@ -73,17 +72,11 @@
       <button id="addMonthTodo" class="ghost-btn" style="margin-top:8px">+ Add</button>
     </section>
 
-    <section class="card">
-      <h3>Night</h3>
-      <label>One line<input id="oneline" placeholder="" /></label>
-      <label class="photo" style="margin-top:8px">Photo <input type="file" id="photo" accept="image/*" /></label>
-      <img id="photoPrev" class="photo-prev" alt="" />
-    </section>
-
     <nav class="menu sub foot">
       <a href="./pages/habit.html">Habit Tracker <span id="habitRate"></span></a>
       <a href="./pages/ledger.html">Ledger</a>
       <a href="./pages/reading.html">Library</a>
+      <a href="./pages/night.html">Night</a>
     </nav>
   </div>
 

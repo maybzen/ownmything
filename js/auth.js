@@ -1,7 +1,8 @@
 window.Auth = (() => {
   const sb = window.supabase.createClient(
     "https://fxfzpkhsfvstutdmndyc.supabase.co",
-    "sb_publishable_pnREwJ9hLSj54xtKVGtXWg_50fdSJWN"
+    "sb_publishable_pnREwJ9hLSj54xtKVGtXWg_50fdSJWN",
+    { auth: { persistSession: true, autoRefreshToken: true, storageKey: "ownmything-auth" } }
   );
   let uid = null;
   const timers = {};

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Night - ownmything</title>
+  <meta name="theme-color" content="#121316" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="../styles/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="../js/theme.js"></script>
+  <script src="../js/pwa.js"></script>
+</head>
+<body>
+  <div class="page">
+    <a class="back" href="../today.html">← Today</a>
+    <header class="today-head">
+      <h2>Night</h2>
+      <input type="date" id="datePicker" />
+    </header>
+    <section class="card">
+      <label>One line<input id="oneline" placeholder="" /></label>
+      <label class="photo" style="margin-top:8px">Photo <input type="file" id="photo" accept="image/*" /></label>
+      <img id="photoPrev" class="photo-prev" alt="" />
+    </section>
+  </div>
+  <script src="../js/store.js"></script>
+  <script src="../js/night.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script>Auth.guard();</script>
+</body>
+</html>
