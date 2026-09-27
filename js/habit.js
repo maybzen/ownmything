@@ -207,5 +207,96 @@ $("monthPicker").onchange = renderMonth;
 $("datePicker").onchange = () => { selDate = $("datePicker").value; renderToday(); };
 $("goTodayDate").onclick = () => { selDate = Store.today(); $("datePicker").value = selDate; renderToday(); };
 
-function renderAll() { renderToday(); renderDefs(); renderWeek(); renderMonth(); }
+function renderReport() {
+  const box = $("repBox");
+  if (!box) return;
+  const mv = $("monthPicker").value || Store.today().slice(0, 7);
+  const [y, m] = mv.split("-").map(Number);
+  const daysIn = new Date(y, m, 0).getDate();
+  const defs = getDefs();
+  const rows = defs.map(def => {
+    let hit = 0;
+    for (let d = 1; d <= daysIn; d++) if (isDone(`${mv}-${String(d).padStart(2, "0")}`, def)) hit++;
+    return { def, hit, rate: Math.round(100 * hit / daysIn) };
+  }).sort((a, b) => b.rate - a.rate);
+  const grid = document.createElement("div");
+  grid.className = "mcal";
+  ["S","M","T","W","T","F","S"].forEach(d => {
+    const h = document.createElement("span");
+    h.className = "mcal-h";
+    h.textContent = d;
+    grid.appendChild(h);
+  });
+  for (let i = 0; i < new Date(y, m - 1, 1).getDay(); i++) grid.appendChild(document.createElement("span"));
+  const today = Store.today();
+  for (let d = 1; d <= daysIn; d++) {
+    const ds = `${mv}-${String(d).padStart(2, "0")}`;
+    let hit = 0;
+    defs.forEach(x => { if (isDone(ds, x)) hit++; });
+    const rate = defs.length ? Math.round(100 * hit / defs.length) : 0;
+    const c = document.createElement("div");
+    c.className = "cal-day mrate " + (rate >= 100 ? "r100" : rate >= 70 ? "r70" : rate >= 30 ? "r30" : "r0") + (ds === today ? " cur" : "");
+    c.innerHTML = `<b>${d}</b><i>${rate}%</i>`;
+    grid.appendChild(c);
+  }
+  box.innerHTML = "";
+  const best = rows[0];
+  const head = document.createElement("p");
+  head.className = "hint";
+  head.textContent = best
+    ? `${mv} · best ${best.def.t} ${best.rate}% · avg ${Math.round(rows.reduce((a, r) => a + r.rate, 0) / rows.length)}%`
+    : `${mv} · no habits`;
+  box.appendChild(head);
+  box.appendChild(grid);
+  const ul = document.createElement("div");
+  ul.style.marginTop = "10px";
+  rows.forEach(r => {
+    const p = document.createElement("p");
+    p.className = "rep-row";
+    p.innerHTML = `<span>${r.def.t}</span><b>${r.rate}%</b>`;
+    ul.appendChild(p);
+  });
+  box.appendChild(ul);
+}
+
+function renderData() {
+  const box = $("dataCount");
+  if (!box) return;
+  let n = 0;
+  const pre = "ownmything:" + Store.profile() + ":d:";
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i) || "";
+    if (k.indexOf(pre) === 0) n++;
+  }
+  box.textContent = `${n} days recorded · ${getDefs().length} habits`;
+}
+$("clearHabits").onclick = () => {
+  if (!confirm("Reset all habit check-ins?")) return;
+  const pre = "ownmything:" + Store.profile() + ":d:";
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i) || "";
+    if (k.indexOf(pre) === 0) keys.push(k);
+  }
+  keys.forEach(k => {
+    const ds = k.slice(pre.length);
+    const s = dayData(ds);
+    delete s.habitDone;
+    Store.set("d:" + ds, s);
+  });
+  renderAll();
+};
+$("wipeDays").onclick = () => {
+  if (!confirm("Delete ALL records? This cannot be undone.")) return;
+  const pre = "ownmything:" + Store.profile() + ":d:";
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i) || "";
+    if (k.indexOf(pre) === 0) keys.push(k);
+  }
+  keys.forEach(k => localStorage.removeItem(k));
+  renderAll();
+};
+
+function renderAll() { renderToday(); renderDefs(); renderWeek(); renderMonth(); renderReport(); renderData(); }
 renderAll();

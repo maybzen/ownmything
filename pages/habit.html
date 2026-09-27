@@ -10,7 +10,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="../manifest.webmanifest" />
   <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png" />
-  <link rel="stylesheet" href="../styles/main.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+<link rel="stylesheet" href="../styles/main.css" />
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="../js/theme.js"></script>
   <script src="../js/pwa.js"></script>
@@ -57,8 +58,25 @@
         <button id="addDef" class="btn">Add</button>
       </div>
     </details>
+
+    <details class="card">
+      <summary>Report</summary>
+      <div id="repBox" style="margin-top:8px"></div>
+    </details>
+
+    <details class="card">
+      <summary>Data</summary>
+      <div style="margin-top:8px">
+        <p class="hint" id="dataCount"></p>
+        <div class="row2" style="margin-top:8px">
+          <button id="clearHabits" class="ghost-btn">Reset check-ins</button>
+          <button id="wipeDays" class="ghost-btn danger">Delete all records</button>
+        </div>
+      </div>
+    </details>
     <nav class="menu sub foot">
       <a href="../today.html">Today</a>
+      <a href="./archive.html">Archive</a>
       <a href="./night.html">Night</a>
       <a href="./ledger.html">Ledger</a>
       <a href="./reading.html">Library</a>
@@ -69,5 +87,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
   <script>Auth.guard();</script>
+  <script src="../js/nav.js"></script>
 </body>
 </html>

@@ -268,6 +268,40 @@ h1, h2 {
 .mlist { font-size: 0.8rem; line-height: 1.9; color: var(--ink); }
 .mlist .ml { white-space: nowrap; }
 .mlist i { color: var(--line); font-style: normal; margin: 0 7px; }
+.bnav { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: color-mix(in srgb, var(--card) 92%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.bna { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0 9px; font-size: 0.62rem; color: var(--muted); text-decoration: none; letter-spacing: 0.03em; }
+.bna .material-symbols-outlined { font-size: 20px; }
+.bna.on { color: var(--ink); font-weight: 600; }
+@media (min-width: 900px) { .bnav { display: none; } }
+.tog { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.9rem; padding: 7px 0; }
+.tog input { width: auto; }
+.ghost-btn.danger { color: #b3402f; border-color: #e0c3bd; }
+.rep-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 5px 0; border-bottom: 1px solid var(--line); }
+.rep-row b { font-weight: 600; }
+body.noserif h1, body.noserif h2, body.noserif .menu-list a, body.noserif .quote, body.noserif .sm-card b { font-family: "Manrope", sans-serif; }
+.pad-b { height: 8px; }
+
+.sm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
+.sm-card { border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 2px; background: var(--card); }
+.sm-card span { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.04em; }
+.sm-card b { font-size: 1.15rem; font-weight: 500; }
+.sm-card i { font-style: normal; font-size: 0.65rem; color: var(--muted); }
+
+.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 8px; margin-top: 10px; }
+.kv > div { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 1px; }
+.kv span { font-size: 0.66rem; color: var(--muted); }
+.kv b { font-size: 1rem; font-weight: 500; }
+.kv i { font-style: normal; font-size: 0.62rem; color: var(--muted); }
+
+.quote { font-family: "Newsreader", Georgia, serif; font-size: 1.05rem; line-height: 1.5; color: var(--ink); margin-top: 6px; }
+.mcal .cal-day { cursor: pointer; }
+.mcal .cal-day.has::after { display: none; }
+.mcal .cal-day i { font-style: normal; font-size: 0.58rem; color: var(--muted); }
+.pw-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.pw { border: none; background: none; padding: 0; cursor: pointer; }
+.pw img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; display: block; }
+.pw span { display: block; text-align: center; font-size: 0.65rem; color: var(--muted); margin-top: 3px; }
+input.mini { width: auto; padding: 3px 8px; font-size: 0.78rem; border-radius: 999px; }
 .habit { display: flex; gap: 8px; align-items: center; padding: 6px 0; font-size: 0.9rem; }
 .habit input { width: auto; }
 .habit input[type="text"], .habit input:not([type]) { flex: 1; }

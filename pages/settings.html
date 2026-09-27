@@ -9,7 +9,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <link rel="manifest" href="../manifest.webmanifest" />
   <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png" />
-  <link rel="stylesheet" href="../styles/main.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+<link rel="stylesheet" href="../styles/main.css" />
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="../js/theme.js"></script>
   <script src="../js/pwa.js"></script>
@@ -58,12 +59,40 @@
     </section>
 
     <section class="card">
+      <h3>Display</h3>
+      <label class="tog"><span>System dark mode</span><input type="checkbox" id="sysDark" /></label>
+      <label class="tog"><span>Serif headings</span><input type="checkbox" id="serifHead" checked /></label>
+    </section>
+
+    <section class="card">
+      <h3>Backup</h3>
+      <label class="tog"><span>Auto export (JSON)</span><input type="checkbox" id="autoExport" /></label>
+      <p class="hint" id="lastBackup"></p>
+      <div class="row2" style="margin-top:8px">
+        <button id="exportBtn" class="ghost-btn">Export now</button>
+        <button id="importBtn" class="ghost-btn">Import</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json" style="display:none" />
+    </section>
+
+    <section class="card">
+      <h3>Service</h3>
+      <div class="kv">
+        <div><span>Version</span><b>v1.0</b></div>
+        <div><span>Records</span><b id="svRecords">—</b></div>
+        <div><span>Cloud</span><b id="svCloud">—</b></div>
+        <div><span>Calendar</span><b id="svCal">—</b></div>
+      </div>
+    </section>
+
+    <section class="card">
       <h3>Data</h3>
-      <button id="exportBtn" class="ghost-btn">Export (JSON)</button>
+      <button id="exportBtn2" class="ghost-btn">Export (JSON)</button>
     </section>
 
     <nav class="menu sub foot">
       <a href="../today.html">Today</a>
+      <a href="./archive.html">Archive</a>
       <a href="./night.html">Night</a>
       <a href="./habit.html">Habit Tracker</a>
       <a href="./ledger.html">Ledger</a>
@@ -75,5 +104,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/settings.js"></script>
+  <script src="../js/nav.js"></script>
 </body>
 </html>

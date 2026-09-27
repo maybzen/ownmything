@@ -523,9 +523,8 @@ async function invokeCal(body) {
   }
 }
 window.pullCalendar = async function () {
-  const st = $("calStatus");
-  const say = (t) => { if (st) st.textContent = t; };
-  say("");
+  const st = null;
+  const say = () => {};
   if (!window.Auth || !Auth.sb) { say(""); return; }
   let session = null;
   try { session = await Auth.session(); } catch (e) { say(""); return; }
@@ -556,8 +555,6 @@ window.pullCalendar = async function () {
   s.allDay = allDay.map(e => ({ title: calTitle(e.title), cal: e.cal }));
   Store.set("d:" + date, s);
   paintAll(); renderBlocks(); save();
-  const n = dayEvents.length;
-  if (st) st.textContent = "";
   renderReminders(res.todos || []);
   renderAllDay(allDay);
   autoMonth();

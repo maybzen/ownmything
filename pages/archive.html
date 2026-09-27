@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Archive - ownmything</title>
+  <meta name="theme-color" content="#121316" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+<link rel="stylesheet" href="../styles/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="../js/theme.js"></script>
+  <script src="../js/pwa.js"></script>
+</head>
+<body>
+  <div class="page">
+    <a class="back" href="../menu.html">← Menu</a>
+    <h2 class="page-title">Archive</h2>
+
+    <div class="card-head" style="margin-top:14px">
+      <h3 id="calLabel"></h3>
+      <div class="head-right">
+        <button id="mPrev" class="ghost-btn sm">‹</button>
+        <input type="month" id="mPicker" class="mini" />
+        <button id="mNext" class="ghost-btn sm">›</button>
+      </div>
+    </div>
+
+    <section class="card">
+      <div id="sumCards" class="sm-grid"></div>
+    </section>
+
+    <section class="card">
+      <div id="calGrid" class="mcal"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h3 id="dayTitle"></h3>
+        <span class="hint" id="dayDow"></span>
+      </div>
+      <p class="quote" id="dayOne">—</p>
+      <div class="kv">
+        <div><span>Weight</span><b id="dayW">—</b></div>
+        <div><span>Sleep</span><b id="dayS">—</b></div>
+        <div><span>Blocks</span><b id="dayB">—</b><i id="dayBlock"></i></div>
+        <div><span>Habit</span><b id="dayH">—</b><i id="dayHSub"></i></div>
+        <div><span>Settle</span><b id="dayLedger">—</b></div>
+      </div>
+      <img id="dayPhoto" class="photo-prev" alt="" style="display:none" />
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h3>Weight</h3>
+        <span class="hint" id="wDelta"></span>
+      </div>
+      <svg id="wChart" viewBox="0 0 320 140" class="chart"></svg>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h3>Photos</h3>
+        <span class="hint" id="photoCount"></span>
+      </div>
+      <div id="photoWall" class="pw-grid"></div>
+    </section>
+
+    <div class="pad-b"></div>
+  </div>
+  <script src="../js/store.js"></script>
+  <script src="../js/archive.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/nav.js"></script>
+</body>
+</html>
