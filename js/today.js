@@ -583,6 +583,7 @@ window.pullCalendar = async function () {
   const autoCal = {};
   const allDay = [];
   dayEvents.forEach(ev => {
+    if (/식물/.test(ev.cal || "")) return;
     if (ev.allDay) { allDay.push(ev); return; }
     const color = calColor(ev);
     const memo = calTitle(ev.title);
