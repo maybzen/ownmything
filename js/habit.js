@@ -101,12 +101,18 @@ function renderDefs() {
       const m = d.find(x => x.id === h.id);
       if (m) { m.slot = sel.value; setDefs(d); renderToday(); renderWeek(); }
     };
-    const s = document.createElement("span");
-    s.textContent = h.t;
+    const nm = document.createElement("input");
+    nm.value = h.t;
+    nm.onchange = () => {
+      const d = getDefs();
+      const m = d.find(x => x.id === h.id);
+      if (m && nm.value.trim()) { m.t = nm.value.trim(); setDefs(d); renderToday(); renderWeek(); renderMonth(); }
+      else renderDefs();
+    };
     const b = document.createElement("button");
     b.textContent = "×";
     b.onclick = () => { setDefs(getDefs().filter(x => x.id !== h.id)); renderAll(); };
-    l.append(sel, s, b);
+    l.append(sel, nm, b);
     box.appendChild(l);
   });
 }
