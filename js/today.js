@@ -603,6 +603,7 @@ function renderMonthCals(events, ym) {
     return `<span class="ml ${calColor(ev)}">${d.getDate()}${wk} ${t}${calTitle(ev.title)}</span>`;
   }).join("<i>·</i>");
   box.appendChild(p);
+  box.style.opacity = "0.6";
 }
 function renderReminders(list) {
   const box = $("remsBox");
