@@ -286,9 +286,9 @@ $("loadMonthCal").onclick = async () => {
   const box = $("monthCals");
   box.innerHTML = "<p class='hint'>Loading…</p>";
   try {
-    const r = await Auth.sb.functions.invoke("calendar-sync", { body: { month: ym } });
-    if (r.error || !r.data || r.data.error) throw new Error((r.data && r.data.error) || "failed");
-    renderMonthCals(r.data.events || [], ym);
+    const data = await invokeCal({ month: ym });
+    if (!data || data.error) throw new Error((data && data.error) || "failed");
+    renderMonthCals(data.events || [], ym);
   } catch (e) { box.innerHTML = "<p class='hint'>Load failed</p>"; }
 };
 $("addDiv").onclick = () => { todos.push({ id: uid(), div: true }); save(); renderTodos(); };
@@ -490,6 +490,23 @@ function slotsFor(startMin, endMin) {
   }
   return out;
 }
+async function invokeCal(body) {
+  try {
+    const r = await Auth.sb.functions.invoke("calendar-sync", { body });
+    if (r.error) throw r.error;
+    return r.data;
+  } catch (e) {
+    try { await Auth.sb.auth.refreshSession(); } catch (_) {}
+    try {
+      const r2 = await Auth.sb.functions.invoke("calendar-sync", { body });
+      if (r2.error) throw r2.error;
+      return r2.data;
+    } catch (e2) {
+      Auth.logout();
+      throw e2;
+    }
+  }
+}
 window.pullCalendar = async function () {
   const st = $("calStatus");
   if (st) st.textContent = "Syncing…";
@@ -500,9 +517,7 @@ window.pullCalendar = async function () {
   const ym = date.slice(0, 7);
   let res = null;
   try {
-    const r = await Auth.sb.functions.invoke("calendar-sync", { body: { date } });
-    if (r.error) throw r.error;
-    res = r.data;
+    res = await invokeCal({ date });
   } catch (e) { if (st) st.textContent = "Sync failed (network)"; return; }
   if (!res || res.error || !Array.isArray(res.events)) { if (st) st.textContent = "Sync failed: " + (res ? res.error : "?"); return; }
   lastMonthPulled = "";
