@@ -189,7 +189,8 @@ function paintSleepGrid() {
 }
 
 // --- todo (notion-style) ---
-function todoRow(item, list, render, box) {
+function todoRow(item, list, render, box, opts) {
+  const o = opts || {};
   const l = document.createElement("div");
   l.className = "todo-check";
   l.dataset.id = item.id;
@@ -226,7 +227,17 @@ function todoRow(item, list, render, box) {
       if (!item.t) list.splice(list.indexOf(item), 1);
       save(); render();
     };
-    inp.onkeydown = (e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") { list.splice(list.indexOf(item), 1); save(); render(); } };
+    inp.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        commit();
+        if (o.chain) {
+          const i = list.indexOf(item);
+          list.splice(i + 1, 0, { id: uid(), t: "", done: false, editing: true });
+          save(); render();
+        }
+      }
+      if (e.key === "Escape") { list.splice(list.indexOf(item), 1); save(); render(); }
+    };
     inp.onblur = commit;
     l.appendChild(inp);
     requestAnimationFrame(() => inp.focus());
@@ -277,21 +288,26 @@ function renderTodos() {
 function renderMonthTodos() {
   const box = $("monthTodos");
   box.innerHTML = "";
-  monthTodos.forEach(t => box.appendChild(todoRow(t, monthTodos, renderMonthTodos, box)));
+  monthTodos.forEach(t => box.appendChild(todoRow(t, monthTodos, renderMonthTodos, box, { chain: true })));
 }
 $("addTodo").onclick = () => { todos.push({ id: uid(), t: "", done: false, editing: true }); renderTodos(); };
 $("addMonthTodo").onclick = () => { monthTodos.push({ id: uid(), t: "", done: false, editing: true }); renderMonthTodos(); };
-$("loadMonthCal").onclick = async () => {
+$("loadMonthCal").onclick = () => autoMonth();
+let autoMonthBusy = false, autoMonthDone = "";
+async function autoMonth() {
   const ym = date.slice(0, 7);
+  if (autoMonthBusy || autoMonthDone === ym) return;
+  autoMonthBusy = true;
   const box = $("monthCals");
   box.innerHTML = "<p class='hint'>Loading…</p>";
   try {
     const data = await invokeCal({ month: ym, onlyMe: true });
-    if (!data) { box.innerHTML = "<p class='hint'>ERR empty</p>"; return; }
-    if (data.error) { box.innerHTML = `<p class='hint'>ERR ${data.error}</p>`; return; }
+    autoMonthDone = ym;
+    if (!data || data.error) { box.innerHTML = "<p class='hint'>—</p>"; return; }
     renderMonthCals(data.events || [], ym);
-  } catch (e) { box.innerHTML = `<p class='hint'>ERR ${String(e).slice(0, 50)}</p>`; }
-};
+  } catch (e) { box.innerHTML = "<p class='hint'>—</p>"; }
+  finally { autoMonthBusy = false; }
+}
 $("addDiv").onclick = () => { todos.push({ id: uid(), div: true }); save(); renderTodos(); };
 
 // --- timetable ---
@@ -583,6 +599,7 @@ window.pullCalendar = async function () {
   }
   renderReminders(res.todos || []);
   renderAllDay(allDay);
+  autoMonth();
 };
 let lastMonthPulled = "";
 let monthCache = null;
