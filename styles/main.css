@@ -255,6 +255,16 @@ h1, h2 {
 .bar-col i.good { background: #c9dfc9; }
 .bar-col i.low { background: #efdcd4; }
 .bar-col span { font-size: 0.6rem; color: var(--muted); }
+.mcal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.mcal-h { text-align: center; font-size: 0.65rem; color: var(--muted); padding-bottom: 2px; }
+.mcal-d { border: 1px solid var(--line); border-radius: 6px; padding: 3px; min-height: 52px; overflow: hidden; display: flex; flex-direction: column; gap: 2px; }
+.mcal-d.cur { border-color: var(--ink); }
+.mcal-d b { font-size: 0.7rem; font-weight: 600; }
+.mcal-e { font-style: normal; font-size: 0.6rem; line-height: 1.35; border-radius: 3px; padding: 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mcal-e.work { background: #d9dee9; } .mcal-e.promise { background: #dad5e9; }
+.mcal-e.personal { background: #f0e7de; } .mcal-e.family { background: #efdcd4; }
+.mcal-e.obok { background: #dce5d8; } .mcal-e.sleep { background: #d9e7ea; }
+.mcal-d u { font-size: 0.55rem; color: var(--muted); text-decoration: none; }
 .habit { display: flex; gap: 8px; align-items: center; padding: 6px 0; font-size: 0.9rem; }
 .habit input { width: auto; }
 .habit input[type="text"], .habit input:not([type]) { flex: 1; }
