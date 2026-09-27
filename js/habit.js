@@ -5,6 +5,17 @@ const fmt = (d) => Store.day(d);
 let selDate = Store.today();
 $("datePicker").value = selDate;
 
+const HABIT_EN = {
+  "환기하기": "Ventilate", "이불 정리": "Make bed", "공복 물 한잔": "Water",
+  "체중 기록": "Weigh in", "Sleep Journal": "Sleep log", "Daily Plan": "Daily plan",
+  "식후 독서·양치": "Read & brush", "영양제 먹기": "Vitamins", "운동": "Workout",
+  "화장실": "Bathroom", "오복 산책": "Walk Obok", "기록": "Log", "필사": "Transcribe",
+  "물 마시기": "Water", "독서 10분": "Read 10m",
+};
+function cleanHabit(t) {
+  const s = String(t || "").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/gu, "").trim();
+  return HABIT_EN[s] || s;
+}
 function getDefs() {
   let d = Store.get(DEFS_KEY, LEGACY_DEFS) || [];
   if (!d.length) {
@@ -17,7 +28,11 @@ function getDefs() {
     return d;
   }
   let changed = false;
-  d.forEach(x => { if (!x.slot) { x.slot = "anytime"; changed = true; } });
+  d.forEach(x => {
+    if (!x.slot) { x.slot = "anytime"; changed = true; }
+    const c = cleanHabit(x.t);
+    if (c !== x.t) { x.t = c; changed = true; }
+  });
   if (changed) Store.set(DEFS_KEY, d);
   return d;
 }
