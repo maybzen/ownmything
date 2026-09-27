@@ -166,6 +166,19 @@ h1, h2 {
 .loan { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 0.9rem; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .photo-prev { max-width: 100%; margin-top: 8px; border-radius: 8px; }
 .photo-prev[src=""] { display: none; }
+
+/* mobile */
+@media (max-width: 640px) {
+  .page { padding: 40px 14px 80px; }
+  .center h1 { font-size: 2.4rem; }
+  .row3 { grid-template-columns: 1fr; }
+  .habit-board { grid-template-columns: 1fr; }
+  .cell { height: 28px; }
+  .trow { grid-template-columns: 24px 1fr; gap: 6px; }
+  .hrow { grid-template-columns: 1fr repeat(7, 22px) 40px; gap: 2px; font-size: 0.75rem; }
+  .lgrid { grid-template-columns: 1fr; }
+  .today-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
 .theme-switch { display: flex; gap: 8px; justify-content: center; }
 .theme-switch button { border: 1px solid var(--input-line); background: var(--card); color: var(--muted); border-radius: 999px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer; }
 .theme-switch button.on { color: var(--ink); border-color: var(--ink); }
