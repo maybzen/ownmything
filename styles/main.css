@@ -165,7 +165,8 @@ h1, h2 {
 .timetable { display: flex; flex-direction: column; gap: 2px; user-select: none; }
 .trow { display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: center; }
 .tlabel { font-size: 0.75rem; color: var(--muted); text-align: right; }
-.tgrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; }
+.tgrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; position: relative; }
+.run-label { position: absolute; top: 50%; transform: translateY(-50%); text-align: center; font-size: 10px; line-height: 1; color: #3a3f47; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; z-index: 2; }
 .cell { height: 22px; background: var(--cell); border: 1px solid var(--line); border-radius: 4px; cursor: pointer; font-size: 10px; line-height: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #3a3f47; padding: 0 3px; touch-action: none; }
 .timetable { touch-action: none; }
 .cell.fill.work, .cell.fill.study { background: #d9dee9; border-color: #c3cad9; }
