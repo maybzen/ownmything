@@ -286,7 +286,7 @@ $("loadMonthCal").onclick = async () => {
   const box = $("monthCals");
   box.innerHTML = "<p class='hint'>Loading…</p>";
   try {
-    const data = await invokeCal({ month: ym });
+    const data = await invokeCal({ month: ym, onlyMe: true });
     if (!data || data.error) throw new Error((data && data.error) || "failed");
     renderMonthCals(data.events || [], ym);
   } catch (e) { box.innerHTML = "<p class='hint'>Load failed</p>"; }
@@ -557,10 +557,10 @@ let monthCache = null;
 function renderMonthCals(events, ym) {
   const box = $("monthCals");
   box.innerHTML = "";
-  const items = res.events
-    .filter(ev => /정현|하트|[❤♥💜💛💚💙]/.test(ev.cal || ""))
-    .sort((a, b) => (a.day + a.start) < (b.day + b.start) ? -1 : 1);
-  if (!items.length) return;
+  const items = events
+    .slice()
+    .sort((a, b) => (a.day + String(a.start).padStart(4, "0")) < (b.day + String(b.start).padStart(4, "0")) ? -1 : 1);
+  if (!items.length) { box.innerHTML = "<p class='hint'>No events</p>"; return; }
   let lastDay = "";
   items.forEach(ev => {
     if (ev.day !== lastDay) {
