@@ -67,6 +67,8 @@ function syncSteppers() {
   ["lastSleep", "wake"].forEach(id => {
     const sp = document.querySelector(`[data-for="${id}"] span`);
     if (sp) sp.textContent = $(id).value || "—";
+    const nat = $(id + "-native");
+    if (nat && nat.value !== $(id).value) nat.value = $(id).value;
   });
 }
 function stepVal(id, dir) {
@@ -82,6 +84,23 @@ document.querySelectorAll(".stepper").forEach(s => {
   const id = s.dataset.for;
   s.querySelectorAll("button").forEach(b => b.onclick = () => stepVal(id, Number(b.dataset.d)));
 });
+// touch: native spinner instead of stepper
+const IS_TOUCH = ("ontouchstart" in window) || navigator.maxTouchPoints > 0;
+if (IS_TOUCH) {
+  ["lastSleep", "wake"].forEach(id => {
+    const hidden = $(id);
+    const nat = document.createElement("input");
+    nat.type = "time";
+    nat.id = id + "-native";
+    nat.value = hidden.value;
+    nat.addEventListener("change", () => {
+      hidden.value = nat.value;
+      autoSleepCalc(); paintSleepGrid(); save();
+    });
+    const st = hidden.parentElement.querySelector(".stepper");
+    if (st) st.replaceWith(nat);
+  });
+}
 
 // --- sleep ---
 function toMin(t) {
