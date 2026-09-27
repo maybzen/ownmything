@@ -342,7 +342,7 @@ function runs() {
   if (cur) out.push(cur);
   return out;
 }
-const CNAMES = { work: "Work", promise: "Meet", personal: "Me", family: "Family", obok: "Obok", sleep: "Sleep" };
+const CNAMES = { work: "Work", promise: "Meet", personal: "Me", family: "Family", plant: "Plant", obok: "Obok", sleep: "기록" };
 function cellEl(id) {
   return tt.querySelector(`[data-id="${id}"]`);
 }
@@ -412,8 +412,15 @@ const CALMAP = [
   [/\[오복\]/, "obok"],
   [/\[수면\]|\[sleep\]/i, "sleep"],
 ];
-function calColor(title) {
-  for (const [re, c] of CALMAP) if (re.test(title)) return c;
+function calColor(ev) {
+  const cal = ev.cal || "";
+  if (/정현/.test(cal)) return "personal";
+  if (/하트|[❤♥💜💛💚💙]/.test(cal)) return "promise";
+  if (/식물/.test(cal)) return "plant";
+  if (/업무/.test(cal)) return "work";
+  if (/기록/.test(cal)) return "sleep";
+  if (/공부/.test(cal)) return "work";
+  for (const [re, c] of CALMAP) if (re.test(ev.title)) return c;
   return "promise";
 }
 function calTitle(title) {
@@ -445,7 +452,7 @@ window.pullCalendar = async function () {
   Object.keys(prev).forEach(id => { if (cells[id] === prev[id]) delete cells[id]; });
   const autoCal = {};
   (res.events || []).forEach(ev => {
-    const color = calColor(ev.title);
+    const color = calColor(ev);
     const memo = calTitle(ev.title);
     const ids = slotsFor(ev.start, ev.end).filter(id => !cells[id]);
     ids.forEach(id => { cells[id] = color; autoCal[id] = color; });

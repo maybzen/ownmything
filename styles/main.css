@@ -122,7 +122,7 @@ h1, h2 {
 .cell.sel { outline: 2px solid var(--ink); outline-offset: -2px; }
 .dot.work { background: #d9dee9; } .dot.promise { background: #dad5e9; }
 .dot.personal { background: #f0e7de; } .dot.family { background: #efdcd4; }
-.dot.obok, .dot.obokwalk { background: #dce5d8; } .dot.sleep { background: #d9e7ea; }
+.dot.obok, .dot.obokwalk { background: #dce5d8; } .dot.plant { background: #c9dfc9; } .dot.sleep { background: #d9e7ea; }
 .stepper { display: flex; gap: 4px; align-items: stretch; border: 1px solid var(--input-line); background: var(--card); border-radius: 8px; padding: 4px; }
 .stepper button { flex: 1; border: none; background: var(--cell); color: var(--ink); border-radius: 6px; padding: 8px 0; font-size: 1rem; cursor: pointer; }
 .stepper span { flex: 2; text-align: center; align-self: center; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -187,6 +187,7 @@ h1, h2 {
 .sw.personal.on { background: #f0e7de; }
 .sw.family.on { background: #efdcd4; }
 .sw.obokwalk.on { background: #dce5d8; }
+.sw.plant.on { background: #c9dfc9; }
 .sw.sleep.on { background: #d9e7ea; }
 .timetable { display: flex; flex-direction: column; gap: 2px; user-select: none; }
 .trow { display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: center; }
@@ -200,6 +201,7 @@ h1, h2 {
 .cell.fill.personal, .cell.fill.move, .cell.fill.home { background: #f0e7de; border-color: #ddcbb8; }
 .cell.fill.family { background: #efdcd4; border-color: #dfc0b2; }
 .cell.fill.obokwalk, .cell.fill.obok, .cell.fill.walk, .cell.fill.rest { background: #dce5d8; border-color: #c2d1bc; }
+.cell.fill.plant { background: #c9dfc9; border-color: #a4c2a6; }
 .cell.fill.sleep { background: #d9e7ea; border-color: #bcd3d9; }
 
 .todolist { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
