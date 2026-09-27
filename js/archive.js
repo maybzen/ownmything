@@ -19,9 +19,12 @@ function habitRate(ds) {
 
 function hasContent(ds) {
   const s = day(ds);
+  const auto = s.autoCal || {};
   const cells = s.cells || {};
+  // ignore cells that were only auto-filled from the calendar
+  const own = Object.keys(cells).filter(id => auto[id] !== cells[id]);
   return !!(s.oneline || s.photo || s.braindump || s.weight || s.sleepH ||
-    Object.keys(cells).length || (s.todos || []).some(t => t.t));
+    own.length || (s.todos || []).some(t => t.t));
 }
 
 function allDays() {
@@ -29,7 +32,10 @@ function allDays() {
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i) || "";
     const pre = "ownmything:" + Store.profile() + ":d:";
-    if (k.indexOf(pre) === 0) out.push(k.slice(pre.length));
+    if (k.indexOf(pre) === 0) {
+      const ds = k.slice(pre.length);
+      if (hasContent(ds)) out.push(ds);
+    }
   }
   return out.sort();
 }

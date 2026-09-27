@@ -24,7 +24,10 @@
         <h2 id="dateTitle" style="display:inline">Today</h2>
       </div>
       <div class="head-right">
-        <button id="goToday" class="ghost-btn">Today</button>
+        <span class="hint" id="saveState">Saved</span>
+        <button id="saveBtn" class="btn sm">Save</button>
+        <button id="wipeBtn" class="ghost-btn sm">Delete</button>
+        <button id="goToday" class="ghost-btn sm">Today</button>
         <input type="date" id="datePicker" />
         <a class="gear" href="./pages/settings.html">⚙</a>
       </div>
@@ -57,7 +60,12 @@
         <h3>BrainDump</h3>
       </div>
       <textarea id="braindump" rows="4" placeholder=""></textarea>
-      <h4 class="sub">To Do <button id="addDiv" class="ghost-btn sm">+ Line</button></h4>
+      <h4 class="sub">To Do
+        <span class="sub-btns">
+          <button id="addDiv" class="ghost-btn sm">+ Line</button>
+          <button id="moveMonth" class="ghost-btn sm">→ Month</button>
+        </span>
+      </h4>
       <div id="todos"></div>
       <div id="remsBox" style="margin-top:8px"></div>
     </section>

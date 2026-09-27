@@ -21,9 +21,16 @@ HOURS.forEach(h => {
 function load(d) {
   return Store.get("d:" + d, "ownmything:" + d) || {};
 }
-function save() {
-  const prev = load(date);
-  Store.set("d:" + date, Object.assign({}, prev, {
+let dirty = false;
+function markDirty() { dirty = true; paintSaveBar(); }
+function paintSaveBar() {
+  const b = $("saveState");
+  if (b) b.textContent = dirty ? "Unsaved" : "Saved";
+  const s = $("saveBtn");
+  if (s) s.style.opacity = dirty ? "1" : "0.45";
+}
+function commit() {
+  Store.set("d:" + date, Object.assign({}, load(date), {
     lastSleep: $("lastSleep").value, wake: $("wake").value,
     weight: $("weight").value, sleepH: $("sleepH").value,
     braindump: $("braindump").value,
@@ -32,7 +39,20 @@ function save() {
     habitDone: habitDone,
   }));
   Store.set(monthKey(date), monthTodos);
+  dirty = false;
+  paintSaveBar();
+  return true;
 }
+// keep calendar auto-fill persisted even when the user has unsaved edits
+function saveCal() {
+  const prev = load(date);
+  if (dirty) prev.cells = prev.cells || {};
+  Store.set("d:" + date, Object.assign({}, prev, {
+    autoCal: prev.autoCal || {},
+    allDay: prev.allDay || [],
+  }));
+}
+function save() { commit(); }
 function monthKey(d) { return "month:" + d.slice(0, 7); }
 
 // --- weekday + holiday red ---
@@ -97,6 +117,7 @@ function apply(d) {
   migrateHabits(s);
   habitDone = s.habitDone || {};
   paintAll(); renderBlocks(); renderTodos(); renderMonthTodos(); renderHabitRate();
+  paintSaveBar();
   title.textContent = d;
   renderDateTitle();
   loadHolidays();
@@ -251,6 +272,11 @@ function renderMonthTodos() {
   const box = $("monthTodos");
   box.innerHTML = "";
   monthTodos.forEach(t => box.appendChild(todoRow(t, monthTodos, renderMonthTodos, box, { chain: true })));
+  const marks = (load(date).dumpMarks) || [];
+  if (marks.length) {
+    const seen = new Set(monthTodos.map(t => t.t));
+    marks.forEach(m => { if (m && !seen.has(m)) monthTodos.push({ id: uid(), t: m, done: false }); });
+  }
   if (!monthTodos.some(t => t.editing)) {
     monthTodos.push({ id: uid(), t: "", done: false, editing: true });
     box.appendChild(todoRow(monthTodos[monthTodos.length - 1], monthTodos, renderMonthTodos, box, { chain: true, draft: true }));
@@ -273,6 +299,33 @@ async function autoMonth() {
   finally { autoMonthBusy = false; }
 }
 $("addDiv").onclick = () => { todos.push({ id: uid(), div: true }); save(); renderTodos(); };
+$("moveMonth").onclick = () => {
+  const items = todos.filter(t => !t.div && t.t.trim());
+  if (!items.length) return;
+  if (!confirm(`Move ${items.length} item(s) to this month?`)) return;
+  monthTodos.push(...items.map(t => ({ id: uid(), t: t.t, done: t.done })));
+  todos = todos.filter(t => t.div);
+  commit(); renderTodos(); renderMonthTodos();
+};
+$("saveBtn").onclick = () => { commit(); };
+$("wipeBtn").onclick = () => {
+  if (!confirm(`Delete all records for ${date}?`)) return;
+  Store.set("d:" + date, {});
+  Store.set(monthKey(date), []);
+  dirty = false;
+  apply(date);
+};
+$("braindump").addEventListener("input", onDump);
+function onDump() {
+  markDirty();
+  const v = $("braindump").value;
+  const marks = v.split("\n").filter(l => /^\s*[-*]?\s*\[\s*\]\s*/.test(l));
+  const key = "d:" + date;
+  const prev = load(date);
+  prev.dumpMarks = marks.map(m => m.replace(/^\s*[-*]?\s*\[\s*\]\s*/, "").trim()).filter(Boolean);
+  prev.braindump = v;
+  Store.set(key, prev);
+}
 
 // --- timetable ---
 const tt = $("timetable");
@@ -553,8 +606,9 @@ window.pullCalendar = async function () {
   const s = load(date);
   s.autoCal = autoCal;
   s.allDay = allDay.map(e => ({ title: calTitle(e.title), cal: e.cal }));
+  if (!dirty) s.cells = cells;
   Store.set("d:" + date, s);
-  paintAll(); renderBlocks(); save();
+  paintAll(); renderBlocks();
   renderReminders(res.todos || []);
   renderAllDay(allDay);
   autoMonth();
@@ -571,14 +625,15 @@ function renderMonthCals(events, ym) {
   if (!items.length) { box.innerHTML = "<p class='hint'>No events</p>"; return; }
   const p = document.createElement("p");
   p.className = "mlist";
+  const today = Store.today();
   p.innerHTML = items.map(ev => {
     const d = new Date(ev.day + "T12:00:00");
     const wk = WD[d.getDay()];
-    const t = "";
-    return `<span class="ml">${d.getDate()}${wk} ${calTitle(ev.title)}</span>`;
+    const past = ev.day < today;
+    return `<span class="ml${past ? " past" : ""}">${d.getDate()}${wk} ${calTitle(ev.title)}</span>`;
   }).join("<i>·</i>");
   box.appendChild(p);
-  box.style.opacity = "0.6";
+  box.style.opacity = "0.75";
 }
 function renderReminders(list) {
   const box = $("remsBox");
@@ -654,9 +709,9 @@ function renderHabitRate() {
 
 // --- photo moved to Night page ---
 
-["weight", "sleepH", "braindump"].forEach(id => $(id).addEventListener("input", save));
-picker.onchange = () => { save(); date = picker.value; apply(date); if (window.pullCalendar) pullCalendar(); };
-$("goToday").onclick = () => { save(); date = todayStr(); picker.value = date; apply(date); if (window.pullCalendar) pullCalendar(); };
+["weight", "sleepH"].forEach(id => $(id).addEventListener("input", markDirty));
+picker.onchange = () => { commit(); date = picker.value; apply(date); };
+$("goToday").onclick = () => { commit(); date = todayStr(); picker.value = date; apply(date); if (window.pullCalendar) pullCalendar(); };
 $("goToday").onclick = () => { save(); date = todayStr(); picker.value = date; apply(date); };
 
 apply(date);

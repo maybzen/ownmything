@@ -122,6 +122,8 @@ h1, h2 {
 .ghost-btn { border: 1px solid var(--input-line); background: transparent; color: var(--muted); border-radius: 999px; padding: 5px 12px; font-size: 0.78rem; cursor: pointer; }
 .ghost-btn.sm { padding: 2px 10px; font-size: 0.7rem; }
 .sub { font-size: 1rem; margin: 16px 0 8px; display: flex; align-items: center; justify-content: space-between; }
+.sub-btns { display: flex; gap: 6px; }
+button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .tmemo { grid-column: 1 / -1; border: none !important; background: transparent !important; font-size: 0.8rem; padding: 2px 0 6px 36px !important; color: var(--ink); }
 .todo-check { display: flex; gap: 8px; align-items: center; padding: 7px 0; font-size: 0.92rem; border-bottom: 1px solid var(--line); }
 .todo-check input[type="checkbox"] { width: 17px; height: 17px; }
@@ -267,8 +269,10 @@ h1, h2 {
 .mcal-d u { font-size: 0.55rem; color: var(--muted); text-decoration: none; }
 .mlist { font-size: 0.8rem; line-height: 1.9; color: var(--ink); }
 .mlist .ml { white-space: nowrap; }
+.mlist .ml.past { text-decoration: line-through; opacity: 0.5; }
 .mlist i { color: var(--line); font-style: normal; margin: 0 7px; }
 .bnav { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: color-mix(in srgb, var(--card) 92%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.dfoot { display: flex; justify-content: center; align-items: center; gap: 18px; flex-wrap: wrap; margin: 0 auto; padding: 30px 0 42px; }
 .dfoot a { font-size: 0.82rem; color: var(--muted); text-decoration: none; border-bottom: 1px solid transparent; }
 .dfoot a:hover { color: var(--ink); border-bottom-color: var(--line); }
 .dfoot a.on { color: var(--ink); border-bottom-color: var(--ink); }
