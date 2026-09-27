@@ -300,8 +300,6 @@ function renderMonthTodos() {
     box.appendChild(todoRow(monthTodos[monthTodos.length - 1], monthTodos, renderMonthTodos, box, { chain: true, draft: true }));
   }
 }
-$("addTodo").onclick = () => { todos.push({ id: uid(), t: "", done: false, editing: true }); renderTodos(); };
-$("addMonthTodo").onclick = () => { monthTodos.push({ id: uid(), t: "", done: false, editing: true }); renderMonthTodos(); };
 $("loadMonthCal").onclick = () => autoMonth();
 let autoMonthBusy = false, autoMonthDone = "";
 async function autoMonth() {
