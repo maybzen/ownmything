@@ -123,6 +123,7 @@ h1, h2 {
 .todo-check.divider { position: relative; border-bottom: none; padding: 10px 0; }
 .todo-check.divider .divline { position: absolute; left: 0; right: 0; top: 50%; border-bottom: 1px solid var(--line); height: 0; }
 .todo-check.divider .grip, .todo-check.divider button { position: relative; z-index: 1; background: var(--card); border-radius: 4px; }
+.todo-check.divider button { margin-left: auto; }
 .grip { flex: none; }
 .todo-edit { border: none !important; background: transparent !important; flex: 1; padding: 0 !important; }
 .block-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
@@ -150,6 +151,9 @@ h1, h2 {
 .cal-day { aspect-ratio: 1; border: 1px solid transparent; background: transparent; color: var(--ink); border-radius: 8px; font-size: 0.85rem; cursor: pointer; position: relative; }
 .cal-day.has::after { content: ""; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: var(--muted); }
 .cal-day.cur { border-color: var(--ink); }
+.cal-day.mrate { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; cursor: default; }
+.cal-day.mrate b { font-weight: 600; font-size: 0.8rem; }
+.cal-day.mrate i { font-style: normal; font-size: 0.62rem; color: var(--muted); }
 .cal-tip { position: absolute; width: 180px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px; z-index: 40; box-shadow: 0 8px 24px rgba(18,19,22,0.12); font-size: 0.8rem; }
 .cal-tip img { width: 100%; border-radius: 6px; }
 .gal { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -256,8 +260,8 @@ button.btn:active { transform: scale(0.98); }
   .page.today { max-width: 1060px; }
   .day-grid { display: grid; grid-template-columns: 1fr 390px; gap: 16px; align-items: start; }
   .day-grid .card:last-child { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; }
-  .cell { height: 18px; }
-  .tmemo { padding-left: 32px !important; }
+  .cell { height: 15px; font-size: 9px; line-height: 15px; }
+  .tmemo { padding-left: 30px !important; }
 }
 
 /* mobile */

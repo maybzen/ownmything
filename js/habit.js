@@ -174,24 +174,32 @@ function renderWeek() {
 
 function renderMonth() {
   const defs = getDefs();
-  const mv = $("monthPicker").value || fmt(new Date()).slice(0, 7);
+  const mv = $("monthPicker").value || Store.today().slice(0, 7);
   $("monthPicker").value = mv;
   $("monthLabel").textContent = mv;
   const [y, m] = mv.split("-").map(Number);
   const daysIn = new Date(y, m, 0).getDate();
-  const box = $("monthRates");
+  const first = new Date(y, m - 1, 1).getDay();
+  const box = $("monthCal");
   box.innerHTML = "";
-  defs.forEach(def => {
-    let hit = 0;
-    for (let d = 1; d <= daysIn; d++) {
-      const ds = `${mv}-${String(d).padStart(2, "0")}`;
-      if (isDone(ds, def)) hit++;
-    }
-    const rate = Math.round(100 * hit / daysIn);
-    const p = document.createElement("p");
-    p.textContent = `${def.t} — ${rate}% (${hit}/${daysIn})`;
-    box.appendChild(p);
+  ["S","M","T","W","T","F","S"].forEach(d => {
+    const h = document.createElement("span");
+    h.className = "cal-h";
+    h.textContent = d;
+    box.appendChild(h);
   });
+  for (let i = 0; i < first; i++) box.appendChild(document.createElement("span"));
+  const today = Store.today();
+  for (let d = 1; d <= daysIn; d++) {
+    const ds = `${mv}-${String(d).padStart(2, "0")}`;
+    let hit = 0;
+    defs.forEach(def => { if (isDone(ds, def)) hit++; });
+    const rate = defs.length ? Math.round(100 * hit / defs.length) : 0;
+    const c = document.createElement("div");
+    c.className = "cal-day mrate" + (ds === today ? " cur" : "");
+    c.innerHTML = `<b>${d}</b><i>${rate}%</i>`;
+    box.appendChild(c);
+  }
 }
 $("monthPicker").onchange = renderMonth;
 $("datePicker").onchange = () => { selDate = $("datePicker").value; renderToday(); };

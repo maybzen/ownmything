@@ -10,7 +10,7 @@ function load(d) {
 }
 function hasEntry(d) {
   const s = load(d);
-  return !!(s.oneline || s.photo || (s.todos && s.todos.length) || (s.cells && Object.keys(s.cells).length));
+  return !!(s.oneline || s.photo);
 }
 function apply(d) {
   const s = load(d);

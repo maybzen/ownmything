@@ -281,6 +281,16 @@ function renderMonthTodos() {
 }
 $("addTodo").onclick = () => { todos.push({ id: uid(), t: "", done: false, editing: true }); renderTodos(); };
 $("addMonthTodo").onclick = () => { monthTodos.push({ id: uid(), t: "", done: false, editing: true }); renderMonthTodos(); };
+$("loadMonthCal").onclick = async () => {
+  const ym = date.slice(0, 7);
+  const box = $("monthCals");
+  box.innerHTML = "<p class='hint'>Loading…</p>";
+  try {
+    const r = await Auth.sb.functions.invoke("calendar-sync", { body: { month: ym } });
+    if (r.error || !r.data || r.data.error) throw new Error((r.data && r.data.error) || "failed");
+    renderMonthCals(r.data.events || [], ym);
+  } catch (e) { box.innerHTML = "<p class='hint'>Load failed</p>"; }
+};
 $("addDiv").onclick = () => { todos.push({ id: uid(), div: true }); save(); renderTodos(); };
 
 // --- timetable ---
@@ -488,19 +498,15 @@ window.pullCalendar = async function () {
   try { session = await Auth.session(); } catch (e) { if (st) st.textContent = "Sync failed (session)"; return; }
   if (!session) { if (st) st.textContent = "Sync off"; return; }
   const ym = date.slice(0, 7);
-  if (ym !== lastMonthPulled) {
-    let res;
-    try {
-      const r = await Auth.sb.functions.invoke("calendar-sync", { body: { month: ym } });
-      if (r.error) throw r.error;
-      res = r.data;
-    } catch (e) { if (st) st.textContent = "Sync failed (network)"; return; }
-    if (!res || res.error || !Array.isArray(res.events)) { if (st) st.textContent = "Sync failed: " + (res ? res.error : "?"); return; }
-    lastMonthPulled = ym;
-    monthCache = res;
-  }
-  const res = monthCache;
-  const dayEvents = (res.events || []).filter(ev => ev.day === date);
+  let res = null;
+  try {
+    const r = await Auth.sb.functions.invoke("calendar-sync", { body: { date } });
+    if (r.error) throw r.error;
+    res = r.data;
+  } catch (e) { if (st) st.textContent = "Sync failed (network)"; return; }
+  if (!res || res.error || !Array.isArray(res.events)) { if (st) st.textContent = "Sync failed: " + (res ? res.error : "?"); return; }
+  lastMonthPulled = "";
+  const dayEvents = res.events;
   // clear previous auto-fill
   const prev = load(date).autoCal || {};
   Object.keys(prev).forEach(id => { if (cells[id] === prev[id]) delete cells[id]; });
@@ -523,7 +529,6 @@ window.pullCalendar = async function () {
     st.textContent = n ? `${tag} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} · ${n} events` : "No events today";
   }
   renderReminders(res.todos || []);
-  renderMonthCals(res.events || [], ym);
 };
 let lastMonthPulled = "";
 let monthCache = null;
