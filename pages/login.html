@@ -32,7 +32,7 @@
       { auth: { persistSession: true, autoRefreshToken: true, storageKey: "ownmything-auth" } }
     );
     const $ = (id) => document.getElementById(id);
-    async function go() { location.href = "../today.html"; }
+    async function go() { location.href = "../menu.html"; }
     (async () => {
       try {
         const { data } = await sb.auth.getSession();

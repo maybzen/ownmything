@@ -31,13 +31,19 @@
     <section class="card">
       <h3>Log</h3>
       <div class="row2">
-        <label>Sleep <input id="lastSleep" readonly placeholder="--:--" /></label>
-        <label>Wake <input id="wake" readonly placeholder="--:--" /></label>
+        <label>Sleep <input id="lastSleep" type="time" /></label>
+        <label>Wake <input id="wake" type="time" /></label>
       </div>
       <div class="row2" style="margin-top:8px">
         <label>Weight<input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="kg" /></label>
         <label>Hours<input id="sleepH" type="number" inputmode="decimal" step="0.5" placeholder="auto" /></label>
       </div>
+    </section>
+
+    <section class="card">
+      <h3 id="monthTitleSide">Month</h3>
+      <div id="monthTodos"></div>
+      <button id="addMonthTodo" class="ghost-btn" style="margin-top:8px">+ Add</button>
     </section>
 
     <div class="day-grid">
@@ -63,14 +69,16 @@
       </div>
       <div id="timetable" class="timetable"></div>
       <div id="blocks"></div>
+      <div class="row2" style="margin-top:8px">
+        <button id="selectMode" class="ghost-btn">Select</button>
+        <button id="clearDay" class="ghost-btn">Clear day</button>
+      </div>
+      <div class="row2" id="selBar" style="display:none;margin-top:8px">
+        <span class="hint" id="selCount"></span>
+        <button id="delSel">Delete</button>
+      </div>
     </section>
     </div>
-
-    <section class="card">
-      <h3 id="monthTitleSide">Month</h3>
-      <div id="monthTodos"></div>
-      <button id="addMonthTodo" class="ghost-btn" style="margin-top:8px">+ Add</button>
-    </section>
 
     <nav class="menu sub foot">
       <a href="./pages/habit.html">Habit Tracker <span id="habitRate"></span></a>
@@ -78,19 +86,6 @@
       <a href="./pages/reading.html">Library</a>
       <a href="./pages/night.html">Night</a>
     </nav>
-  </div>
-
-  <div id="drumModal" class="drum-modal" style="display:none">
-    <div class="drum-box">
-      <div class="drum-cols">
-        <div class="drum-col" id="drumH"></div>
-        <div class="drum-col" id="drumM"></div>
-      </div>
-      <div class="drum-btns">
-        <button id="drumCancel" class="ghost-btn">Cancel</button>
-        <button id="drumOk">OK</button>
-      </div>
-    </div>
   </div>
 
   <script src="./js/store.js"></script>

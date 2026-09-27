@@ -57,54 +57,10 @@ function apply(d) {
   if (!$("sleepH").value) { autoSleepCalc(); paintSleepGrid(); }
 }
 
-// --- drum time picker (desktop only; touch uses native) ---
-const IS_TOUCH = ("ontouchstart" in window) || navigator.maxTouchPoints > 0;
-let drumTarget = null;
-function markDrum(el) {
-  const i = Math.round(el.scrollTop / 34);
-  Array.from(el.children).forEach((d, j) => d.classList.toggle("sel", j === i));
-}
-function buildDrum(el, n, val) {
-  el.innerHTML = "";
-  el.dataset.count = n;
-  for (let i = 0; i < n; i++) {
-    const d = document.createElement("div");
-    d.className = "drum-item";
-    d.textContent = String(i).padStart(2, "0");
-    el.appendChild(d);
-  }
-  el.onscroll = () => markDrum(el);
-  requestAnimationFrame(() => { el.scrollTop = val * 34; markDrum(el); });
-}
-function drumVal(el) {
-  const i = Math.round(el.scrollTop / 34);
-  return String(Math.max(0, Math.min(Number(el.dataset.count) - 1, i))).padStart(2, "0");
-}
-function openDrum(input) {
-  drumTarget = input;
-  const [h, m] = (input.value || "07:00").split(":").map(Number);
-  buildDrum($("drumH"), 24, h || 0);
-  buildDrum($("drumM"), 60, m || 0);
-  $("drumModal").style.display = "flex";
-}
-$("drumCancel").onclick = () => { $("drumModal").style.display = "none"; };
-$("drumOk").onclick = () => {
-  if (drumTarget) {
-    drumTarget.value = drumVal($("drumH")) + ":" + drumVal($("drumM"));
-    autoSleepCalc(); paintSleepGrid(); save();
-  }
-  $("drumModal").style.display = "none";
-};
-$("lastSleep").onclick = () => { if (!IS_TOUCH) openDrum($("lastSleep")); };
-$("wake").onclick = () => { if (!IS_TOUCH) openDrum($("wake")); };
-if (IS_TOUCH) {
-  ["lastSleep", "wake"].forEach(id => {
-    const el = $(id);
-    el.type = "time";
-    el.removeAttribute("readonly");
-    el.addEventListener("change", () => { autoSleepCalc(); paintSleepGrid(); save(); });
-  });
-}
+// --- native time inputs (iOS spinner / desktop picker) ---
+["lastSleep", "wake"].forEach(id => $(id).addEventListener("change", () => {
+  autoSleepCalc(); paintSleepGrid(); save();
+}));
 
 // --- sleep ---
 function toMin(t) {
@@ -199,6 +155,36 @@ $("addMonthTodo").onclick = () => { monthTodos.push({ id: uid(), t: "", done: fa
 const tt = $("timetable");
 let curColor = "work";
 let painting = false, erasing = false, eraseColor = null;
+let selectMode = false;
+const selected = new Set();
+
+$("selectMode").onclick = () => {
+  selectMode = !selectMode;
+  selected.clear();
+  $("selectMode").textContent = selectMode ? "Done" : "Select";
+  updateSelBar();
+};
+$("clearDay").onclick = () => {
+  if (!Object.keys(cells).length) return;
+  if (!confirm("오늘 타임플랜 다 지울까?")) return;
+  cells = {}; labels = {}; autoSleepIds = [];
+  paintAll(); renderBlocks(); save();
+};
+$("delSel").onclick = () => {
+  selected.forEach(id => { delete cells[id]; });
+  selected.clear();
+  selectMode = false;
+  $("selectMode").textContent = "Select";
+  updateSelBar();
+  paintAll(); renderBlocks(); save();
+};
+function updateSelBar() {
+  $("selBar").style.display = selectMode ? "grid" : "none";
+  $("selCount").textContent = selected.size ? `${selected.size} selected` : "탭해서 선택";
+  tt.querySelectorAll(".cell").forEach(c => {
+    c.classList.toggle("sel", selected.has(c.dataset.id));
+  });
+}
 
 document.querySelectorAll("#palette .sw").forEach(b => {
   b.onclick = () => {
@@ -239,6 +225,14 @@ document.addEventListener("pointerup", () => { if (painting) { painting = false;
 
 function toggleCell(c, drag) {
   const id = c.dataset.id;
+  if (selectMode) {
+    if (!drag) {
+      if (selected.has(id)) selected.delete(id);
+      else if (cells[id]) selected.add(id);
+      updateSelBar();
+    }
+    return;
+  }
   const v = cells[id];
   if (!drag) {
     if (v === curColor) { delete cells[id]; }
@@ -291,7 +285,7 @@ function renderBlocks() {
     const txt = labels[r.start] || "";
     if (txt) {
       const mid = cellEl(r.ids[Math.floor(r.ids.length / 2)]);
-      if (mid) mid.textContent = txt;
+      if (mid) { mid.textContent = txt; mid.classList.add("labeled"); }
     }
     const row = document.createElement("div");
     row.className = "block-row";
@@ -307,7 +301,7 @@ function renderBlocks() {
       if (inp.value) labels[r.start] = inp.value;
       else delete labels[r.start];
       const mid2 = cellEl(r.ids[Math.floor(r.ids.length / 2)]);
-      if (mid2) mid2.textContent = inp.value;
+      if (mid2) { mid2.textContent = inp.value; mid2.classList.toggle("labeled", !!inp.value); }
       save();
     };
     row.append(dot, range, inp);
