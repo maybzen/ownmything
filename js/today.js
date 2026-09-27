@@ -342,7 +342,7 @@ function runs() {
   if (cur) out.push(cur);
   return out;
 }
-const CNAMES = { work: "Work", promise: "Meet", personal: "Me", family: "Family", plant: "Plant", obok: "Obok", sleep: "기록" };
+const CNAMES = { work: "Work", promise: "Meet", personal: "Me", family: "Family", obok: "Obok", sleep: "Sleep" };
 function cellEl(id) {
   return tt.querySelector(`[data-id="${id}"]`);
 }
@@ -416,7 +416,7 @@ function calColor(ev) {
   const cal = ev.cal || "";
   if (/정현/.test(cal)) return "personal";
   if (/하트|[❤♥💜💛💚💙]/.test(cal)) return "promise";
-  if (/식물/.test(cal)) return "plant";
+  if (/식물/.test(cal)) return "personal";
   if (/업무/.test(cal)) return "work";
   if (/기록/.test(cal)) return "sleep";
   if (/공부/.test(cal)) return "work";
