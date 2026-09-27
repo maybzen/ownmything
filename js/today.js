@@ -60,7 +60,8 @@ function apply(d) {
   if (!$("sleepH").value) { autoSleepCalc(); paintSleepGrid(); }
 }
 
-// --- drum time picker ---
+// --- drum time picker (desktop only; touch uses native) ---
+const IS_TOUCH = ("ontouchstart" in window) || navigator.maxTouchPoints > 0;
 let drumTarget = null;
 function buildDrum(el, n, val) {
   el.innerHTML = "";
@@ -92,8 +93,16 @@ $("drumOk").onclick = () => {
   }
   $("drumModal").style.display = "none";
 };
-$("lastSleep").onclick = () => openDrum($("lastSleep"));
-$("wake").onclick = () => openDrum($("wake"));
+$("lastSleep").onclick = () => { if (!IS_TOUCH) openDrum($("lastSleep")); };
+$("wake").onclick = () => { if (!IS_TOUCH) openDrum($("wake")); };
+if (IS_TOUCH) {
+  ["lastSleep", "wake"].forEach(id => {
+    const el = $(id);
+    el.type = "time";
+    el.removeAttribute("readonly");
+    el.addEventListener("change", () => { autoSleepCalc(); paintSleepGrid(); save(); });
+  });
+}
 
 // --- sleep ---
 function toMin(t) {
