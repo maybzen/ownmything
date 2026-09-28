@@ -29,16 +29,26 @@ function paintSaveBar() {
   const s = $("saveBtn");
   if (s) s.style.opacity = dirty ? "1" : "0.45";
 }
+function cleanTodos(arr) {
+  return (Array.isArray(arr) ? arr : [])
+    .filter(t => t && (t.div || (t.t && String(t.t).trim())))
+    .map(t => {
+      const c = Object.assign({}, t);
+      delete c.editing;
+      if (typeof c.t !== "string") c.t = c.t ? String(c.t) : "";
+      return c;
+    });
+}
 function commit() {
   Store.set("d:" + date, Object.assign({}, load(date), {
     lastSleep: $("lastSleep").value, wake: $("wake").value,
     weight: $("weight").value, sleepH: $("sleepH").value,
     braindump: $("braindump").value,
     cells: cells, labels: labels, autoSleep: autoSleepIds,
-    todos: todos,
+    todos: cleanTodos(todos),
     habitDone: habitDone,
   }));
-  Store.set(monthKey(date), monthTodos);
+  Store.set(monthKey(date), cleanTodos(monthTodos));
   dirty = false;
   paintSaveBar();
   return true;
@@ -132,9 +142,9 @@ function apply(d) {
   });
   labels = s.labels || {};
   autoSleepIds = s.autoSleep || [];
-  todos = Array.isArray(s.todos) ? s.todos : [];
+  todos = cleanTodos(s.todos);
   if (!Array.isArray(s.todos)) todos = [{ id: uid(), div: true }, { id: uid(), div: true }];
-  monthTodos = Store.get(monthKey(d)) || [];
+  monthTodos = cleanTodos(Store.get(monthKey(d)));
   const mn = ["January","February","March","April","May","June","July","August","September","October","November","December"][Number(d.slice(5, 7)) - 1];
   $("monthTitleSide").textContent = mn;
   migrateHabits(s);
@@ -348,8 +358,9 @@ function renderMonthTodos() {
   const marks = (load(date).dumpMarks) || [];
   if (marks.length) {
     const seen = new Set(monthTodos.map(t => t.t));
-    marks.forEach(m => { if (m && !seen.has(m)) monthTodos.push({ id: uid(), t: m, done: false }); });
-    save();
+    let added = 0;
+    marks.forEach(m => { if (m && !seen.has(m)) { monthTodos.push({ id: uid(), t: m, done: false }); seen.add(m); added++; } });
+    if (added) save();
   }
   monthTodos.forEach(t => box.appendChild(todoRow(t, monthTodos, renderMonthTodos, box, { chain: true })));
   if (!monthTodos.some(t => t.editing)) {
@@ -375,7 +386,7 @@ async function autoMonth() {
   finally { autoMonthBusy = false; }
 }
 $("addDiv").onclick = () => { todos.push({ id: uid(), div: true }); save(); renderTodos(); };
-function selectedIn(list) { return list.filter(t => t.sel && t.t.trim()); }
+function selectedIn(list) { return list.filter(t => t && t.sel && t.t && String(t.t).trim()); }
 function setSelBtn(id, on) { const b = $(id); if (b) { b.textContent = on ? "Done" : "Select"; b.classList.toggle("on", on); } }
 $("moveMonth").onclick = () => {
   const picked = selectedIn(todos);
@@ -836,7 +847,7 @@ if (window.Auth && Auth.onCloudChange) {
     if (editingTodo) return;
     const s = load(date);
     if (s.todos !== undefined) {
-      const fresh = Array.isArray(s.todos) ? s.todos : [];
+      const fresh = cleanTodos(s.todos);
       todos.length = 0;
       fresh.forEach(t => todos.push(t));
     }
@@ -849,7 +860,7 @@ if (window.Auth && Auth.onCloudChange) {
     if (document.activeElement !== $("lastSleep") && s.lastSleep !== undefined) $("lastSleep").value = s.lastSleep || "";
     if (document.activeElement !== $("wake") && s.wake !== undefined) $("wake").value = s.wake || "";
     if (document.activeElement !== $("weight") && s.weight !== undefined) $("weight").value = s.weight || "";
-    const freshM = Store.get(monthKey(date)) || [];
+    const freshM = cleanTodos(Store.get(monthKey(date)));
     monthTodos.length = 0;
     freshM.forEach(t => monthTodos.push(t));
     renderTodos(); renderMonthTodos();

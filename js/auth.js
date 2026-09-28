@@ -7,6 +7,7 @@ window.Auth = (() => {
   let uid = null;
   const timers = {};
   const recentlyPushed = {};
+  const lastPushed = {};
   let realtimeChannel = null;
   const cloudListeners = [];
   const inPages = () => location.pathname.includes("/pages/");
@@ -20,6 +21,7 @@ window.Auth = (() => {
   function queuePush(key, value) {
     if (!uid) return;
     recentlyPushed[key] = Date.now();
+    try { lastPushed[key] = JSON.stringify(value); } catch (e) {}
     clearTimeout(timers[key]);
     timers[key] = setTimeout(async () => {
       const { error } = await sb.from("store").upsert({ user_id: uid, key, value });
@@ -34,9 +36,24 @@ window.Auth = (() => {
   function handleCloudEvent(payload) {
     const row = payload.new;
     if (!row || row.user_id !== uid) return;
+    const lk = "ownmything:" + uid + ":" + row.key;
+    let incoming = null, current = null;
+    try { incoming = JSON.stringify(row.value); } catch (e) {}
+    try { current = localStorage.getItem(lk); } catch (e) {}
+    // No-op: cloud already matches local. Update meta, do NOT re-render.
+    if (incoming !== null && current !== null && current === incoming) {
+      try {
+        const m = meta();
+        m[uid + ":" + row.key] = new Date(row.updated_at).getTime();
+        setMeta(m);
+      } catch (e) {}
+      return;
+    }
+    // Own echo (even a stale one): never clobber local with it.
+    if (incoming !== null && lastPushed[row.key] === incoming) return;
     if (recentlyPushed[row.key] && Date.now() - recentlyPushed[row.key] < 3000) return;
     try {
-      localStorage.setItem("ownmything:" + uid + ":" + row.key, JSON.stringify(row.value));
+      localStorage.setItem(lk, JSON.stringify(row.value));
       const m = meta();
       m[uid + ":" + row.key] = new Date(row.updated_at).getTime();
       setMeta(m);
