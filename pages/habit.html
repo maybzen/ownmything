@@ -23,7 +23,7 @@
       <h2>Habit Tracker <span class="hint" id="headDate"></span></h2>
       <div class="head-right">
         <button id="goTodayDate" class="ghost-btn">Today</button>
-        <input type="date" id="datePicker" />
+        <input type="date" id="datePicker" class="mini" />
       </div>
     </header>
 
@@ -53,9 +53,11 @@
     <details class="card">
       <summary>Manage</summary>
       <div id="defs" style="margin-top:8px"></div>
-      <div class="row2">
-        <input id="newDef" placeholder="New habit" />
-        <button id="addDef" class="btn">Add</button>
+      <div class="flist" style="margin-top:8px">
+        <label><span>Habit</span><input id="newDef" placeholder="New habit" /></label>
+        <div class="frow" style="justify-content:flex-end">
+          <button id="addDef" class="btn sm">Add</button>
+        </div>
       </div>
     </details>
 

@@ -26,26 +26,31 @@
     </header>
 
     <section class="card">
-      <h3>Summary <input type="month" id="mPicker" /></h3>
+      <div class="card-head">
+        <h3>Summary</h3>
+        <input type="month" id="mPicker" class="mini" />
+      </div>
       <p id="summary" class="hint"></p>
     </section>
 
     <section class="card">
       <h3>Add</h3>
-      <div class="lgrid">
-        <input type="date" id="tDate" />
-        <select id="tKind"><option value="expense">Out</option><option value="income">In</option></select>
-        <select id="tCat"></select>
-        <input id="tAmt" type="number" inputmode="decimal" placeholder="Amount" />
-        <select id="tMethod"><option>Cash</option><option>Account</option><option>Card</option><option>Installment</option></select>
-        <input id="tMemo" placeholder="Memo" />
+      <div class="flist">
+        <label><span>Date</span><input type="date" id="tDate" /></label>
+        <label><span>Type</span><select id="tKind"><option value="expense">Out</option><option value="income">In</option></select></label>
+        <label><span>Category</span><select id="tCat"></select></label>
+        <label><span>Amount</span><input id="tAmt" type="number" inputmode="decimal" placeholder="0" /></label>
+        <label><span>Method</span><select id="tMethod"><option>Cash</option><option>Account</option><option>Card</option><option>Installment</option></select></label>
+        <label><span>Memo</span><input id="tMemo" placeholder="" /></label>
       </div>
-      <div class="lgrid" id="instRow" style="display:none">
-        <input id="tCard" placeholder="Card" />
-        <input id="tMonths" type="number" min="2" max="36" value="6" />
-        <span class="hint">months → split monthly</span>
+      <div class="flist" id="instRow" style="display:none;margin-top:6px">
+        <label><span>Card</span><input id="tCard" placeholder="" /></label>
+        <label><span>Months</span><input id="tMonths" type="number" min="2" max="36" value="6" /></label>
+        <div class="frow"><span class="hint">split into monthly entries</span></div>
       </div>
-      <button id="addTxn" class="btn">Add</button>
+      <div class="frow" style="display:flex;justify-content:flex-end;margin-top:10px">
+        <button id="addTxn" class="btn sm">Add</button>
+      </div>
     </section>
 
     <section class="card">
@@ -60,27 +65,31 @@
 
     <section class="card">
       <h3>Statements</h3>
-      <div class="lgrid">
-        <input type="month" id="sMonth" />
-        <input id="sCard" placeholder="Card" />
-        <input id="sAmt" type="number" inputmode="decimal" placeholder="Amount" />
-        <input id="sNote" placeholder="Note" />
+      <div class="flist">
+        <label><span>Month</span><input type="month" id="sMonth" /></label>
+        <label><span>Card</span><input id="sCard" placeholder="" /></label>
+        <label><span>Amount</span><input id="sAmt" type="number" inputmode="decimal" placeholder="0" /></label>
+        <label><span>Note</span><input id="sNote" placeholder="" /></label>
+        <div class="frow" style="justify-content:flex-end">
+          <button id="addStmt" class="btn sm">Add</button>
+        </div>
       </div>
-      <button id="addStmt" class="btn">Add</button>
       <div id="stmtList" style="margin-top:8px"></div>
     </section>
 
     <section class="card">
       <h3>Loans</h3>
-      <div class="lgrid">
-        <input id="loanName" placeholder="Name" />
-        <input id="loanBank" placeholder="Bank" />
-        <input id="loanTotal" type="number" inputmode="decimal" placeholder="Principal" />
-        <input id="loanRate" type="number" step="0.1" inputmode="decimal" placeholder="Rate %" />
-        <input id="loanMonthly" type="number" inputmode="decimal" placeholder="Monthly" />
-        <input id="loanStart" type="month" />
-        <input id="loanMemo" placeholder="Memo" />
-        <button id="addLoan" class="btn">Add</button>
+      <div class="flist">
+        <label><span>Name</span><input id="loanName" placeholder="" /></label>
+        <label><span>Bank</span><input id="loanBank" placeholder="" /></label>
+        <label><span>Principal</span><input id="loanTotal" type="number" inputmode="decimal" placeholder="0" /></label>
+        <label><span>Rate %</span><input id="loanRate" type="number" step="0.1" inputmode="decimal" placeholder="0" /></label>
+        <label><span>Monthly</span><input id="loanMonthly" type="number" inputmode="decimal" placeholder="0" /></label>
+        <label><span>Start</span><input id="loanStart" type="month" /></label>
+        <label><span>Memo</span><input id="loanMemo" placeholder="" /></label>
+        <div class="frow" style="justify-content:flex-end">
+          <button id="addLoan" class="btn sm">Add</button>
+        </div>
       </div>
       <div id="loanList" style="margin-top:8px"></div>
     </section>

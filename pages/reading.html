@@ -22,18 +22,20 @@
       <h2>Library <span class="hint" id="headDate"></span></h2>
       <div class="head-right">
         <button id="goTodayDate" class="ghost-btn">All</button>
-        <input type="date" id="dateFilter" />
+        <input type="date" id="dateFilter" class="mini" />
       </div>
     </header>
     <section class="card">
       <h3>Add</h3>
-      <div class="lgrid">
-        <input id="bTitle" placeholder="Title" />
-        <input id="bAuthor" placeholder="Author" />
-        <select id="bStatus"><option>Reading</option><option>Done</option><option>Want</option></select>
-        <select id="bRating"><option value="0">★ -</option><option value="1">★ 1</option><option value="2">★ 2</option><option value="3">★ 3</option><option value="4">★ 4</option><option value="5">★ 5</option></select>
-        <input id="bMemo" placeholder="Memo" />
-        <button id="addBook" class="btn">Add</button>
+      <div class="flist">
+        <label><span>Title</span><input id="bTitle" placeholder="" /></label>
+        <label><span>Author</span><input id="bAuthor" placeholder="" /></label>
+        <label><span>Status</span><select id="bStatus"><option>Reading</option><option>Done</option><option>Want</option></select></label>
+        <label><span>Rating</span><select id="bRating"><option value="0">★ -</option><option value="1">★ 1</option><option value="2">★ 2</option><option value="3">★ 3</option><option value="4">★ 4</option><option value="5">★ 5</option></select></label>
+        <label><span>Memo</span><input id="bMemo" placeholder="" /></label>
+        <div class="frow" style="justify-content:flex-end">
+          <button id="addBook" class="btn sm">Add</button>
+        </div>
       </div>
     </section>
     <div id="bookGrid" class="book-grid"></div>

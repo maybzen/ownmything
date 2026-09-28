@@ -239,6 +239,38 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
   box-shadow: 0 1px 3px rgba(18, 19, 22, 0.03), 0 4px 12px rgba(18, 19, 22, 0.02);
 }
 .card h3 { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+/* Minimal list form: label column + underline field, one row per field. */
+.flist { display: grid; grid-template-columns: 68px 1fr; gap: 0 10px; align-items: center; }
+.flist > label, .card .flist > label { display: contents; }
+.flist > label > span { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.01em; }
+.flist > label > input, .flist > label > select {
+  border: none; border-bottom: 1px solid var(--line); border-radius: 0;
+  background: transparent; padding: 7px 2px; min-width: 0; width: 100%;
+}
+.flist > label > span { align-self: start; padding-top: 9px; }
+.flist > label > input:focus, .flist > label > select:focus { outline: none; border-bottom-color: var(--ink); }
+.flist > label > input::placeholder { color: var(--line); }
+.flist > .frow { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
+.flist > .frow > .hint { flex: 1; }
+.flist .btn, .flist > .frow .btn { justify-self: end; }
+.btn-row { display: flex; gap: 8px; margin-top: 10px; }
+.btn-row > * { flex: 1; }
+details.card > summary {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--muted); cursor: pointer;
+  list-style: none; display: flex; align-items: center; gap: 6px;
+}
+details.card > summary::-webkit-details-marker { display: none; }
+details.card > summary::before { content: "▸"; font-size: 0.8em; }
+details.card[open] > summary::before { content: "▾"; }
+details.card > summary:hover { color: var(--ink); }
+.flist > .frow { padding-top: 10px; }
+.flist > label > input[type=date], .flist > label > input[type=month] { padding-right: 0; }
+/* date/month pickers need the full row width to render their value */
+.flist > label:has(> input[type=date]) > input,
+.flist > label:has(> input[type=month]) > input { grid-column: 1 / -1; }
+.flist > label:has(> input[type=date]) > span,
+.flist > label:has(> input[type=month]) > span { font-size: 0.66rem; }
 .log-card { max-width: 560px; }
 .log-card .row2 label { flex-direction: row; align-items: center; gap: 8px; }
 .log-card .row2 label input { width: auto; flex: 1 1 auto; min-width: 0; }
@@ -399,7 +431,7 @@ button.btn:active { transform: scale(0.98); }
   .page { padding: 28px 12px 84px; }
   .pad-b { height: 0; }
   .center h1 { font-size: 2.4rem; }
-  .page-title { margin-top: 14px; }
+  .page-title { margin: 4px 0 8px; }
 
   /* iOS: prevent zoom only on text entry (not selects) */
   input[type=text], input[type=number], input[type=date], input[type=month],
@@ -419,6 +451,8 @@ button.btn:active { transform: scale(0.98); }
   .cal-day { min-height: 34px; font-size: 0.75rem; }
   .mcal-d { min-height: 46px; }
   .todo-check { padding: 8px 0; font-size: 0.85rem; }
+  .flist { grid-template-columns: 62px 1fr; gap: 0 8px; }
+  .flist > label > input, .flist > label > select { padding: 8px 2px; }
 
   /* time plan: whole day visible without scrolling */
   .trow .cell { height: 18px; font-size: 8px; line-height: 16px; border-radius: 3px; }
@@ -454,7 +488,6 @@ button.btn:active { transform: scale(0.98); }
   .sm-grid { grid-template-columns: repeat(3, 1fr); }
   .habit-board { grid-template-columns: 1fr; }
   .hcol { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
-  .hrow { grid-template-columns: 1fr repeat(7, 18px) 34px; gap: 2px; font-size: 0.68rem; overflow-x: auto; }
 
   /* archive: whole month + summary in one screen */
   .mcal { gap: 2px; }
@@ -481,17 +514,14 @@ button.btn:active { transform: scale(0.98); }
   #braindump { min-height: 56px; height: auto; }
   .card-head { margin-bottom: 8px; }
   .card-head .ghost-btn.sm { padding: 6px 8px; }
-  .page-title { margin: 4px 0 8px; }
   .today-head { flex-direction: column; align-items: stretch; gap: 8px; margin: 10px 0 12px; }
   .head-top { display: flex; align-items: center; gap: 8px; width: 100%; }
   .head-top h2 { font-size: 1.3rem; min-width: 0; overflow-wrap: anywhere; }
   .head-top .hint { flex: 0 0 auto; font-size: 0.6rem; white-space: nowrap; }
   .head-right { display: flex; flex-wrap: wrap; gap: 5px; flex-shrink: 1; }
   .head-right button { padding: 6px 7px; font-size: 0.72rem; min-height: 30px; flex: 0 0 auto; }
-  .hint.warn { color: #b3402f; font-weight: 600; }
   .sub-btns { display: flex; gap: 4px; margin-left: auto; }
   .sub-btns .ghost-btn.sm { padding: 5px 7px; font-size: 0.7rem; min-height: 28px; }
-  #braindump { min-height: 56px; }
   .quote { font-size: 0.95rem; }
   .mlist { font-size: 0.72rem; line-height: 1.8; }
   .dfoot { display: none; }
