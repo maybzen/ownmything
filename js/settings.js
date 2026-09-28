@@ -43,7 +43,7 @@ $("importFile").onchange = (e) => {
       Object.keys(obj).forEach(k => { localStorage.setItem(k, JSON.stringify(obj[k])); n++; });
       Store.set("last-backup", Date.now());
       location.reload();
-    } catch (err) { $("lastBackup").textContent = "Import failed"; }
+    } catch (err) { $("lastBackup").textContent = "가져오기 실패"; }
   };
   r.readAsText(f);
 };
@@ -101,7 +101,7 @@ async function loadMembers() {
       const b = document.createElement("button");
       b.textContent = "×";
       b.onclick = async () => {
-        if (!confirm(`${u.email} Delete this member and all their data?`)) return;
+        if (!confirm(`${u.email} 멤버와 모든 기록을 삭제할까요?`)) return;
         try { await callAdmin({ action: "delete", id: u.id }); loadMembers(); }
         catch (e) { $("adminMsg").textContent = e.message; }
       };
@@ -116,7 +116,7 @@ $("inviteBtn").onclick = async () => {
   $("adminMsg").textContent = "";
   try {
     await callAdmin({ action: "invite", email });
-    $("adminMsg").textContent = "Invite sent";
+    $("adminMsg").textContent = "초대 보냄";
     $("inviteEmail").value = "";
     loadMembers();
   } catch (e) { $("adminMsg").textContent = e.message; }

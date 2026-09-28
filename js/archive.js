@@ -1,6 +1,6 @@
 const $ = (id) => document.getElementById(id);
 const P2 = (n) => String(n).padStart(2, "0");
-const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MONTHS = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
 let ym = Store.today().slice(0, 7);
 
 function day(ds) { return Store.get("d:" + ds, "ownmything:" + ds) || {}; }
@@ -65,12 +65,12 @@ function renderSummary() {
   const box = $("sumCards");
   box.innerHTML = "";
   const cards = [
-    ["Log rate", s.n ? Math.round(100 * s.logged / s.n) + "%" : "—", `${s.logged}/${s.n} days`],
-    ["10-min blocks", (s.blocks / 60).toFixed(1) + "h", `${Math.round(s.blocks / 10)} blocks`],
-    ["Habit", s.habit !== null ? s.habit + "%" : "—", "routine rate"],
-    ["Weight", s.avgW ? s.avgW.toFixed(1) + " kg" : "—", s.weights.length ? `${s.weights.length} entries` : "no data"],
-    ["Sleep", s.avgS ? s.avgS.toFixed(1) + " h" : "—", s.avgS ? "month avg" : "no data"],
-    ["Total days", String(all.length), "all records"],
+    ["기록률", s.n ? Math.round(100 * s.logged / s.n) + "%" : "—", `${s.logged}/${s.n}일`],
+    ["시간", (s.blocks / 60).toFixed(1) + "h", `${Math.round(s.blocks / 10)}칸`],
+    ["습관", s.habit !== null ? s.habit + "%" : "—", "수행률"],
+    ["체중", s.avgW ? s.avgW.toFixed(1) + " kg" : "—", s.weights.length ? `${s.weights.length}건` : "없음"],
+    ["수면", s.avgS ? s.avgS.toFixed(1) + " h" : "—", s.avgS ? "월 평균" : "없음"],
+    ["총 일수", String(all.length), "전체 기록"],
   ];
   cards.forEach(([k, v, sub]) => {
     const d = document.createElement("div");
@@ -82,10 +82,10 @@ function renderSummary() {
 
 function renderCal() {
   const [y, m] = ym.split("-").map(Number);
-  $("calLabel").textContent = `${MONTHS[m - 1]} ${y}`;
+  $("calLabel").textContent = `${y}년 ${MONTHS[m - 1]}`;
   const grid = $("calGrid");
   grid.innerHTML = "";
-  ["S","M","T","W","T","F","S"].forEach(d => {
+  ["일","월","화","수","목","금","토"].forEach(d => {
     const h = document.createElement("span");
     h.className = "mcal-h";
     h.textContent = d;
@@ -109,14 +109,14 @@ function renderDay() {
   const s = day(date);
   $("dayTitle").textContent = date;
   const d = new Date(date + "T12:00:00");
-  $("dayDow").textContent = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()];
+  $("dayDow").textContent = ["일","월","화","수","목","금","토"][d.getDay()];
   $("dayOne").textContent = s.oneline || "—";
   $("dayW").textContent = s.weight ? s.weight + " kg" : "—";
   $("dayS").textContent = s.sleepH ? s.sleepH + " h" : "—";
   const cells = s.cells || {};
   const mins = Object.keys(cells).length * 10;
   $("dayB").textContent = mins ? (mins / 60).toFixed(1) + " h" : "—";
-  $("dayBlock").textContent = Math.round(mins / 10) + " blocks";
+  $("dayBlock").textContent = Math.round(mins / 10) + "칸";
   const hr = habitRate(date);
   const defs = habitDefs();
   $("dayH").textContent = hr !== null ? hr + "%" : "—";
@@ -130,11 +130,11 @@ function renderDay() {
 function monthSettle(m) {
   try {
     const t = (Store.get("ledger-txns", "ownmything:ledger-txns") || []).filter(x => (x.date || "").slice(0, 7) === m);
-    if (!t.length) return "no data";
+    if (!t.length) return "없음";
     const inc = t.filter(x => x.kind === "income").reduce((a, x) => a + x.amt, 0);
     const exp = t.filter(x => x.kind === "expense").reduce((a, x) => a + x.amt, 0);
     return `${(inc - exp).toLocaleString()} KRW`;
-  } catch (e) { return "no data"; }
+  } catch (e) { return "없음"; }
 }
 
 function renderPhotos() {
@@ -147,8 +147,8 @@ function renderPhotos() {
     const s = day(ds);
     if (s.photo) out.push({ ds, photo: s.photo, line: s.oneline || "" });
   }
-  $("photoCount").textContent = out.length ? `${out.length} photos` : "";
-  if (!out.length) { box.innerHTML = "<p class='hint'>No photos</p>"; return; }
+  $("photoCount").textContent = out.length ? `${out.length}장` : "";
+  if (!out.length) { box.innerHTML = "<p class='hint'>사진 없음</p>"; return; }
   out.forEach(p => {
     const it = document.createElement("button");
     it.className = "pw";
@@ -167,7 +167,7 @@ function renderWeight() {
   const svg = $("wChart");
   svg.innerHTML = "";
   const goal = parseFloat(Store.get("goal-weight", ""));
-  if (s.weights.length < 2) { svg.innerHTML = `<text x="160" y="70" text-anchor="middle" font-size="11" fill="#a0a4af">Not enough data</text>`; return; }
+  if (s.weights.length < 2) { svg.innerHTML = `<text x="160" y="70" text-anchor="middle" font-size="11" fill="#a0a4af">데이터 부족</text>`; return; }
   const W = 320, H = 140, pad = 20;
   const ws = s.weights.map(x => x.v);
   let min = Math.min(...ws), max = Math.max(...ws);

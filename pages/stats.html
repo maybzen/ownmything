@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stats - ownmything</title>
+  <title>체중·수면 · ownmything</title>
   <meta name="theme-color" content="#121316" />
   <link rel="manifest" href="../manifest.webmanifest" />
   <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png" />
@@ -15,17 +15,21 @@
 </head>
 <body>
   <div class="page">
-    <a class="back" href="./settings.html">← Settings</a>
-    <h2 class="page-title">Body</h2>
+    <header class="today-head">
+      <div class="head-top">
+        <a class="back" href="../settings.html">←</a>
+        <h2>체중·수면</h2>
+      </div>
+    </header>
 
     <section class="card">
-      <h3>Weight</h3>
+      <h3>체중</h3>
       <p class="hint" id="wSummary"></p>
       <svg id="chart" viewBox="0 0 320 140" class="chart"></svg>
     </section>
 
     <section class="card">
-      <h3>Sleep</h3>
+      <h3>수면</h3>
       <p class="hint" id="sSummary"></p>
       <div id="sleepBars" class="bars"></div>
     </section>

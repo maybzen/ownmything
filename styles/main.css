@@ -43,7 +43,7 @@ input, textarea, select, button { font-family: inherit; }
 body {
   background: var(--bg);
   color: var(--ink);
-  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif;
+  font-family: "Manrope", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
   font-feature-settings: "tnum";
 }
@@ -56,7 +56,7 @@ h1 {
   letter-spacing: -0.02em;
 }
 h2 {
-  font-family: "Manrope", -apple-system, sans-serif;
+  font-family: "Manrope", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 600;
   letter-spacing: -0.015em;
 }
@@ -105,6 +105,7 @@ h2 {
   color: var(--muted);
   letter-spacing: 0.01em;
 }
+.hint.warn { color: #b3402f; font-weight: 600; }
 
 .page {
   max-width: 760px;
@@ -238,11 +239,11 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
   margin-bottom: 16px;
   box-shadow: 0 1px 3px rgba(18, 19, 22, 0.03), 0 4px 12px rgba(18, 19, 22, 0.02);
 }
-.card h3 { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.card h3 { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
 /* Minimal list form: label column + underline field, one row per field. */
 .flist { display: grid; grid-template-columns: 68px 1fr; gap: 0 10px; align-items: center; }
 .flist > label, .card .flist > label { display: contents; }
-.flist > label > span { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.01em; }
+.flist > label > span { font-size: 0.72rem; color: var(--muted); }
 .flist > label > input, .flist > label > select {
   border: none; border-bottom: 1px solid var(--line); border-radius: 0;
   background: transparent; padding: 7px 2px; min-width: 0; width: 100%;
@@ -256,7 +257,7 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .btn-row { display: flex; gap: 8px; margin-top: 10px; }
 .btn-row > * { flex: 1; }
 details.card > summary {
-  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.09em;
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em;
   text-transform: uppercase; color: var(--muted); cursor: pointer;
   list-style: none; display: flex; align-items: center; gap: 6px;
 }
@@ -367,7 +368,7 @@ details.card > summary:hover { color: var(--ink); }
 .ghost-btn.danger { color: #b3402f; border-color: #e0c3bd; }
 .rep-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 5px 0; border-bottom: 1px solid var(--line); }
 .rep-row b { font-weight: 600; }
-body.noserif h1, body.noserif .quote, body.noserif .sm-card b { font-family: "Manrope", sans-serif; }
+body.noserif h1, body.noserif .quote, body.noserif .sm-card b { font-family: "Manrope", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", -apple-system, BlinkMacSystemFont, sans-serif; }
 .pad-b { height: 8px; }
 
 .sm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
@@ -508,7 +509,8 @@ button.btn:active { transform: scale(0.98); }
   .log-card { padding: 10px 12px; }
   .log-card .card-head { margin-bottom: 6px; }
   .log-card .row2 { grid-template-columns: 1fr 1fr; gap: 6px 10px; }
-  .log-card .row2 label { flex-direction: row; align-items: center; gap: 6px; font-size: 0.66rem; }
+  .log-card .row2 label { flex-direction: row; align-items: center; gap: 6px; font-size: 0.7rem; }
+  .log-card .row2 label > span { flex: none; white-space: nowrap; color: var(--muted); }
   .log-card .row2 label input { min-height: 28px; width: auto; flex: 1 1 auto; min-width: 0; padding: 4px 6px; }
   .block-row input { padding: 4px 6px; min-height: 26px; }
   #braindump { min-height: 56px; height: auto; }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Today - ownmything</title>
+  <title>오늘 · ownmything</title>
   <meta name="theme-color" content="#121316" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -22,56 +22,56 @@
       <div class="head-top">
         <a class="back" href="./menu.html">←</a>
         <div class="date-tap" id="dateTap">
-          <h2 id="dateTitle">Today</h2>
-          <span class="hint" id="saveState">Saved</span>
+          <h2 id="dateTitle">오늘</h2>
+          <span class="hint" id="saveState">저장됨</span>
           <input type="date" id="datePicker" aria-label="Change date" tabindex="-1" />
         </div>
       </div>
       <div class="head-right">
-        <button id="goToday" class="ghost-btn sm">Today</button>
-        <button id="saveBtn" class="btn sm">Save</button>
-        <button id="revertBtn" class="ghost-btn sm" style="display:none">Revert</button>
-        <button id="wipeBtn" class="ghost-btn sm">Delete</button>
+        <button id="goToday" class="ghost-btn sm">오늘</button>
+        <button id="saveBtn" class="btn sm">저장</button>
+        <button id="revertBtn" class="ghost-btn sm" style="display:none">되돌리기</button>
+        <button id="wipeBtn" class="ghost-btn sm">삭제</button>
       </div>
     </header>
 
     <section class="card log-card">
       <div class="card-head">
-        <h3>Log</h3>
-        <span class="hint">auto</span>
+        <h3>기록</h3>
+        <span class="hint">자동</span>
       </div>
       <div class="row2 log-row">
-        <label>Sleep <input type="time" id="lastSleep" /></label>
-        <label>Wake <input type="time" id="wake" /></label>
-        <label>Weight<input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="kg" /></label>
-        <label>Hours<input id="sleepH" type="number" inputmode="decimal" step="0.5" placeholder="auto" /></label>
+        <label><span>취침</span><input type="time" id="lastSleep" /></label>
+        <label><span>기상</span><input type="time" id="wake" /></label>
+        <label><span>체중</span><input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="kg" /></label>
+        <label><span>시간</span><input id="sleepH" type="number" inputmode="decimal" step="0.5" placeholder="자동" /></label>
       </div>
     </section>
 
     <section class="card">
       <div class="card-head">
-        <h3 id="monthTitleSide">Month</h3>
-        <button id="loadMonthCal" class="ghost-btn sm">Reload</button>
+        <h3 id="monthTitleSide">월간</h3>
+        <button id="loadMonthCal" class="ghost-btn sm">갱신</button>
       </div>
       <div id="monthCals" style="margin-top:6px"></div>
       <div id="monthTodos" style="margin-top:10px"></div>
       <div class="btn-row">
-        <button id="moveToday" class="ghost-btn sm">→ Today</button>
-        <button id="selMonth" class="ghost-btn sm">Select</button>
+        <button id="moveToday" class="ghost-btn sm">→ 오늘</button>
+        <button id="selMonth" class="ghost-btn sm">선택</button>
       </div>
     </section>
 
     <div class="day-grid">
     <section class="card">
       <div class="card-head">
-        <h3>BrainDump</h3>
+        <h3>아이디어</h3>
       </div>
       <textarea id="braindump" rows="4" placeholder=""></textarea>
-      <h4 class="sub">To Do
+      <h4 class="sub">할 일
         <span class="sub-btns">
-          <button id="selToday" class="ghost-btn sm">Select</button>
-          <button id="addDiv" class="ghost-btn sm">+ Line</button>
-          <button id="moveMonth" class="ghost-btn sm">→ Month</button>
+          <button id="selToday" class="ghost-btn sm">선택</button>
+          <button id="addDiv" class="ghost-btn sm">+ 줄</button>
+          <button id="moveMonth" class="ghost-btn sm">→ 월간</button>
         </span>
       </h4>
       <div id="todos"></div>
@@ -80,24 +80,24 @@
 
     <section class="card">
       <div class="card-head">
-        <h3>Time plan</h3>
+        <h3>시간표</h3>
         <div class="head-right">
-          <button id="undoGrid" class="ghost-btn sm" disabled style="opacity:.4" title="Undo the last time-plan change">↶ Undo</button>
+          <button id="undoGrid" class="ghost-btn sm" disabled style="opacity:.4" title="Undo the last time-plan change">↶ 되돌리기</button>
         </div>
       </div>
       <div class="palette" id="palette">
-        <button data-c="work" class="sw work on">Work</button>
-        <button data-c="promise" class="sw promise">Meet</button>
-        <button data-c="personal" class="sw personal">Me</button>
-        <button data-c="family" class="sw family">Family</button>
-        <button data-c="obok" class="sw obokwalk">Obok</button>
-        <button data-c="sleep" class="sw sleep">Record</button>
+        <button data-c="work" class="sw work on">일</button>
+        <button data-c="promise" class="sw promise">약속</button>
+        <button data-c="personal" class="sw personal">나</button>
+        <button data-c="family" class="sw family">가족</button>
+        <button data-c="obok" class="sw obokwalk">오복</button>
+        <button data-c="sleep" class="sw sleep">수면</button>
       </div>
       <div id="timetable" class="timetable"></div>
       <div id="blocks"></div>
       <div class="btn-row">
-        <button id="delChecked" class="ghost-btn sm">Delete checked</button>
-        <button id="clearDay" class="ghost-btn sm">Clear day</button>
+        <button id="delChecked" class="ghost-btn sm">선택 삭제</button>
+        <button id="clearDay" class="ghost-btn sm">시간표 비우기</button>
       </div>
     </section>
     </div>

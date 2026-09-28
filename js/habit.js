@@ -40,11 +40,68 @@ function getDefs() {
   if (changed) Store.set(DEFS_KEY, d);
   return d;
 }
-function setDefs(d) { Store.set(DEFS_KEY, d); }
+
+// --- explicit save: edits live in memory until Save is pressed -------------
+// done: { "2026-09-28": { habitId: true } }
+// defs: habit definition edits, or null when untouched
+const DKEY = "omt:habit-draft";
+let dDefs = null;
+let dDone = {};
+let dDirty = false;
+try {
+  const raw = JSON.parse(sessionStorage.getItem(DKEY) || "null");
+  if (raw) { dDefs = raw.defs || null; dDone = raw.done || {}; dDirty = true; }
+} catch (e) {}
+function stash() {
+  try {
+    if (dDirty) sessionStorage.setItem(DKEY, JSON.stringify({ defs: dDefs, done: dDone }));
+    else sessionStorage.removeItem(DKEY);
+  } catch (e) {}
+}
+function isDirty() { return dDirty; }
+function markDirty() { dDirty = true; stash(); paintSaveBar(); }
+function paintSaveBar() {
+  const b = $("saveState");
+  if (b) { b.textContent = dDirty ? "저장 전" : "저장됨"; b.classList.toggle("warn", dDirty); }
+  const s = $("saveBtn");
+  if (s) s.style.opacity = dDirty ? "1" : "0.45";
+  const r = $("revertBtn");
+  if (r) r.style.display = dDirty ? "inline-block" : "none";
+}
+function curDefs() { return dDefs || getDefs(); }
+function setDefs(d) { dDefs = d; markDirty(); }
+function commitAll() {
+  if (dDefs) { Store.set(DEFS_KEY, dDefs); dDefs = null; }
+  Object.keys(dDone).forEach(ds => {
+    const s = dayData(ds);
+    s.habitDone = Object.assign({}, s.habitDone, dDone[ds]);
+    Store.set("d:" + ds, s);
+  });
+  dDone = {};
+  dDirty = false;
+  stash();
+  paintSaveBar();
+}
+function revertAll() {
+  if (!dDirty) return;
+  if (!confirm("저장하지 않은 습관 변경을 되돌릴까요?")) return;
+  dDefs = null; dDone = {}; dDirty = false;
+  stash(); paintSaveBar(); renderAll();
+}
+$("saveBtn").onclick = () => { if (!dDirty) return; commitAll(); renderAll(); };
+$("revertBtn").onclick = () => revertAll();
+window.addEventListener("beforeunload", (e) => {
+  if (!dDirty) return;
+  e.preventDefault(); e.returnValue = "";
+});
+// -----------------------------------------------------------------------
+
 function dayData(ds) {
   return Store.get("d:" + ds, "ownmything:" + ds) || {};
 }
 function isDone(ds, def) {
+  const o = dDone[ds];
+  if (o && typeof o[def.id] !== "undefined") return !!o[def.id];
   const s = dayData(ds);
   if (s.habitDone && typeof s.habitDone[def.id] !== "undefined") return !!s.habitDone[def.id];
   if (Array.isArray(s.habits)) {
@@ -54,19 +111,18 @@ function isDone(ds, def) {
   return false;
 }
 function setDone(ds, def, v) {
-  const s = dayData(ds);
-  s.habitDone = s.habitDone || {};
-  s.habitDone[def.id] = v;
-  Store.set("d:" + ds, s);
+  dDone[ds] = Object.assign({}, dDone[ds]);
+  dDone[ds][def.id] = v;
+  markDirty();
 }
 
-const SLOTS = [["morning", "Morning"], ["anytime", "Anytime"], ["night", "Night"]];
+const SLOTS = [["morning", "아침"], ["anytime", "낮"], ["night", "밤"]];
 function renderToday() {
   const box = $("todayCheck");
   box.innerHTML = "";
-  $("checkTitle").textContent = selDate === Store.today() ? "Today" : selDate;
+  $("checkTitle").textContent = selDate === Store.today() ? "오늘" : selDate;
   $("headDate").textContent = selDate;
-  const defs = getDefs();
+  const defs = curDefs();
   SLOTS.forEach(([slot, label]) => {
     const items = defs.filter(d => (d.slot || "anytime") === slot);
     if (!items.length) return;
@@ -91,32 +147,32 @@ function renderToday() {
 function renderDefs() {
   const box = $("defs");
   box.innerHTML = "";
-  getDefs().forEach((h) => {
+  curDefs().forEach((h) => {
     const l = document.createElement("label");
     l.className = "habit";
     const sel = document.createElement("select");
     ["morning", "anytime", "night"].forEach(s => {
       const o = document.createElement("option");
-      o.value = s; o.textContent = s === "morning" ? "Morning" : s === "anytime" ? "Anytime" : "Night";
+      o.value = s; o.textContent = s === "morning" ? "아침" : s === "anytime" ? "낮" : "밤";
       if ((h.slot || "anytime") === s) o.selected = true;
       sel.appendChild(o);
     });
     sel.onchange = () => {
-      const d = getDefs();
+      const d = curDefs();
       const m = d.find(x => x.id === h.id);
       if (m) { m.slot = sel.value; setDefs(d); renderToday(); renderWeek(); }
     };
     const nm = document.createElement("input");
     nm.value = h.t;
     nm.onchange = () => {
-      const d = getDefs();
+      const d = curDefs();
       const m = d.find(x => x.id === h.id);
       if (m && nm.value.trim()) { m.t = nm.value.trim(); setDefs(d); renderToday(); renderWeek(); renderMonth(); }
       else renderDefs();
     };
     const b = document.createElement("button");
     b.textContent = "×";
-    b.onclick = () => { setDefs(getDefs().filter(x => x.id !== h.id)); renderAll(); };
+    b.onclick = () => { setDefs(curDefs().filter(x => x.id !== h.id)); renderAll(); };
     l.append(sel, nm, b);
     box.appendChild(l);
   });
@@ -124,7 +180,7 @@ function renderDefs() {
 $("addDef").onclick = () => {
   const v = $("newDef").value.trim();
   if (!v) return;
-  const d = getDefs();
+  const d = curDefs();
   d.push({ id: "h" + Date.now().toString(36), t: v, slot: "anytime" });
   setDefs(d);
   $("newDef").value = "";
@@ -141,18 +197,18 @@ function last7() {
   return out;
 }
 function renderWeek() {
-  const defs = getDefs(), days = last7();
+  const defs = curDefs(), days = last7();
   $("weekLabel").textContent = `${days[0]} ~ ${days[6]}`;
   const t = $("weekTable");
   t.innerHTML = "";
   const head = document.createElement("div");
   head.className = "hrow hhead";
-  const WD = ["S", "M", "T", "W", "T", "F", "S"];
+  const WD = ["일","월","화","수","목","금","토"];
   head.innerHTML = `<span></span>` +
     days.map(d => `<span>${WD[new Date(d + "T00:00:00").getDay()]}${d.slice(8)}</span>`).join("") +
     `<span>Rate</span>`;
   t.appendChild(head);
-  [["morning", "Morning"], ["anytime", "Anytime"], ["night", "Night"]].forEach(([slot, label]) => {
+  [["morning", "아침"], ["anytime", "낮"], ["night", "밤"]].forEach(([slot, label]) => {
     const items = defs.filter(d => (d.slot || "anytime") === slot);
     if (!items.length) return;
     const sh = document.createElement("div");
@@ -172,11 +228,11 @@ function renderWeek() {
   });
   const total = defs.length * days.length;
   const hit = defs.reduce((a, def) => a + days.filter(d => isDone(d, def)).length, 0);
-  $("weekRates").textContent = defs.length ? `Weekly ${Math.round(100 * hit / total)}% (${hit}/${total})` : "Add habits";
+  $("weekRates").textContent = defs.length ? `주간 ${Math.round(100 * hit / total)}% (${hit}/${total})` : "습관 없음";
 }
 
 function renderMonth() {
-  const defs = getDefs();
+  const defs = curDefs();
   const mv = $("monthPicker").value || Store.today().slice(0, 7);
   $("monthPicker").value = mv;
   $("monthLabel").textContent = mv;
@@ -185,7 +241,7 @@ function renderMonth() {
   const first = new Date(y, m - 1, 1).getDay();
   const box = $("monthCal");
   box.innerHTML = "";
-  ["S","M","T","W","T","F","S"].forEach(d => {
+  ["일","월","화","수","목","금","토"].forEach(d => {
     const h = document.createElement("span");
     h.className = "cal-h";
     h.textContent = d;
@@ -216,7 +272,7 @@ function renderReport() {
   const mv = $("monthPicker").value || Store.today().slice(0, 7);
   const [y, m] = mv.split("-").map(Number);
   const daysIn = new Date(y, m, 0).getDate();
-  const defs = getDefs();
+  const defs = curDefs();
   const rows = defs.map(def => {
     let hit = 0;
     for (let d = 1; d <= daysIn; d++) if (isDone(`${mv}-${String(d).padStart(2, "0")}`, def)) hit++;
@@ -224,7 +280,7 @@ function renderReport() {
   }).sort((a, b) => b.rate - a.rate);
   const grid = document.createElement("div");
   grid.className = "mcal";
-  ["S","M","T","W","T","F","S"].forEach(d => {
+  ["일","월","화","수","목","금","토"].forEach(d => {
     const h = document.createElement("span");
     h.className = "mcal-h";
     h.textContent = d;
@@ -247,8 +303,8 @@ function renderReport() {
   const head = document.createElement("p");
   head.className = "hint";
   head.textContent = best
-    ? `${mv} · best ${best.def.t} ${best.rate}% · avg ${Math.round(rows.reduce((a, r) => a + r.rate, 0) / rows.length)}%`
-    : `${mv} · no habits`;
+    ? `${mv} · 최고 ${best.def.t} ${best.rate}% · 평균 ${Math.round(rows.reduce((a, r) => a + r.rate, 0) / rows.length)}%`
+    : `${mv} · 습관 없음`;
   box.appendChild(head);
   box.appendChild(grid);
   const ul = document.createElement("div");
@@ -271,10 +327,11 @@ function renderData() {
     const k = localStorage.key(i) || "";
     if (k.indexOf(pre) === 0) n++;
   }
-  box.textContent = `${n} days recorded · ${getDefs().length} habits`;
+  box.textContent = `${n}일 기록 · 습관 ${curDefs().length}개`;
 }
 $("clearHabits").onclick = () => {
-  if (!confirm("Reset all habit check-ins?")) return;
+  if (!confirm("습관 체크를 모두 초기화할까요?")) return;
+  if (dDirty) commitAll();
   const pre = "ownmything:" + Store.profile() + ":d:";
   const keys = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -290,7 +347,8 @@ $("clearHabits").onclick = () => {
   renderAll();
 };
 $("wipeDays").onclick = () => {
-  if (!confirm("Delete ALL records? This cannot be undone.")) return;
+  if (!confirm("모든 기록을 삭제할까요? 되돌릴 수 없습니다.")) return;
+  if (dDirty) commitAll();
   const pre = "ownmything:" + Store.profile() + ":d:";
   const keys = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -301,5 +359,5 @@ $("wipeDays").onclick = () => {
   renderAll();
 };
 
-function renderAll() { renderToday(); renderDefs(); renderWeek(); renderMonth(); renderReport(); renderData(); }
+function renderAll() { renderToday(); renderDefs(); renderWeek(); renderMonth(); renderReport(); renderData(); paintSaveBar(); }
 renderAll();

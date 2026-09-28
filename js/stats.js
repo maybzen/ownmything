@@ -17,8 +17,8 @@ function renderWeight() {
   const goal = parseFloat(Store.get("goal-weight", ""));
   const sum = pts.length ? pts[pts.length - 1] : null;
   $("wSummary").textContent = sum
-    ? `Latest ${sum.w} kg${goal ? ` · goal ${goal} kg (${(sum.w - goal).toFixed(1)})` : ""} · ${pts.length} entries`
-    : "No weight logged yet";
+    ? `최근 ${sum.w} kg${goal ? ` · 목표 ${goal} kg (${(sum.w - goal).toFixed(1)})` : ""} · ${pts.length}건`
+    : "체중 기록 없음";
   const svg = $("chart");
   svg.innerHTML = "";
   if (pts.length < 2) return;
@@ -55,7 +55,7 @@ function renderSleep() {
   const s = series(14);
   const pts = s.filter(p => !isNaN(p.h));
   const avg = pts.length ? (pts.reduce((a, p) => a + p.h, 0) / pts.length).toFixed(1) : "-";
-  $("sSummary").textContent = pts.length ? `Avg ${avg} h · last 14 days` : "No sleep logged yet";
+  $("sSummary").textContent = pts.length ? `평균 ${avg} h · 최근 14일` : "수면 기록 없음";
   const box = $("sleepBars");
   box.innerHTML = "";
   s.forEach(p => {

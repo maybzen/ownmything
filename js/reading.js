@@ -24,11 +24,11 @@ function render() {
   const f = $("dateFilter").value;
   $("headDate").textContent = f || "All";
   const items = load().filter(x => !f || x.date === f);
-  if (!items.length) g.innerHTML = "<p class='hint'>No books</p>";
+  if (!items.length) g.innerHTML = "<p class='hint'>책 없음</p>";
   items.forEach(x => {
     const d = document.createElement("div");
     d.className = "book-card";
-    d.innerHTML = `<span class="chip">${x.status}</span>
+    d.innerHTML = `<span class="chip">${({Reading:"읽는 중",Done:"완독",Want:"읽을 것"})[x.status] || x.status}</span>
       <b>${x.title}</b>
       <span class="hint">${x.author || ""}</span>
       <span class="hint">${stars(x.rating)}${x.memo ? " · " + x.memo : ""}</span>

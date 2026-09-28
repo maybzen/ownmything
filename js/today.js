@@ -50,9 +50,9 @@ function paintSaveBar() {
   const n = Object.keys(drafts).length;
   const b = $("saveState");
   if (b) {
-    b.textContent = n ? (n === 1 ? "Unsaved" : `Unsaved ×${n}`) : "Saved";
+    b.textContent = n ? (n === 1 ? "저장 전" : `저장 전 ·${n}`) : "저장됨";
     b.classList.toggle("warn", n > 0);
-    b.title = n ? "Tap Save to keep these changes" : "All changes saved";
+    b.title = n ? "저장을 눌러야 기록됩니다" : "모두 저장됨";
   }
   const s = $("saveBtn");
   if (s) s.style.opacity = n ? "1" : "0.45";
@@ -90,7 +90,7 @@ function commit() {
 function revert() {
   if (!isDirty()) return;
   const keys = Object.keys(drafts);
-  if (!confirm(`Discard unsaved changes${keys.length > 1 ? ` on ${keys.length} days` : ""}?`)) return;
+  if (!confirm(`저장하지 않은 변경을 되돌릴까요?${keys.length > 1 ? ` (${keys.length}일)` : ""}`)) return;
   keys.forEach(k => delete drafts[k]);
   stashDrafts();
   apply(date);
@@ -109,7 +109,7 @@ function save() { markDirty(); }
 function monthKey(d) { return "month:" + d.slice(0, 7); }
 
 // --- weekday + holiday red ---
-const YO = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const YO = ["일","월","화","수","목","금","토"];
 const FALLBACK_HOL = ["01-01", "03-01", "05-05", "06-06", "08-15", "10-03", "10-09", "12-25"];
 let holSet = new Set(FALLBACK_HOL);
 async function loadHolidays() {
@@ -142,7 +142,7 @@ function renderDateTitle() {
   title.appendChild(s);
   if (hol && dt.getDay() !== 0) {
     const s2 = document.createElement("span");
-    s2.textContent = " · Holiday";
+    s2.textContent = " · 공휴일";
     s2.className = "holiday";
     title.appendChild(s2);
   }
@@ -212,8 +212,8 @@ function apply(d) {
   todos = cleanTodos(f.todos);
   if (!Array.isArray(f.todos)) todos = [{ id: uid(), div: true }, { id: uid(), div: true }];
   monthTodos = cleanTodos(f.monthTodos || Store.get(monthKey(d)));
-  const mn = ["January","February","March","April","May","June","July","August","September","October","November","December"][Number(d.slice(5, 7)) - 1];
-  $("monthTitleSide").textContent = mn;
+  const mn = Number(d.slice(5, 7));
+  $("monthTitleSide").textContent = mn + "월";
   migrateHabits(s);
   habitDone = f.habitDone || {};
   if (syncDumpMarks()) markDirty();
@@ -310,7 +310,7 @@ function todoRow(item, list, render, box, opts) {
     const inp = document.createElement("input");
     inp.className = "todo-edit";
     inp.value = item.t || "";
-    inp.placeholder = "To do";
+    inp.placeholder = "할 일";
     let saved = false;
     const commit = (skipRender) => {
       if (saved) return;
@@ -470,12 +470,12 @@ async function autoMonth() {
 }
 $("addDiv").onclick = () => { todos.push({ id: uid(), div: true }); save(); renderTodos(); };
 function selectedIn(list) { return list.filter(t => t && t.sel && t.t && String(t.t).trim()); }
-function setSelBtn(id, on) { const b = $(id); if (b) { b.textContent = on ? "Done" : "Select"; b.classList.toggle("on", on); } }
+function setSelBtn(id, on) { const b = $(id); if (b) { b.textContent = on ? "해제" : "선택"; b.classList.toggle("on", on); } }
 $("moveMonth").onclick = () => {
   const picked = selectedIn(todos);
   const items = picked.length ? picked : todos.filter(t => !t.div && t.t.trim() && !t.done);
   if (!items.length) return;
-  if (!confirm(`Move ${items.length} item(s) to this month?`)) return;
+  if (!confirm(`${items.length}개를 월간으로 옮길까요?`)) return;
   monthTodos.push(...items.map(t => ({ id: uid(), t: t.t, done: t.done })));
   todos = todos.filter(t => items.indexOf(t) === -1);
   selMode = false; setSelBtn("selToday", false);
@@ -485,7 +485,7 @@ $("moveToday").onclick = () => {
   const picked = selectedIn(monthTodos);
   const items = picked.length ? picked : monthTodos.filter(t => !t.div && t.t.trim() && !t.done);
   if (!items.length) return;
-  if (!confirm(`Move ${items.length} item(s) to today?`)) return;
+  if (!confirm(`${items.length}개를 오늘로 옮길까요?`)) return;
   todos.push(...items.map(t => ({ id: uid(), t: t.t, done: t.done })));
   monthTodos = monthTodos.filter(t => items.indexOf(t) === -1);
   selMode = false; setSelBtn("selMonth", false);
@@ -510,7 +510,7 @@ $("saveBtn").onclick = () => {
 };
 $("revertBtn").onclick = () => revert();
 $("wipeBtn").onclick = () => {
-  if (!confirm(`Delete all records for ${date}?`)) return;
+  if (!confirm(`${date} 기록을 전부 지울까요?`)) return;
   Store.set("d:" + date, {});
   Store.set(monthKey(date), []);
   delete drafts[date];
@@ -569,7 +569,7 @@ if ($("undoGrid")) $("undoGrid").onclick = undoGrid;
 
 $("clearDay").onclick = () => {
   if (!Object.keys(cells).length) return;
-  if (!confirm("Clear today's time plan?")) return;
+  if (!confirm("시간표를 전부 비울까요?")) return;
   pushUndo();
   cells = {}; labels = {}; autoSleepIds = []; checkedRuns.clear();
   paintAll(); renderBlocks(); markDirty();
@@ -664,7 +664,7 @@ function renderAllDay(list) {
   box.style.display = "block";
   const h = document.createElement("p");
   h.className = "hint";
-  h.textContent = "All day";
+  h.textContent = "종일";
   box.appendChild(h);
   list.forEach(ev => {
     const l = document.createElement("div");
@@ -697,7 +697,7 @@ function runs() {
   if (cur) out.push(cur);
   return out;
 }
-const CNAMES = { work: "Work", lunch: "Lunch", promise: "Meet", personal: "Me", family: "Family", obok: "Obok", sleep: "Record" };
+const CNAMES = { work: "일", lunch: "점심", promise: "약속", personal: "나", family: "가족", obok: "오복", sleep: "수면" };
 function cellEl(id) {
   return tt.querySelector(`[data-id="${id}"]`);
 }
@@ -868,7 +868,7 @@ function renderMonthCals(events, ym) {
   const items = events
     .filter(ev => ev.day && ev.day.slice(0, 7) === ym)
     .sort((a, b) => (a.day + String(a.start).padStart(4, "0")) < (b.day + String(b.start).padStart(4, "0")) ? -1 : 1);
-  if (!items.length) { box.innerHTML = "<p class='hint'>No events</p>"; return; }
+  if (!items.length) { box.innerHTML = "<p class='hint'>일정 없음</p>"; return; }
   const p = document.createElement("p");
   p.className = "mlist";
   const today = Store.today();
@@ -887,7 +887,7 @@ function renderReminders(list) {
   if (!list.length) return;
   const hint = document.createElement("p");
   hint.className = "hint";
-  hint.textContent = "Reminders";
+  hint.textContent = "리마인더";
   box.appendChild(hint);
   list.slice(0, 20).forEach(t => {
     const l = document.createElement("div");
@@ -896,7 +896,7 @@ function renderReminders(list) {
     s.className = "txt";
     s.textContent = t.title + (t.due ? ` (${t.due.slice(0, 10)})` : "");
     const add = document.createElement("button");
-    add.textContent = "+ To Do";
+    add.textContent = "+ 할 일";
     add.onclick = () => {
       todos.push({ id: uid(), t: t.title, done: false });
       save(); renderTodos();

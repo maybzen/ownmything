@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Settings - ownmything</title>
+  <title>설정 · ownmything</title>
   <meta name="theme-color" content="#121316" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,8 +17,12 @@
 </head>
 <body>
   <div class="page">
-    <a class="back" href="../menu.html">← Menu</a>
-    <h2 class="page-title">Settings</h2>
+  <header class="today-head">
+    <div class="head-top">
+      <a class="back" href="../menu.html">←</a>
+      <h2>설정</h2>
+    </div>
+  </header>
 
     <section class="card">
       <div class="profile-row">
@@ -29,65 +33,65 @@
         </div>
       </div>
       <div class="row2" style="margin-top:8px">
-        <button id="logoutBtn" class="ghost-btn">Logout</button>
+        <button id="logoutBtn" class="ghost-btn sm">로그아웃</button>
       </div>
     </section>
 
     <section class="card">
-      <h3>Theme</h3>
+      <h3>테마</h3>
       <div class="theme-cards">
-        <button class="theme-card" data-set-theme="mono"><i class="t-mono"></i>Mono</button>
-        <button class="theme-card" data-set-theme="warm"><i class="t-warm"></i>Warm</button>
-        <button class="theme-card" data-set-theme="dark"><i class="t-dark"></i>Dark</button>
+        <button class="theme-card" data-set-theme="mono"><i class="t-mono"></i>모노</button>
+        <button class="theme-card" data-set-theme="warm"><i class="t-warm"></i>웜</button>
+        <button class="theme-card" data-set-theme="dark"><i class="t-dark"></i>다크</button>
       </div>
     </section>
 
     <section class="card">
-      <h3>Body</h3>
-      <label>Goal weight (kg)<input id="goalWeight" type="number" step="0.1" inputmode="decimal" placeholder="62.0" /></label>
-      <p class="hint" style="margin-top:8px"><a href="./stats.html">Weight trend →</a></p>
+      <h3>체중</h3>
+      <label>목표 (kg)<input id="goalWeight" type="number" step="0.1" inputmode="decimal" placeholder="62.0" /></label>
+      <p class="hint" style="margin-top:8px"><a href="./stats.html">체중 추이 →</a></p>
     </section>
 
     <section class="card" id="adminCard" style="display:none">
-      <h3>Members</h3>
+      <h3>멤버</h3>
       <div id="memberList"></div>
       <div class="row2" style="margin-top:8px">
-        <input id="inviteEmail" type="email" placeholder="Email to invite" />
-        <button id="inviteBtn">Invite</button>
+        <input id="inviteEmail" type="email" placeholder="이메일" />
+        <button id="inviteBtn" class="btn sm">초대</button>
       </div>
       <p id="adminMsg" class="hint" style="margin-top:8px"></p>
     </section>
 
     <section class="card">
-      <h3>Display</h3>
-      <label class="tog"><span>System dark mode</span><input type="checkbox" id="sysDark" /></label>
-      <label class="tog"><span>Serif headings</span><input type="checkbox" id="serifHead" checked /></label>
+      <h3>표시</h3>
+      <label class="tog"><span>시스템 다크</span><input type="checkbox" id="sysDark" /></label>
+      <label class="tog"><span>세리프 제목</span><input type="checkbox" id="serifHead" checked /></label>
     </section>
 
     <section class="card">
-      <h3>Backup</h3>
-      <label class="tog"><span>Auto export (JSON)</span><input type="checkbox" id="autoExport" /></label>
+      <h3>백업</h3>
+      <label class="tog"><span>자동 내보내기</span><input type="checkbox" id="autoExport" /></label>
       <p class="hint" id="lastBackup"></p>
       <div class="row2" style="margin-top:8px">
-        <button id="exportBtn" class="ghost-btn">Export now</button>
-        <button id="importBtn" class="ghost-btn">Import</button>
+        <button id="exportBtn" class="ghost-btn sm">내보내기</button>
+        <button id="importBtn" class="ghost-btn sm">가져오기</button>
       </div>
       <input type="file" id="importFile" accept="application/json" style="display:none" />
     </section>
 
     <section class="card">
-      <h3>Service</h3>
+      <h3>정보</h3>
       <div class="kv">
-        <div><span>Version</span><b>v1.0</b></div>
-        <div><span>Records</span><b id="svRecords">—</b></div>
-        <div><span>Cloud</span><b id="svCloud">—</b></div>
-        <div><span>Calendar</span><b id="svCal">—</b></div>
+        <div><span>버전</span><b>v1.0</b></div>
+        <div><span>기록</span><b id="svRecords">—</b></div>
+        <div><span>클라우드</span><b id="svCloud">—</b></div>
+        <div><span>달력</span><b id="svCal">—</b></div>
       </div>
     </section>
 
     <section class="card">
-      <h3>Data</h3>
-      <button id="exportBtn2" class="ghost-btn">Export (JSON)</button>
+      <h3>데이터</h3>
+      <button id="exportBtn2" class="ghost-btn sm">내보내기</button>
     </section>
   </div>
   <script src="../js/store.js"></script>

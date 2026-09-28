@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ledger - ownmything</title>
+  <title>가계부 · ownmything</title>
   <meta name="theme-color" content="#121316" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,78 +17,80 @@
 </head>
 <body>
   <div class="page">
-    <a class="back" href="../menu.html">← Menu</a>
     <header class="today-head">
-      <h2>Ledger <span class="hint" id="headDate"></span></h2>
+      <div class="head-top">
+        <a class="back" href="../menu.html">←</a>
+        <h2>가계부 <span class="hint" id="headDate"></span></h2>
+      </div>
       <div class="head-right">
-        <button id="goTodayDate" class="ghost-btn">Today</button>
+        <button id="goTodayDate" class="ghost-btn sm">오늘</button>
       </div>
     </header>
 
     <section class="card">
       <div class="card-head">
-        <h3>Summary</h3>
+        <h3>합계</h3>
         <input type="month" id="mPicker" class="mini" />
       </div>
       <p id="summary" class="hint"></p>
     </section>
 
     <section class="card">
-      <h3>Add</h3>
+      <h3>추가</h3>
       <div class="flist">
-        <label><span>Date</span><input type="date" id="tDate" /></label>
-        <label><span>Type</span><select id="tKind"><option value="expense">Out</option><option value="income">In</option></select></label>
-        <label><span>Category</span><select id="tCat"></select></label>
-        <label><span>Amount</span><input id="tAmt" type="number" inputmode="decimal" placeholder="0" /></label>
-        <label><span>Method</span><select id="tMethod"><option>Cash</option><option>Account</option><option>Card</option><option>Installment</option></select></label>
-        <label><span>Memo</span><input id="tMemo" placeholder="" /></label>
+        <label><span>날짜</span><input type="date" id="tDate" /></label>
+        <label><span>구분</span><select id="tKind"><option value="expense">지출</option><option value="income">수입</option></select></label>
+        <label><span>분류</span><select id="tCat"></select></label>
+        <label><span>금액</span><input id="tAmt" type="number" inputmode="decimal" placeholder="0" /></label>
+        <label><span>수단</span><select id="tMethod"><option value="Cash">현금</option><option value="Account">계좌</option><option value="Card">카드</option><option value="Installment">할부</option></select></label>
+        <label><span>메모</span><input id="tMemo" placeholder="" /></label>
       </div>
       <div class="flist" id="instRow" style="display:none;margin-top:6px">
-        <label><span>Card</span><input id="tCard" placeholder="" /></label>
-        <label><span>Months</span><input id="tMonths" type="number" min="2" max="36" value="6" /></label>
-        <div class="frow"><span class="hint">split into monthly entries</span></div>
+        <label><span>카드</span><input id="tCard" placeholder="" /></label>
+        <label><span>개월</span><input id="tMonths" type="number" min="2" max="36" value="6" /></label>
+        <div class="frow"><span class="hint">월 단위로 나눠 기록</span></div>
       </div>
       <div class="frow" style="display:flex;justify-content:flex-end;margin-top:10px">
-        <button id="addTxn" class="btn sm">Add</button>
+        <button id="addTxn" class="btn sm">추가</button>
       </div>
     </section>
 
     <section class="card">
-      <h3>List</h3>
+      <h3>목록</h3>
       <ul id="txnList"></ul>
     </section>
 
     <section class="card">
-      <h3>Installments</h3>
+      <h3>할부</h3>
       <div id="cardList"></div>
     </section>
 
     <section class="card">
-      <h3>Statements</h3>
+      <h3>명세서</h3>
       <div class="flist">
-        <label><span>Month</span><input type="month" id="sMonth" /></label>
-        <label><span>Card</span><input id="sCard" placeholder="" /></label>
-        <label><span>Amount</span><input id="sAmt" type="number" inputmode="decimal" placeholder="0" /></label>
-        <label><span>Note</span><input id="sNote" placeholder="" /></label>
+        <label><span>달</span><input type="month" id="sMonth" /></label>
+        <label><span>카드</span><input id="sCard" placeholder="" /></label>
+        <label><span>금액</span><input id="sAmt" type="number" inputmode="decimal" placeholder="0" /></label>
+        <label><span>메모</span><input id="sNote" placeholder="" /></label>
         <div class="frow" style="justify-content:flex-end">
-          <button id="addStmt" class="btn sm">Add</button>
+          <button id="addStmt" class="btn sm">추가</button>
         </div>
       </div>
       <div id="stmtList" style="margin-top:8px"></div>
     </section>
 
     <section class="card">
-      <h3>Loans</h3>
+      <h3>대출</h3>
       <div class="flist">
-        <label><span>Name</span><input id="loanName" placeholder="" /></label>
-        <label><span>Bank</span><input id="loanBank" placeholder="" /></label>
-        <label><span>Principal</span><input id="loanTotal" type="number" inputmode="decimal" placeholder="0" /></label>
-        <label><span>Rate %</span><input id="loanRate" type="number" step="0.1" inputmode="decimal" placeholder="0" /></label>
-        <label><span>Monthly</span><input id="loanMonthly" type="number" inputmode="decimal" placeholder="0" /></label>
-        <label><span>Start</span><input id="loanStart" type="month" /></label>
-        <label><span>Memo</span><input id="loanMemo" placeholder="" /></label>
+        <label><span>이름</span><input id="loanName" placeholder="" /></label>
+        <label><span>은행</span><input id="loanBank" placeholder="" /></label>
+        <label><span>원금</span><input id="loanTotal" type="number" inputmode="decimal" placeholder="0" /></label>
+        <label><span>이자%</span><input id="loanRate" type="number" step="0.1" inputmode="decimal" placeholder="0" /></label>
+        <label><span>월납</span><input id="loanMonthly" type="number" inputmode="decimal" placeholder="0" /></label>
+        <label><span>시작</span><input id="loanStart" type="month" /></label>
+        <label><span>메모</span><input id="loanMemo" placeholder="" /></label>
         <div class="frow" style="justify-content:flex-end">
-          <button id="addLoan" class="btn sm">Add</button>
+          <button id="addLoan" class="btn sm">추가</button>
         </div>
       </div>
       <div id="loanList" style="margin-top:8px"></div>

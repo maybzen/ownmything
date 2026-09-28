@@ -6,6 +6,15 @@ const LEGACY_TXN = "ownmything:ledger-txns";
 const LEGACY_LOAN = "ownmything:ledger-loans";
 const EXP_CATS = ["Food", "Transport", "Housing", "Medical", "Obok", "Family", "Personal", "Work", "Other"];
 const INC_CATS = ["Salary", "Other income"];
+// stored values stay English so existing records keep working; display is Korean
+const KO = {
+  Food: "음식", Transport: "교통", Housing: "주거", Medical: "의료", Obok: "오복",
+  Family: "가족", Personal: "개인", Work: "업무", Other: "기타",
+  Salary: "급여", "Other income": "기타 수입",
+  Cash: "현금", Account: "계좌", Card: "카드", Installment: "할부",
+  Reading: "읽는 중", Done: "완독", Want: "읽을 것",
+};
+const ko = (x) => KO[x] || x;
 const METHODS = ["Cash", "Account", "Card", "Installment"];
 
 const legacyFor = (k) => k === TXN ? LEGACY_TXN : (k === LOAN ? LEGACY_LOAN : undefined);
@@ -19,7 +28,7 @@ const ym = (ds) => ds.slice(0, 7);
 
 function cats() {
   const k = $("tKind").value;
-  $("tCat").innerHTML = (k === "income" ? INC_CATS : EXP_CATS).map(c => `<option>${c}</option>`).join("");
+  $("tCat").innerHTML = (k === "income" ? INC_CATS : EXP_CATS).map(c => `<option value="${c}">${ko(c)}</option>`).join("");
 }
 $("tKind").onchange = cats;
 $("tMethod").onchange = () => {
@@ -62,12 +71,12 @@ function render() {
   const txns = load(TXN, []).filter(t => ym(t.date) === mv).sort((a, b) => a.date.localeCompare(b.date));
   const inc = txns.filter(t => t.kind === "income").reduce((a, t) => a + t.amt, 0);
   const exp = txns.filter(t => t.kind === "expense").reduce((a, t) => a + t.amt, 0);
-  $("summary").textContent = `In ${inc.toLocaleString()} · Out ${exp.toLocaleString()} · Balance ${(inc - exp).toLocaleString()} (${txns.length})`;
+  $("summary").textContent = `수입 ${inc.toLocaleString()} · 지출 ${exp.toLocaleString()} · 잔액 ${(inc - exp).toLocaleString()} (${txns.length})`;
   const ul = $("txnList");
   ul.innerHTML = "";
   txns.forEach(t => {
     const li = document.createElement("li");
-    li.textContent = `${t.date.slice(5)} [${t.kind === "income" ? "In" : "Out"}/${t.cat}] ${t.amt.toLocaleString()}${t.memo ? " · " + t.memo : ""} (${t.method})`;
+    li.textContent = `${t.date.slice(5)} [${t.kind === "income" ? "수입" : "지출"}/${ko(t.cat)}] ${t.amt.toLocaleString()}${t.memo ? " · " + t.memo : ""} (${ko(t.method)})`;
     const b = document.createElement("button");
     b.textContent = "×";
     b.onclick = () => { store(TXN, load(TXN, []).filter(x => x.id !== t.id)); render(); };
@@ -84,12 +93,12 @@ function renderCards(mv) {
   const plans = {};
   txns.filter(t => t.planId).forEach(t => { (plans[t.planId] = plans[t.planId] || []).push(t); });
   const box = $("cardList");
-  box.innerHTML = Object.keys(plans).length ? "" : "<p class='hint'>No installments</p>";
+  box.innerHTML = Object.keys(plans).length ? "" : "<p class='hint'>할부 없음</p>";
   Object.values(plans).forEach(items => {
     items.sort((a, b) => a.date.localeCompare(b.date));
     const total = items.reduce((a, t) => a + t.amt, 0);
     const p = document.createElement("p");
-    p.textContent = `${items[0].memo || items[0].cat} — ${total.toLocaleString()} (${items[0].method})`;
+    p.textContent = `${items[0].memo || ko(items[0].cat)} — ${total.toLocaleString()} (${ko(items[0].method)})`;
     box.appendChild(p);
   });
 }
@@ -126,7 +135,7 @@ function renderLoans() {
   const box = $("loanList");
   const loans = load(LOAN, []).map(normLoan);
   if (JSON.stringify(loans) !== JSON.stringify(load(LOAN, []))) store(LOAN, loans);
-  box.innerHTML = loans.length ? "" : "<p class='hint'>No loans</p>";
+  box.innerHTML = loans.length ? "" : "<p class='hint'>대출 없음</p>";
   loans.forEach(l => {
     const left = loanLeft(l);
     const pct = l.principal ? Math.min(100, Math.round(100 * (l.principal - left) / l.principal)) : 0;
@@ -134,23 +143,23 @@ function renderLoans() {
     div.className = "loan-detail";
     div.innerHTML = `<b>${l.name}</b> <span class="hint">${l.bank} ${l.rate ? l.rate + "%" : ""} ${l.start || ""}</span>
       <div class="bar"><i style="width:${pct}%"></i></div>
-      <div class="hint">Left ${left.toLocaleString()} / ${l.principal.toLocaleString()} · Monthly ${Number(l.monthly).toLocaleString()}${l.memo ? " · " + l.memo : ""}</div>`;
+      <div class="hint">잔여 ${left.toLocaleString()} / ${l.principal.toLocaleString()} · 월납 ${Number(l.monthly).toLocaleString()}${l.memo ? " · " + l.memo : ""}</div>`;
     const row = document.createElement("div");
     row.className = "row2";
     const pay = document.createElement("button");
-    pay.textContent = "Repay";
+    pay.textContent = "상환";
     pay.onclick = () => {
-      const amt = Number(prompt("Amount", l.monthly || "")) || 0;
+      const amt = Number(prompt("금액", l.monthly || "")) || 0;
       if (!amt) return;
       l.reps.push({ date: Store.today(), amt });
       const txns = load(TXN, []);
-      txns.push({ id: uid(), date: Store.today(), kind: "expense", cat: "Housing", amt, method: "Account", memo: `${l.name} repay` });
+      txns.push({ id: uid(), date: Store.today(), kind: "expense", cat: "Housing", amt, method: "Account", memo: `${l.name} 상환` });
       store(TXN, txns); store(LOAN, loans); render();
     };
     const del = document.createElement("button");
-    del.textContent = "Delete";
+    del.textContent = "삭제";
     del.className = "ghost-btn";
-    del.onclick = () => { if (confirm(`Delete ${l.name}?`)) { store(LOAN, loans.filter(x => x.id !== l.id)); renderLoans(); } };
+    del.onclick = () => { if (confirm(`${l.name} 삭제할까요?`)) { store(LOAN, loans.filter(x => x.id !== l.id)); renderLoans(); } };
     const hist = document.createElement("p");
     hist.className = "hint";
     hist.textContent = l.reps.length ? l.reps.map(r => `${r.date.slice(5)} ${r.amt.toLocaleString()}`).join(" · ") : "";
@@ -174,7 +183,7 @@ $("addStmt").onclick = () => {
 function renderStmts(mv) {
   const box = $("stmtList");
   const all = load(STMT, []).filter(s => s.month === mv);
-  box.innerHTML = all.length ? "" : "<p class='hint'>No statements</p>";
+  box.innerHTML = all.length ? "" : "<p class='hint'>명세서 없음</p>";
   all.forEach(s => {
     const div = document.createElement("div");
     div.className = "loan-detail";
@@ -191,7 +200,7 @@ function renderStmts(mv) {
     row.className = "row2";
     const att = document.createElement("label");
     att.className = "ghost-btn";
-    att.textContent = "Receipt";
+    att.textContent = "영수증";
     const fi = document.createElement("input");
     fi.type = "file"; fi.accept = "image/*"; fi.style.display = "none";
     fi.onchange = () => {
@@ -207,7 +216,7 @@ function renderStmts(mv) {
     };
     att.appendChild(fi);
     const del = document.createElement("button");
-    del.textContent = "Delete";
+    del.textContent = "삭제";
     del.className = "ghost-btn";
     del.onclick = () => { store(STMT, load(STMT, []).filter(x => x.id !== s.id)); renderStmts(mv); };
     row.append(att, del);

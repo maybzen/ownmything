@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Habit Tracker - ownmything</title>
+  <title>습관 · ownmything</title>
   <meta name="theme-color" content="#121316" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -18,28 +18,33 @@
 </head>
 <body>
   <div class="page">
-    <a class="back" href="../menu.html">← Menu</a>
     <header class="today-head">
-      <h2>Habit Tracker <span class="hint" id="headDate"></span></h2>
+      <div class="head-top">
+        <a class="back" href="../menu.html">←</a>
+        <h2>습관 <span class="hint" id="headDate"></span></h2>
+        <span class="hint" id="saveState">저장됨</span>
+      </div>
       <div class="head-right">
-        <button id="goTodayDate" class="ghost-btn">Today</button>
         <input type="date" id="datePicker" class="mini" />
+        <button id="goTodayDate" class="ghost-btn sm">오늘</button>
+        <button id="saveBtn" class="btn sm">저장</button>
+        <button id="revertBtn" class="ghost-btn sm" style="display:none">되돌리기</button>
       </div>
     </header>
 
     <section class="card">
-      <h3 id="checkTitle">Today</h3>
+      <h3 id="checkTitle">오늘</h3>
       <div id="todayCheck" class="habit-board"></div>
     </section>
 
     <section class="card">
-      <h3>Week <span class="hint" id="weekLabel"></span></h3>
+      <h3>주간 <span class="hint" id="weekLabel"></span></h3>
       <div id="weekTable" class="htable"></div>
       <div id="weekRates" class="rates"></div>
     </section>
 
     <section class="card">
-      <h3>Month <span class="hint" id="monthLabel"></span></h3>
+      <h3>월간 <span class="hint" id="monthLabel"></span></h3>
       <input type="month" id="monthPicker" />
       <div id="monthCal" class="cal" style="margin-top:8px"></div>
       <div class="legend">
@@ -51,28 +56,28 @@
     </section>
 
     <details class="card">
-      <summary>Manage</summary>
+      <summary>관리</summary>
       <div id="defs" style="margin-top:8px"></div>
       <div class="flist" style="margin-top:8px">
-        <label><span>Habit</span><input id="newDef" placeholder="New habit" /></label>
+        <label><span>이름</span><input id="newDef" placeholder="" /></label>
         <div class="frow" style="justify-content:flex-end">
-          <button id="addDef" class="btn sm">Add</button>
+          <button id="addDef" class="btn sm">추가</button>
         </div>
       </div>
     </details>
 
     <details class="card">
-      <summary>Report</summary>
+      <summary>리포트</summary>
       <div id="repBox" style="margin-top:8px"></div>
     </details>
 
     <details class="card">
-      <summary>Data</summary>
+      <summary>데이터</summary>
       <div style="margin-top:8px">
         <p class="hint" id="dataCount"></p>
         <div class="row2" style="margin-top:8px">
-          <button id="clearHabits" class="ghost-btn">Reset check-ins</button>
-          <button id="wipeDays" class="ghost-btn danger">Delete all records</button>
+          <button id="clearHabits" class="ghost-btn sm">체크 초기화</button>
+          <button id="wipeDays" class="ghost-btn danger sm">전체 삭제</button>
         </div>
       </div>
     </details>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Archive - ownmything</title>
+  <title>기록 · ownmything</title>
   <meta name="theme-color" content="#121316" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,8 +17,12 @@
 </head>
 <body>
   <div class="page">
-    <a class="back" href="../menu.html">← Menu</a>
-    <h2 class="page-title">Archive</h2>
+  <header class="today-head">
+    <div class="head-top">
+      <a class="back" href="../menu.html">←</a>
+      <h2>기록</h2>
+    </div>
+  </header>
 
     <div class="card-head" style="margin-top:14px">
       <h3 id="calLabel"></h3>
@@ -44,18 +48,18 @@
       </div>
       <p class="quote" id="dayOne">—</p>
       <div class="kv">
-        <div><span>Weight</span><b id="dayW">—</b></div>
-        <div><span>Sleep</span><b id="dayS">—</b></div>
-        <div><span>Blocks</span><b id="dayB">—</b><i id="dayBlock"></i></div>
-        <div><span>Habit</span><b id="dayH">—</b><i id="dayHSub"></i></div>
-        <div><span>Settle</span><b id="dayLedger">—</b></div>
+        <div><span>체중</span><b id="dayW">—</b></div>
+        <div><span>수면</span><b id="dayS">—</b></div>
+        <div><span>시간</span><b id="dayB">—</b><i id="dayBlock"></i></div>
+        <div><span>습관</span><b id="dayH">—</b><i id="dayHSub"></i></div>
+        <div><span>정산</span><b id="dayLedger">—</b></div>
       </div>
       <img id="dayPhoto" class="photo-prev" alt="" style="display:none" />
     </section>
 
     <section class="card">
       <div class="card-head">
-        <h3>Weight</h3>
+        <h3>체중</h3>
         <span class="hint" id="wDelta"></span>
       </div>
       <svg id="wChart" viewBox="0 0 320 140" class="chart"></svg>
@@ -63,7 +67,7 @@
 
     <section class="card">
       <div class="card-head">
-        <h3>Photos</h3>
+        <h3>사진</h3>
         <span class="hint" id="photoCount"></span>
       </div>
       <div id="photoWall" class="pw-grid"></div>

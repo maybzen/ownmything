@@ -36,7 +36,7 @@ $("photo").onchange = (e) => {
 };
 $("delPhoto").onclick = () => {
   if (!$("photoPrev").getAttribute("src")) return;
-  if (!confirm("Delete this photo?")) return;
+  if (!confirm("사진을 지울까요?")) return;
   $("photoPrev").setAttribute("src", "");
   $("photo").value = "";
   save();
@@ -51,7 +51,7 @@ function renderCal() {
   $("calLabel").textContent = `${MN[m - 1]} ${y}`;
   const box = $("cal");
   box.innerHTML = "";
-  ["S","M","T","W","T","F","S"].forEach(d => {
+  ["일","월","화","수","목","금","토"].forEach(d => {
     const h = document.createElement("span");
     h.className = "cal-h";
     h.textContent = d;

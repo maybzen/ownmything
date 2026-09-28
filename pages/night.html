@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Night - ownmything</title>
+  <title>야간 · ownmything</title>
   <meta name="theme-color" content="#121316" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,29 +17,31 @@
 </head>
 <body>
   <div class="page">
-    <a class="back" href="../menu.html">← Menu</a>
     <header class="today-head">
-      <h2>Night <span class="hint" id="headDate"></span></h2>
+      <div class="head-top">
+        <a class="back" href="../menu.html">←</a>
+        <h2>야간 <span class="hint" id="headDate"></span></h2>
+      </div>
       <div class="head-right">
-        <button id="goTodayDate" class="ghost-btn">Today</button>
+        <button id="goTodayDate" class="ghost-btn sm">오늘</button>
         <input type="date" id="datePicker" class="mini" />
       </div>
     </header>
     <section class="card">
       <div class="flist">
-        <label><span>One line</span><input id="oneline" placeholder="" /></label>
-        <label class="photo"><span>Photo</span><input type="file" id="photo" accept="image/*" /></label>
+        <label><span>한 줄</span><input id="oneline" placeholder="" /></label>
+        <label class="photo"><span>사진</span><input type="file" id="photo" accept="image/*" /></label>
       </div>
       <img id="photoPrev" class="photo-prev" alt="" />
       <div class="row2" style="margin-top:8px">
         <span></span>
-        <button id="delPhoto" class="ghost-btn sm">Delete photo</button>
+        <button id="delPhoto" class="ghost-btn sm">사진 삭제</button>
       </div>
-      <a id="goToday" class="hint" href="#" style="display:block;margin-top:6px">Open in Today →</a>
+      <a id="goToday" class="hint" href="#" style="display:block;margin-top:6px">오늘에서 보기 →</a>
     </section>
     <section class="card">
       <div class="card-head">
-        <h3 id="calLabel">Calendar</h3>
+        <h3 id="calLabel">달력</h3>
         <div class="head-right">
           <button id="calPrev" class="ghost-btn">‹</button>
           <button id="calNext" class="ghost-btn">›</button>
