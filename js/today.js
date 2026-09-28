@@ -219,6 +219,7 @@ function apply(d) {
   if (syncDumpMarks()) markDirty();
   paintAll(); renderBlocks(); renderTodos(); renderMonthTodos(); renderHabitRate();
   paintSaveBar();
+  paintUndoBtn();
   title.textContent = d;
   renderDateTitle();
   loadHolidays();
@@ -538,26 +539,60 @@ function onDump() {
 }
 
 // --- timetable ---
+// The time plan saves itself per tap, so a wrong tap is undone with the
+// card's own Undo instead of the page-wide Save.
 const tt = $("timetable");
 let curColor = "work";
 let painting = false, erasing = false, eraseColor = null;
 const checkedRuns = new Set();
 
+const gridUndo = [];
+function gridSnap() { return { date: date, cells: Object.assign({}, cells), labels: Object.assign({}, labels) }; }
+function pushUndo() { gridUndo.push(gridSnap()); if (gridUndo.length > 50) gridUndo.shift(); paintUndoBtn(); }
+function hasUndo() { for (let i = gridUndo.length - 1; i >= 0; i--) if (gridUndo[i].date === date) return true; return false; }
+function paintUndoBtn() {
+  const b = $("undoGrid");
+  if (!b) return;
+  b.disabled = !hasUndo();
+  b.style.opacity = hasUndo() ? "1" : "0.4";
+}
+// Writes only the grid for this date, leaving every other field alone.
+function saveGrid() {
+  const prev = load(date);
+  Store.set("d:" + date, Object.assign({}, prev, {
+    cells: Object.assign({}, cells),
+    labels: Object.assign({}, labels),
+  }));
+  if (drafts[date]) { drafts[date] = draftData(); stashDrafts(); }
+}
+function undoGrid() {
+  while (gridUndo.length && gridUndo[gridUndo.length - 1].date !== date) gridUndo.pop();
+  const s = gridUndo.pop();
+  if (!s) return;
+  cells = s.cells;
+  labels = s.labels;
+  autoSleepIds = (autoSleepIds || []).filter(id => cells[id] === "sleep");
+  saveGrid(); paintAll(); renderBlocks(); paintUndoBtn();
+}
+if ($("undoGrid")) $("undoGrid").onclick = undoGrid;
+
 $("clearDay").onclick = () => {
   if (!Object.keys(cells).length) return;
   if (!confirm("Clear today's time plan?")) return;
+  pushUndo();
   cells = {}; labels = {}; autoSleepIds = []; checkedRuns.clear();
-  paintAll(); renderBlocks(); save();
+  paintAll(); renderBlocks(); saveGrid();
 };
 $("delChecked").onclick = () => {
   if (!checkedRuns.size) return;
+  pushUndo();
   checkedRuns.forEach(start => {
     const r = runs().find(x => x.start === start);
     if (r) r.ids.forEach(id => { delete cells[id]; });
     delete labels[start];
   });
   checkedRuns.clear();
-  paintAll(); renderBlocks(); save();
+  paintAll(); renderBlocks(); saveGrid();
 };
 
 document.querySelectorAll("#palette .sw").forEach(b => {
@@ -586,23 +621,28 @@ HOURS.forEach(h => {
     c.title = id;
     c.addEventListener("pointerdown", (e) => {
       e.preventDefault();
+      pushUndo();
       const id = c.dataset.id;
       if (cells[id] === curColor) delete cells[id];
       else cells[id] = curColor;
       paintCell(c);
-      save(); renderBlocks();
+      saveGrid(); renderBlocks();
     });
     grid.appendChild(c);
   }
   row.appendChild(grid);
   tt.appendChild(row);
 });
-document.addEventListener("pointerup", () => { painting = false; erasing = false; });
+document.addEventListener("pointerup", () => {
+  if (painting || erasing) { saveGrid(); renderBlocks(); }
+  painting = false; erasing = false;
+});
 
 function toggleCell(c, drag) {
   const id = c.dataset.id;
   const v = cells[id];
   if (!drag) {
+    pushUndo();
     if (v === curColor) { delete cells[id]; }
     else { cells[id] = curColor; erasing = false; }
     if (!v) { painting = true; }
@@ -717,11 +757,14 @@ function renderBlocks() {
     const inp = document.createElement("input");
     inp.placeholder = "memo";
     inp.value = txt;
+    let memoUndo = false;
     inp.oninput = () => {
+      if (!memoUndo) { pushUndo(); memoUndo = true; }
       if (inp.value) labels[r.start] = inp.value;
       else delete labels[r.start];
-      save(); paintOverlays(runs());
+      saveGrid(); paintOverlays(runs());
     };
+    inp.onblur = () => { memoUndo = false; };
     row.append(cb, dot, range, inp);
     box.appendChild(row);
   });

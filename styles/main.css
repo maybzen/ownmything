@@ -401,17 +401,11 @@ button.btn:active { transform: scale(0.98); }
   .palette .sw::before { width: 6px; height: 6px; margin-right: 3px; flex: none; }
   .palette .sw span, .palette .sw { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  /* reorder: Log → Time plan → BrainDump → Month (time plan high on screen) */
-  .page.today { display: flex; flex-direction: column; }
-  .page.today .day-grid { display: contents; }
-  .page.today > header { order: 0; }
-  .page.today > .log-card { order: 1; }
-  .page.today .day-grid > .card:nth-child(2) { order: 2; }
-  .page.today .day-grid > .card:nth-child(1) { order: 3; }
-  .page.today > section:nth-of-type(2) { order: 4; }
+  /* order stays as authored: header → Log → Month → BrainDump → Time plan */
   .page.today .card { width: 100%; }
 
-  .row2, .row3 { grid-template-columns: 1fr; }
+  .row2 { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .row3 { grid-template-columns: 1fr; }
   .lgrid { grid-template-columns: 1fr 1fr; gap: 6px; }
   .book-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
   .book-card { padding: 9px; gap: 3px; }
@@ -443,7 +437,17 @@ button.btn:active { transform: scale(0.98); }
   .photo-prev { max-height: 160px; }
 
   .card { padding: 12px; margin-bottom: 12px; border-radius: 10px; }
-  .card textarea, .card input, .card select { padding: 8px 10px; }
+  /* inputs: keep 16px (no iOS zoom) but trim the box */
+  .card input, .card select, .card textarea { padding: 5px 7px; min-height: 30px; }
+  .card select { padding: 5px 4px; }
+  .card label { display: flex; align-items: center; gap: 5px; }
+  .card label input, .card label select { flex: 1 1 auto; min-width: 0; }
+  .log-card { padding: 10px 12px; }
+  .log-card .card-head { margin-bottom: 6px; }
+  .log-card .row2 { gap: 6px; }
+  .log-card label { font-size: 0.68rem; gap: 4px; }
+  .log-card label input { min-height: 28px; }
+  .block-row input { padding: 4px 6px; min-height: 26px; }
   .card-head { margin-bottom: 8px; }
   .card-head .ghost-btn.sm { padding: 6px 8px; }
   .page-title { margin: 4px 0 8px; }
@@ -456,8 +460,8 @@ button.btn:active { transform: scale(0.98); }
   .head-right button { padding: 6px 7px; font-size: 0.72rem; min-height: 30px; flex: 0 0 auto; }
   .head-right input[type=date] { flex: 1 1 130px; min-width: 0; max-width: 200px; padding: 7px 6px; }
   .hint.warn { color: #b3402f; font-weight: 600; }
-  .log-card .row2 { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .log-card .row2 + .row2 { margin-top: 8px !important; }
+  .log-card .row2 { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .log-card .row2 label { flex-direction: column; align-items: stretch; gap: 2px; }
   .sub { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 10px 0 4px; }
   .sub-btns { display: flex; gap: 4px; margin-left: auto; }
   .sub-btns .ghost-btn.sm { padding: 5px 7px; font-size: 0.7rem; min-height: 28px; }
