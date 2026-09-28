@@ -162,8 +162,9 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .todo-check button { border: none; background: none; cursor: pointer; color: var(--muted); font-size: 0.8rem; padding: 2px 4px; }
 .todo-check.dragging { opacity: 0.6; }
 .todo-check.picking { cursor: pointer; }
-.todo-check.sel-on { background: color-mix(in srgb, var(--cell) 70%, transparent); }
-.todo-check.sel-on::after { content: "✓"; margin-left: auto; color: var(--ink); font-size: 0.75rem; }
+.todo-check.movable { cursor: pointer; background: color-mix(in srgb, var(--ink) 7%, transparent); box-shadow: inset 3px 0 0 var(--ink); }
+.todo-check.movable::after { content: "옮기기"; margin-left: auto; font-size: 0.66rem; color: var(--muted); letter-spacing: 0.02em; flex: none; }
+.todo-check.movable:active { background: color-mix(in srgb, var(--ink) 18%, transparent); }
 .ghost-btn.on { color: var(--ink); border-color: var(--ink); }
 .todo-check.over-other { background: var(--cell); border-radius: 6px; outline: 1px dashed var(--muted); }
 .todo-check span.txt { cursor: text; }
@@ -173,7 +174,8 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .todo-check.divider .grip, .todo-check.divider button { position: relative; z-index: 1; background: var(--card); border-radius: 4px; }
 .todo-check.divider button { margin-left: auto; }
 .grip { flex: none; }
-.todo-edit { border: none !important; background: transparent !important; flex: 1; min-width: 0; width: 100%; padding: 0 !important; }
+.todo-edit { border: none !important; background: transparent !important; flex: 1; min-width: 0; width: 100%; padding: 0 !important; font: inherit; color: var(--ink); line-height: 1.45; }
+.todo-edit:focus { outline: none; }
 .block-row { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
 .block-row input[type="checkbox"] { flex: none; width: 15px; height: 15px; accent-color: var(--ink); }
 .block-row input:not([type="checkbox"]) { border: none !important; background: transparent !important; border-bottom: 1px solid transparent !important; border-radius: 0 !important; flex: 1; min-width: 0; padding: 2px !important; font-size: 0.85rem; }
@@ -383,11 +385,11 @@ details.card > summary:hover { color: var(--ink); }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 0 8px; }
 .sheet-head > span { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; color: var(--muted); }
 .sheet-row {
-  display: flex; align-items: center; gap: 12px; padding: 13px 2px;
+  display: flex; align-items: center; gap: 13px; padding: 15px 2px;
   border-top: 1px solid var(--line); color: var(--ink); text-decoration: none; font-size: 1rem;
 }
 .sheet-row:active { opacity: 0.5; }
-.sheet-ico { font-size: 20px; color: var(--muted); }
+.sheet-ico { font-size: 22px; color: var(--muted); }
 .sheet-t { flex: 1; min-width: 0; }
 .sheet-go { color: var(--line); font-size: 0.95rem; }
 .sheet-row.on .sheet-t { font-weight: 700; }
@@ -397,7 +399,7 @@ body.sheet-open { overflow: hidden; }
 body.sheet-open .sheet { transform: translateY(0); }
 body.sheet-open .sheet-scrim { opacity: 1; pointer-events: auto; }
 @media (min-width: 900px) { .bnav { display: none; } .dfoot { display: flex; } }
-@media (max-width: 899px) { .bnav { display: flex; } .dfoot { display: none; } .pad-b { height: 72px; } }
+@media (max-width: 899px) { .bnav { display: flex; } .dfoot { display: none; } .pad-b { height: 84px; } }
 .tog { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.9rem; padding: 7px 0; }
 /* .card label is a column flex — .tog must win for the switch layout */
 .card label.tog, label.tog { flex-direction: row; }
@@ -466,7 +468,7 @@ button.btn:active { transform: scale(0.98); }
 
 /* mobile */
 @media (max-width: 640px) {
-  .page { padding: 28px 12px 84px; }
+  .page { padding: 28px 12px 92px; }
   .pad-b { height: 0; }
   .center h1 { font-size: 2.4rem; }
   .page-title { margin: 4px 0 8px; }
@@ -484,11 +486,13 @@ button.btn:active { transform: scale(0.98); }
   /* tap targets — compact but usable */
   button, .sw, .pill, .theme-card, .cal-day { min-height: 34px; }
   .sw, .pill, .theme-card { padding: 7px 10px; font-size: 0.78rem; }
-  .bna { min-height: 52px; padding: 6px 0 7px; font-size: 0.58rem; }
-  .bna .material-symbols-outlined { font-size: 21px; }
+  .bna { min-height: 60px; padding: 8px 0 9px; font-size: 0.7rem; gap: 3px; }
+  .bna .material-symbols-outlined { font-size: 25px; }
   .cal-day { min-height: 34px; font-size: 0.75rem; }
   .mcal-d { min-height: 46px; }
-  .todo-check { padding: 8px 0; font-size: 0.85rem; }
+  .todo-check { padding: 9px 0; font-size: 16px; }
+  .todo-check button { font-size: 0.8rem; }
+  .todo-check .grip { font-size: 0.7rem; }
   .flist { grid-template-columns: 62px 1fr; gap: 0 8px; }
   .flist > label > input, .flist > label > select { padding: 8px 2px; }
 
@@ -550,7 +554,7 @@ button.btn:active { transform: scale(0.98); }
   .log-card .row2 label > span { flex: none; white-space: nowrap; color: var(--muted); }
   .log-card .row2 label input { min-height: 28px; width: auto; flex: 1 1 auto; min-width: 0; padding: 4px 6px; }
   .block-row input { padding: 4px 6px; min-height: 26px; }
-  #braindump { min-height: 56px; height: auto; }
+  #braindump { min-height: 56px; height: auto; font-size: 16px; }
   .card-head { margin-bottom: 8px; }
   .card-head .ghost-btn.sm { padding: 6px 8px; }
   .today-head { flex-direction: column; align-items: stretch; gap: 8px; margin: 10px 0 12px; }
@@ -569,9 +573,8 @@ button.btn:active { transform: scale(0.98); }
   .sm-card b { font-size: 0.95rem; }
   .kv > div { padding: 6px 8px; }
   .kv b { font-size: 0.85rem; }
-  .block-row { font-size: 0.75rem; margin-top: 6px; }
+  .block-row { font-size: 0.8rem; margin-top: 4px; }
   .block-row input { font-size: 0.8rem; }
-  .todo-check span.txt { font-size: 0.85rem; }
   .back { font-size: 0.85rem; }
 }
 .theme-switch { display: flex; gap: 8px; justify-content: center; }

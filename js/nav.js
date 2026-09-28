@@ -8,11 +8,13 @@
   const here = (f) => path.endsWith(f);
 
   const DRAWER = [
-    ["pages/habit.html", "checklist", "습관", "checklist"],
-    ["pages/ledger.html", "account_balance_wallet", "가계부", "account_balance_wallet"],
-    ["pages/reading.html", "auto_stories", "서재", "auto_stories"],
-    ["pages/night.html", "bedtime", "야간", "bedtime"],
-    ["pages/settings.html", "settings", "설정", "settings"],
+    ["today.html", "view_day", "오늘"],
+    ["pages/habit.html", "checklist", "습관"],
+    ["pages/ledger.html", "account_balance_wallet", "가계부"],
+    ["pages/reading.html", "auto_stories", "서재"],
+    ["pages/night.html", "bedtime", "야간"],
+    ["pages/archive.html", "calendar_month", "기록"],
+    ["pages/settings.html", "settings", "설정"],
   ];
   const ALL = [
     ["today.html", "view_day", "Today"],
@@ -23,7 +25,7 @@
     ["pages/archive.html", "calendar_month", "Archive"],
     ["pages/settings.html", "settings", "Settings"],
   ];
-  const inDrawer = DRAWER.some(([f]) => here(f));
+  const inDrawer = DRAWER.slice(1).some(([f]) => here(f));
 
   // ---------- bottom bar ----------
   const el = document.createElement("nav");
@@ -33,12 +35,12 @@
     '<a href="' + base + 'today.html" class="bna' + (here("today.html") ? " on" : "") + '">' +
       '<span class="material-symbols-outlined">view_day</span>오늘</a>' +
     '<button id="bnaMore" class="bna bna-mid' + (inDrawer ? " on" : "") + '" aria-haspopup="true" aria-expanded="false">' +
-      '<span class="material-symbols-outlined">checklist</span>기록</button>' +
+      '<span class="material-symbols-outlined">apps</span>기록</button>' +
     '<a href="' + base + 'pages/archive.html" class="bna' + (here("pages/archive.html") ? " on" : "") + '">' +
       '<span class="material-symbols-outlined">inventory_2</span>보관함</a>';
   document.body.appendChild(el);
 
-  // ---------- drawer ----------
+  // ---------- drawer: the whole menu ----------
   const scrim = document.createElement("div");
   scrim.id = "sheetScrim";
   scrim.className = "sheet-scrim";
@@ -47,18 +49,18 @@
   sheet.id = "sheet";
   sheet.className = "sheet";
   sheet.setAttribute("role", "dialog");
-  sheet.setAttribute("aria-label", "기록");
+  sheet.setAttribute("aria-label", "메뉴");
   sheet.innerHTML =
     '<div class="sheet-grab"></div>' +
-    '<div class="sheet-head"><span>기록</span><button id="sheetX" class="ghost-btn sm">닫기</button></div>' +
+    '<div class="sheet-head"><span>메뉴</span><button id="sheetX" class="ghost-btn sm">닫기</button></div>' +
     DRAWER.map(([f, i, ko]) =>
       '<a href="' + base + f + '" class="sheet-row' + (here(f) ? " on" : "") + '">' +
         '<span class="sheet-ico material-symbols-outlined">' + i + '</span>' +
         '<span class="sheet-t">' + ko + '</span>' +
         '<span class="sheet-go">→</span></a>').join("") +
     '<a href="' + base + 'menu.html" class="sheet-row sheet-all">' +
-      '<span class="sheet-ico material-symbols-outlined">apps</span>' +
-      '<span class="sheet-t">전체 메뉴</span>' +
+      '<span class="sheet-ico material-symbols-outlined">language</span>' +
+      '<span class="sheet-t">English menu</span>' +
       '<span class="sheet-go">→</span></a>';
   document.body.appendChild(scrim);
   document.body.appendChild(sheet);

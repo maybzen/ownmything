@@ -150,7 +150,6 @@ function renderDateTitle() {
 }
 
 let cells = {}, labels = {}, autoSleepIds = [], todos = [], monthTodos = [];
-let selMode = false;
 
 function isWorkday(d) {
   const day = new Date(d + "T12:00:00").getDay();
@@ -297,13 +296,11 @@ function todoRow(item, list, render, box, opts) {
   grip0.className = "grip";
   grip0.textContent = "⋮⋮";
   l.append(grip0, cb);
-  if (selMode) {
-    l.classList.add("picking");
-    if (item.sel) l.classList.add("sel-on");
+  if (moveMode && moveMode === moveTarget(list)) {
+    l.classList.add("movable");
     l.onclick = (e) => {
       if (e.target.closest(".grip") || e.target.closest("button") || e.target.closest("input[type=checkbox]")) return;
-      item.sel = !item.sel;
-      render();
+      moveItem(item, list);
     };
   }
   bindGrip(grip0, l, box, list, item);
@@ -470,40 +467,36 @@ async function autoMonth() {
   finally { autoMonthBusy = false; }
 }
 $("addDiv").onclick = () => { todos.push({ id: uid(), div: true }); save(); renderTodos(); };
-function selectedIn(list) { return list.filter(t => t && t.sel && t.t && String(t.t).trim()); }
-function setSelBtn(id, on) { const b = $(id); if (b) { b.textContent = on ? "해제" : "선택"; b.classList.toggle("on", on); } }
-$("moveMonth").onclick = () => {
-  const picked = selectedIn(todos);
-  const items = picked.length ? picked : todos.filter(t => !t.div && t.t.trim() && !t.done);
-  if (!items.length) return;
-  if (!confirm(`${items.length}개를 월간으로 옮길까요?`)) return;
-  monthTodos.push(...items.map(t => ({ id: uid(), t: t.t, done: t.done })));
-  todos = todos.filter(t => items.indexOf(t) === -1);
-  selMode = false; setSelBtn("selToday", false);
-  markDirty(); renderTodos(); renderMonthTodos();
-};
-$("moveToday").onclick = () => {
-  const picked = selectedIn(monthTodos);
-  const items = picked.length ? picked : monthTodos.filter(t => !t.div && t.t.trim() && !t.done);
-  if (!items.length) return;
-  if (!confirm(`${items.length}개를 오늘로 옮길까요?`)) return;
-  todos.push(...items.map(t => ({ id: uid(), t: t.t, done: t.done })));
-  monthTodos = monthTodos.filter(t => items.indexOf(t) === -1);
-  selMode = false; setSelBtn("selMonth", false);
-  markDirty(); renderTodos(); renderMonthTodos();
-};
-$("selToday").onclick = () => {
-  selMode = !selMode;
-  if (!selMode) todos.forEach(t => { delete t.sel; });
-  setSelBtn("selToday", selMode);
-  renderTodos();
-};
-$("selMonth").onclick = () => {
-  selMode = !selMode;
-  if (!selMode) monthTodos.forEach(t => { delete t.sel; });
-  setSelBtn("selMonth", selMode);
-  renderMonthTodos();
-};
+
+// Move mode: press → 월간 (or → 오늘), then tap the rows you want to move.
+let moveMode = null; // "month" | "today" | null
+function moveTarget(list) { return list === monthTodos ? "today" : "month"; }
+function setMoveMode(m) {
+  moveMode = (moveMode === m) ? null : m;
+  const bt = $("moveMonth"), bm = $("moveToday");
+  bt.classList.toggle("on", moveMode === "month");
+  bm.classList.toggle("on", moveMode === "today");
+  bt.textContent = moveMode === "month" ? "취소" : "→ 월간";
+  bm.textContent = moveMode === "today" ? "취소" : "→ 오늘";
+  const hint = $("moveHint");
+  if (hint) hint.style.display = moveMode === "today" ? "" : "none";
+  const hintTo = $("moveHintTo");
+  if (hintTo) hintTo.style.display = moveMode === "month" ? "" : "none";
+  renderTodos(); renderMonthTodos();
+}
+function moveItem(item, list) {
+  const i = list.indexOf(item);
+  if (i === -1) return;
+  const to = moveTarget(list);
+  list.splice(i, 1);
+  (to === "month" ? monthTodos : todos).push({ id: uid(), t: item.t, done: item.done });
+  moveMode = null;
+  markDirty();
+  renderTodos(); renderMonthTodos();
+  setMoveMode(null);
+}
+$("moveMonth").onclick = () => setMoveMode("month");
+$("moveToday").onclick = () => setMoveMode("today");
 $("saveBtn").onclick = () => {
   if (!isDirty()) return;
   commit();
