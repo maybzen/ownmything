@@ -20,17 +20,17 @@ window.Auth = (() => {
 
   function queuePush(key, value) {
     if (!uid) return;
-    recentlyPushed[key] = Date.now();
     try { lastPushed[key] = JSON.stringify(value); } catch (e) {}
     clearTimeout(timers[key]);
     timers[key] = setTimeout(async () => {
+      recentlyPushed[key] = Date.now();
       const { error } = await sb.from("store").upsert({ user_id: uid, key, value });
       if (!error) {
         const m = meta();
         m[uid + ":" + key] = Date.now();
         setMeta(m);
       }
-    }, 1500);
+    }, 800);
   }
 
   function handleCloudEvent(payload) {
@@ -50,8 +50,12 @@ window.Auth = (() => {
       return;
     }
     // Own echo (even a stale one): never clobber local with it.
+    // NOTE: no blanket time-window block here. Blocking all cloud events
+    // for N seconds after a local edit also drops legitimate remote edits
+    // (phone -> PC within the window) and is the main "바로 안됨" cause.
+    // Stale-echo protection is handled by the exact-match above + the
+    // editor-focus guard on each page.
     if (incoming !== null && lastPushed[row.key] === incoming) return;
-    if (recentlyPushed[row.key] && Date.now() - recentlyPushed[row.key] < 3000) return;
     try {
       localStorage.setItem(lk, JSON.stringify(row.value));
       const m = meta();
@@ -62,7 +66,8 @@ window.Auth = (() => {
   }
 
   function startRealtime() {
-    if (realtimeChannel || !uid) return;
+    if (!uid) return;
+    if (realtimeChannel) { try { sb.removeChannel(realtimeChannel); } catch (e) {} realtimeChannel = null; }
     realtimeChannel = sb.channel("ownmything-store-" + uid)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "store", filter: "user_id=eq." + uid }, handleCloudEvent)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "store", filter: "user_id=eq." + uid }, handleCloudEvent)
@@ -71,6 +76,30 @@ window.Auth = (() => {
 
   function onCloudChange(fn) {
     cloudListeners.push(fn);
+  }
+
+  // Fallback when realtime drops (mobile sleep / network flap):
+  // re-pull and notify listeners so the UI refreshes even without a push event.
+  async function resync() {
+    if (!uid) return false;
+    let changed = false;
+    try { changed = await pull(); } catch (e) { return false; }
+    if (changed) {
+      try {
+        const keys = new Set();
+        try {
+          const { data } = await sb.from("store").select("key");
+          (data || []).forEach(r => keys.add(r.key));
+        } catch (e) {}
+        keys.forEach(k => cloudListeners.forEach(fn => { try { fn(k); } catch (e) {} }));
+      } catch (e) {}
+    }
+    return changed;
+  }
+  if (typeof window !== "undefined") {
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) resync(); });
+    window.addEventListener("online", () => resync());
+    window.addEventListener("focus", () => resync());
   }
 
   async function pull() {
@@ -116,8 +145,12 @@ window.Auth = (() => {
   async function startSync(userId) {
     uid = userId;
     Store.setProfile(uid);
-    const origSet = Store.set.bind(Store);
-    Store.set = (k, v) => { origSet(k, v); queuePush(k, v); };
+    if (!Store.set.__synced) {
+      const origSet = Store.set.bind(Store);
+      const wrapped = (k, v) => { origSet(k, v); queuePush(k, v); };
+      wrapped.__synced = true;
+      Store.set = wrapped;
+    }
     const migrated = migrateLocal();
     let changed = false;
     try { changed = await pull(); } catch (e) {}
@@ -157,5 +190,5 @@ window.Auth = (() => {
     location.href = loginUrl();
   }
 
-  return { sb, guard, logout, onCloudChange, session: async () => (await sb.auth.getSession()).data.session };
+  return { sb, guard, logout, onCloudChange, resync, session: async () => (await sb.auth.getSession()).data.session };
 })();

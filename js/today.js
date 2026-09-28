@@ -859,6 +859,7 @@ picker.onchange = () => { commit(); date = picker.value; apply(date); };
 $("goToday").onclick = () => { commit(); date = todayStr(); picker.value = date; apply(date); if (window.pullCalendar) pullCalendar(); };
 
 // --- realtime sync: refresh when cloud data changes ---
+let pendingTodoSync = false;
 if (window.Auth && Auth.onCloudChange) {
   Auth.onCloudChange((key) => {
     const curD = "d:" + date;
@@ -872,14 +873,9 @@ if (window.Auth && Auth.onCloudChange) {
     // Never destroy focused inputs: cloud value is already in
     // localStorage, so it will be picked up on the next render/save.
     // Rendering todos while the user types recreates the <input> and
-    // causes flicker/shake + lost keystrokes.
-    if (editingTodo || focusInTodos || focusInMonth) return;
+    // causes flicker/shake + lost keystrokes. So: apply everything that
+    // is NOT focused now, and defer the todo-list re-render until blur.
     const s = load(date);
-    if (s.todos !== undefined) {
-      const fresh = cleanTodos(s.todos);
-      todos.length = 0;
-      fresh.forEach(t => todos.push(t));
-    }
     if (s.cells) { cells = s.cells; paintAll(); renderBlocks(); }
     if (s.labels) labels = s.labels;
     if (!editingDump && s.braindump !== undefined && $("braindump").value !== s.braindump) {
@@ -889,11 +885,42 @@ if (window.Auth && Auth.onCloudChange) {
     if (document.activeElement !== $("lastSleep") && s.lastSleep !== undefined) $("lastSleep").value = s.lastSleep || "";
     if (document.activeElement !== $("wake") && s.wake !== undefined) $("wake").value = s.wake || "";
     if (document.activeElement !== $("weight") && s.weight !== undefined) $("weight").value = s.weight || "";
+    if (editingTodo || focusInTodos || focusInMonth) {
+      pendingTodoSync = true;
+      return;
+    }
+    if (s.todos !== undefined) {
+      const fresh = cleanTodos(s.todos);
+      todos.length = 0;
+      fresh.forEach(t => todos.push(t));
+    }
     const freshM = cleanTodos(Store.get(monthKey(date)));
     monthTodos.length = 0;
     freshM.forEach(t => monthTodos.push(t));
     renderTodos(); renderMonthTodos();
     paintSaveBar();
+  });
+  // Deferred todo refresh: apply the pending cloud todos once the user leaves the input.
+  document.addEventListener("focusout", (e) => {
+    if (!pendingTodoSync) return;
+    if (e.target && e.target.classList && e.target.classList.contains("todo-edit")) {
+      setTimeout(() => {
+        if (document.activeElement && document.activeElement.classList &&
+            document.activeElement.classList.contains("todo-edit")) return;
+        pendingTodoSync = false;
+        const s = load(date);
+        if (s.todos !== undefined) {
+          const fresh = cleanTodos(s.todos);
+          todos.length = 0;
+          fresh.forEach(t => todos.push(t));
+        }
+        const freshM = cleanTodos(Store.get(monthKey(date)));
+        monthTodos.length = 0;
+        freshM.forEach(t => monthTodos.push(t));
+        renderTodos(); renderMonthTodos();
+        paintSaveBar();
+      }, 300);
+    }
   });
 }
 
