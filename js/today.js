@@ -539,8 +539,8 @@ function onDump() {
 }
 
 // --- timetable ---
-// The time plan saves itself per tap, so a wrong tap is undone with the
-// card's own Undo instead of the page-wide Save.
+// The time plan uses the same explicit Save as everything else.
+// Undo in the card head is the safety net for mis-taps.
 const tt = $("timetable");
 let curColor = "work";
 let painting = false, erasing = false, eraseColor = null;
@@ -556,15 +556,6 @@ function paintUndoBtn() {
   b.disabled = !hasUndo();
   b.style.opacity = hasUndo() ? "1" : "0.4";
 }
-// Writes only the grid for this date, leaving every other field alone.
-function saveGrid() {
-  const prev = load(date);
-  Store.set("d:" + date, Object.assign({}, prev, {
-    cells: Object.assign({}, cells),
-    labels: Object.assign({}, labels),
-  }));
-  if (drafts[date]) { drafts[date] = draftData(); stashDrafts(); }
-}
 function undoGrid() {
   while (gridUndo.length && gridUndo[gridUndo.length - 1].date !== date) gridUndo.pop();
   const s = gridUndo.pop();
@@ -572,7 +563,7 @@ function undoGrid() {
   cells = s.cells;
   labels = s.labels;
   autoSleepIds = (autoSleepIds || []).filter(id => cells[id] === "sleep");
-  saveGrid(); paintAll(); renderBlocks(); paintUndoBtn();
+  markDirty(); paintAll(); renderBlocks(); paintUndoBtn();
 }
 if ($("undoGrid")) $("undoGrid").onclick = undoGrid;
 
@@ -581,7 +572,7 @@ $("clearDay").onclick = () => {
   if (!confirm("Clear today's time plan?")) return;
   pushUndo();
   cells = {}; labels = {}; autoSleepIds = []; checkedRuns.clear();
-  paintAll(); renderBlocks(); saveGrid();
+  paintAll(); renderBlocks(); markDirty();
 };
 $("delChecked").onclick = () => {
   if (!checkedRuns.size) return;
@@ -592,7 +583,7 @@ $("delChecked").onclick = () => {
     delete labels[start];
   });
   checkedRuns.clear();
-  paintAll(); renderBlocks(); saveGrid();
+  paintAll(); renderBlocks(); markDirty();
 };
 
 document.querySelectorAll("#palette .sw").forEach(b => {
@@ -626,7 +617,7 @@ HOURS.forEach(h => {
       if (cells[id] === curColor) delete cells[id];
       else cells[id] = curColor;
       paintCell(c);
-      saveGrid(); renderBlocks();
+      markDirty(); renderBlocks();
     });
     grid.appendChild(c);
   }
@@ -634,7 +625,7 @@ HOURS.forEach(h => {
   tt.appendChild(row);
 });
 document.addEventListener("pointerup", () => {
-  if (painting || erasing) { saveGrid(); renderBlocks(); }
+  if (painting || erasing) { markDirty(); renderBlocks(); }
   painting = false; erasing = false;
 });
 
@@ -762,7 +753,7 @@ function renderBlocks() {
       if (!memoUndo) { pushUndo(); memoUndo = true; }
       if (inp.value) labels[r.start] = inp.value;
       else delete labels[r.start];
-      saveGrid(); paintOverlays(runs());
+      markDirty(); paintOverlays(runs());
     };
     inp.onblur = () => { memoUndo = false; };
     row.append(cb, dot, range, inp);

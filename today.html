@@ -21,12 +21,13 @@
     <header class="today-head">
       <div class="head-top">
         <a class="back" href="./menu.html">←</a>
-        <h2 id="dateTitle">Today</h2>
-        <span class="hint" id="saveState">Saved</span>
-        <a class="gear" href="./pages/settings.html">⚙</a>
+        <div class="date-tap" id="dateTap">
+          <h2 id="dateTitle">Today</h2>
+          <span class="hint" id="saveState">Saved</span>
+          <input type="date" id="datePicker" aria-label="Change date" tabindex="-1" />
+        </div>
       </div>
       <div class="head-right">
-        <input type="date" id="datePicker" />
         <button id="goToday" class="ghost-btn sm">Today</button>
         <button id="saveBtn" class="btn sm">Save</button>
         <button id="revertBtn" class="ghost-btn sm" style="display:none">Revert</button>
@@ -81,7 +82,6 @@
       <div class="card-head">
         <h3>Time plan</h3>
         <div class="head-right">
-          <span class="hint">auto-saved</span>
           <button id="undoGrid" class="ghost-btn sm" disabled style="opacity:.4" title="Undo the last time-plan change">↶ Undo</button>
         </div>
       </div>

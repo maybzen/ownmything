@@ -48,10 +48,17 @@ body {
   font-feature-settings: "tnum";
 }
 
-h1, h2 {
+/* Newsreader stays for the landing hero and journal quotes.
+   Everything navigational / list-like is sans for a cleaner read. */
+h1 {
   font-family: "Newsreader", Georgia, serif;
   font-weight: 400;
   letter-spacing: -0.02em;
+}
+h2 {
+  font-family: "Manrope", -apple-system, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.015em;
 }
 
 .center {
@@ -94,8 +101,9 @@ h1, h2 {
 }
 
 .hint {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--muted);
+  letter-spacing: 0.01em;
 }
 
 .page {
@@ -119,8 +127,18 @@ h1, h2 {
   gap: 8px;
   margin: 16px 0 20px;
 }
-.head-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.head-top .gear { margin-left: auto; flex: none; }
+.head-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+/* the visible title is just a readout; the real <input type=date> sits on
+   top of it, so tapping the date opens the native date editor */
+.date-tap { position: relative; display: flex; align-items: baseline; gap: 8px; min-width: 0; flex: 1; cursor: pointer; }
+.date-tap::after { content: "▾"; font-size: 0.8em; color: var(--muted); pointer-events: none; flex: none; }
+.date-tap h2, .date-tap .hint { pointer-events: none; }
+.date-tap #datePicker {
+  position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+  opacity: 0; border: none; background: none; padding: 0; margin: 0;
+  max-width: 100%; cursor: pointer;
+}
+.date-tap:active h2 { opacity: 0.5; }
 .head-top .hint { white-space: nowrap; }
 .head-top h2 { min-width: 0; overflow-wrap: anywhere; }
 .head-top h2 .holiday { white-space: nowrap; }
@@ -134,8 +152,9 @@ h1, h2 {
 .sub-btns { display: flex; gap: 6px; }
 button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .tmemo { grid-column: 1 / -1; border: none !important; background: transparent !important; font-size: 0.8rem; padding: 2px 0 6px 36px !important; color: var(--ink); }
-.todo-check { display: flex; gap: 8px; align-items: flex-start; padding: 7px 0; font-size: 0.92rem; border-bottom: 1px solid var(--line); }
-.todo-check input[type="checkbox"] { width: 17px; height: 17px; flex: none; margin-top: 2px; }
+.todo-check { display: flex; gap: 9px; align-items: flex-start; padding: 9px 0; font-size: 0.9rem; border-bottom: 1px solid var(--line); }
+.todo-check:last-child { border-bottom: none; }
+.todo-check input[type="checkbox"] { width: 16px; height: 16px; flex: none; margin-top: 3px; accent-color: var(--ink); }
 .todo-check span { flex: none; }
 .todo-check span.txt { flex: 1; min-width: 0; text-align: left; white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.45; }
 .todo-check span.done { text-decoration: line-through; color: var(--muted); }
@@ -147,16 +166,17 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .ghost-btn.on { color: var(--ink); border-color: var(--ink); }
 .todo-check.over-other { background: var(--cell); border-radius: 6px; outline: 1px dashed var(--muted); }
 .todo-check span.txt { cursor: text; }
-.grip { cursor: grab; color: var(--muted); touch-action: none; padding: 4px 2px; flex: none; }
+.grip { cursor: grab; color: var(--line); touch-action: none; padding: 2px 1px; flex: none; font-size: 0.75rem; letter-spacing: -1px; }
 .todo-check.divider { position: relative; border-bottom: none; padding: 10px 0; }
 .todo-check.divider .divline { position: absolute; left: 0; right: 0; top: 50%; border-bottom: 1px solid var(--line); height: 0; }
 .todo-check.divider .grip, .todo-check.divider button { position: relative; z-index: 1; background: var(--card); border-radius: 4px; }
 .todo-check.divider button { margin-left: auto; }
 .grip { flex: none; }
 .todo-edit { border: none !important; background: transparent !important; flex: 1; min-width: 0; width: 100%; padding: 0 !important; }
-.block-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
-.block-row input[type="checkbox"] { flex: none; width: 16px; }
-.block-row input { border: none !important; background: transparent !important; border-bottom: 1px solid var(--line) !important; border-radius: 0 !important; flex: 1; padding: 2px !important; font-size: 0.85rem; }
+.block-row { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.block-row input[type="checkbox"] { flex: none; width: 15px; height: 15px; accent-color: var(--ink); }
+.block-row input:not([type="checkbox"]) { border: none !important; background: transparent !important; border-bottom: 1px solid transparent !important; border-radius: 0 !important; flex: 1; min-width: 0; padding: 2px !important; font-size: 0.85rem; }
+.block-row input:not([type="checkbox"]):focus { border-bottom-color: var(--ink) !important; outline: none; }
 .cell.labeled { overflow: visible; text-align: center; position: relative; z-index: 1; }
 .cell.sel { outline: 2px solid var(--ink); outline-offset: -2px; }
 .dot.work { background: #d9dee9; } .dot.lunch { background: #e3e8ef; } .dot.promise { background: #dad5e9; }
@@ -171,8 +191,14 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .hm { display: flex; gap: 4px; align-items: stretch; min-width: 0; }
 .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .menu-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 0 20px; }
-.menu-list { display: flex; flex-direction: column; gap: 18px; text-align: center; }
-.menu-list a { font-family: "Newsreader", Georgia, serif; font-size: 1.8rem; color: var(--ink); text-decoration: none; }
+.menu-list { display: flex; flex-direction: column; text-align: left; width: 100%; max-width: 320px; }
+.menu-list a {
+  font-size: 1.15rem; font-weight: 500; color: var(--ink); text-decoration: none;
+  padding: 15px 2px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.menu-list a::after { content: "→"; color: var(--muted); font-size: 0.9rem; }
+.menu-list a:active { opacity: 0.5; }
 .foot-gear { color: var(--muted); text-decoration: none; }
 .cal-h { text-align: center; font-size: 0.7rem; color: var(--muted); }
 .cal-day { aspect-ratio: 1; border: 1px solid transparent; background: transparent; color: var(--ink); border-radius: 8px; font-size: 0.85rem; cursor: pointer; position: relative; }
@@ -197,7 +223,7 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .gal-item span { display: block; text-align: center; font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
 .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
 .book-card { border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 3px rgba(18, 19, 22, 0.03), 0 4px 12px rgba(18, 19, 22, 0.02); }
-.book-card b { font-family: "Newsreader", Georgia, serif; font-weight: 500; font-size: 1.05rem; }
+.book-card b { font-weight: 600; font-size: 0.95rem; }
 .book-card button { align-self: flex-end; border: none; background: none; cursor: pointer; color: var(--muted); }
 .chip { align-self: flex-start; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; color: var(--muted); }
 .loan-detail { border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
@@ -212,7 +238,10 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
   margin-bottom: 16px;
   box-shadow: 0 1px 3px rgba(18, 19, 22, 0.03), 0 4px 12px rgba(18, 19, 22, 0.02);
 }
-.card h3 { font-size: 1rem; margin-bottom: 12px; }
+.card h3 { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.log-card { max-width: 560px; }
+.log-card .row2 label { flex-direction: row; align-items: center; gap: 8px; }
+.log-card .row2 label input { width: auto; flex: 1 1 auto; min-width: 0; }
 .card textarea, .card input {
   width: 100%;
   min-width: 0;
@@ -300,11 +329,13 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 @media (min-width: 900px) { .bnav { display: none; } .dfoot { display: flex; } }
 @media (max-width: 899px) { .bnav { display: flex; } .dfoot { display: none; } .pad-b { height: 76px; } }
 .tog { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.9rem; padding: 7px 0; }
-.tog input { width: auto; }
+/* .card label is a column flex — .tog must win for the switch layout */
+.card label.tog, label.tog { flex-direction: row; }
+.tog input { width: 18px; height: 18px; flex: none; accent-color: var(--ink); }
 .ghost-btn.danger { color: #b3402f; border-color: #e0c3bd; }
 .rep-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 5px 0; border-bottom: 1px solid var(--line); }
 .rep-row b { font-weight: 600; }
-body.noserif h1, body.noserif h2, body.noserif .menu-list a, body.noserif .quote, body.noserif .sm-card b { font-family: "Manrope", sans-serif; }
+body.noserif h1, body.noserif .quote, body.noserif .sm-card b { font-family: "Manrope", sans-serif; }
 .pad-b { height: 8px; }
 
 .sm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
@@ -440,14 +471,14 @@ button.btn:active { transform: scale(0.98); }
   /* inputs: keep 16px (no iOS zoom) but trim the box */
   .card input, .card select, .card textarea { padding: 5px 7px; min-height: 30px; }
   .card select { padding: 5px 4px; }
-  .card label { display: flex; align-items: center; gap: 5px; }
-  .card label input, .card label select { flex: 1 1 auto; min-width: 0; }
+  .tog { font-size: 0.85rem; padding: 9px 0; }
   .log-card { padding: 10px 12px; }
   .log-card .card-head { margin-bottom: 6px; }
-  .log-card .row2 { gap: 6px; }
-  .log-card label { font-size: 0.68rem; gap: 4px; }
-  .log-card label input { min-height: 28px; }
+  .log-card .row2 { grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+  .log-card .row2 label { flex-direction: row; align-items: center; gap: 6px; font-size: 0.66rem; }
+  .log-card .row2 label input { min-height: 28px; width: auto; flex: 1 1 auto; min-width: 0; padding: 4px 6px; }
   .block-row input { padding: 4px 6px; min-height: 26px; }
+  #braindump { min-height: 56px; height: auto; }
   .card-head { margin-bottom: 8px; }
   .card-head .ghost-btn.sm { padding: 6px 8px; }
   .page-title { margin: 4px 0 8px; }
@@ -455,17 +486,12 @@ button.btn:active { transform: scale(0.98); }
   .head-top { display: flex; align-items: center; gap: 8px; width: 100%; }
   .head-top h2 { font-size: 1.3rem; min-width: 0; overflow-wrap: anywhere; }
   .head-top .hint { flex: 0 0 auto; font-size: 0.6rem; white-space: nowrap; }
-  .head-top .gear { margin-left: auto; flex: none; }
   .head-right { display: flex; flex-wrap: wrap; gap: 5px; flex-shrink: 1; }
   .head-right button { padding: 6px 7px; font-size: 0.72rem; min-height: 30px; flex: 0 0 auto; }
-  .head-right input[type=date] { flex: 1 1 130px; min-width: 0; max-width: 200px; padding: 7px 6px; }
   .hint.warn { color: #b3402f; font-weight: 600; }
-  .log-card .row2 { grid-template-columns: 1fr 1fr; gap: 6px; }
-  .log-card .row2 label { flex-direction: column; align-items: stretch; gap: 2px; }
-  .sub { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 10px 0 4px; }
   .sub-btns { display: flex; gap: 4px; margin-left: auto; }
   .sub-btns .ghost-btn.sm { padding: 5px 7px; font-size: 0.7rem; min-height: 28px; }
-  #braindump { min-height: 70px; }
+  #braindump { min-height: 56px; }
   .quote { font-size: 0.95rem; }
   .mlist { font-size: 0.72rem; line-height: 1.8; }
   .dfoot { display: none; }
