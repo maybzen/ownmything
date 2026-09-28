@@ -367,43 +367,102 @@ button.btn:active { transform: scale(0.98); }
   .center h1 { font-size: 2.4rem; }
   .page-title { margin-top: 14px; }
 
-  /* iOS: prevent zoom on focus */
-  .card textarea, .card input, .card select, .card button,
-  input, textarea, select { font-size: 16px; }
+  /* iOS: prevent zoom only on text entry (not selects) */
+  input[type=text], input[type=number], input[type=date], input[type=month],
+  input[type=time], input:not([type]), textarea, select { font-size: 16px; }
+  select { font-size: 15px; }
+  .card label { font-size: 0.8rem; }
+  .card h3 { font-size: 0.9rem; }
+  .card p.hint, .hint { font-size: 0.72rem; }
+  .page h2, .page-title { font-size: 1.4rem; }
+  .sub { font-size: 0.85rem; }
 
-  /* tap targets */
-  button, .sw, .pill, .theme-card, .cal-day, .bna { min-height: 40px; }
-  .sw, .pill, .theme-card { padding: 9px 12px; }
-  .bna { min-height: 52px; padding: 6px 0 7px; }
-  .bna .material-symbols-outlined { font-size: 21px; }
-  .cal-day { min-height: 40px; }
-  .mcal-d { min-height: 58px; }
-  .todo-check { padding: 10px 0; }
-  .trow .cell { height: 30px; }
+  /* tap targets — compact but usable */
+  button, .sw, .pill, .theme-card, .cal-day { min-height: 34px; }
+  .sw, .pill, .theme-card { padding: 7px 10px; font-size: 0.78rem; }
+  .bna { min-height: 48px; padding: 5px 0 6px; font-size: 0.52rem; }
+  .bna .material-symbols-outlined { font-size: 19px; }
+  .cal-day { min-height: 34px; font-size: 0.75rem; }
+  .mcal-d { min-height: 46px; }
+  .todo-check { padding: 8px 0; font-size: 0.85rem; }
 
-  .row2, .row3, .lgrid, .kv, .sm-grid { grid-template-columns: 1fr; }
+  /* time plan: whole day visible without scrolling */
+  .trow .cell { height: 18px; font-size: 8px; line-height: 16px; border-radius: 3px; }
+  .timetable { gap: 1px; }
+  .trow { grid-template-columns: 20px 1fr; gap: 4px; }
+  .tlabel { font-size: 0.56rem; }
+  .tgrid { gap: 2px; }
+  .run-label { font-size: 8px; }
+  .palette { gap: 4px; margin-bottom: 8px; }
+  .palette .sw { flex: 1 1 auto; min-width: 0; padding: 6px 2px; font-size: 0.68rem; text-align: center; }
+
+  /* reorder: Log → Time plan → BrainDump → Month (time plan high on screen) */
+  .page.today { display: flex; flex-direction: column; }
+  .page.today .day-grid { display: contents; }
+  .page.today > header { order: 0; }
+  .page.today > .log-card { order: 1; }
+  .page.today .day-grid > .card:nth-child(2) { order: 2; }
+  .page.today .day-grid > .card:nth-child(1) { order: 3; }
+  .page.today > section:nth-of-type(2) { order: 4; }
+  .page.today .card { width: 100%; }
+
+  .row2, .row3 { grid-template-columns: 1fr; }
+  .lgrid { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .book-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .book-card { padding: 9px; gap: 3px; }
+  .book-card b { font-size: 0.9rem; }
+  .cal { gap: 2px; }
+  .htable { font-size: 0.75rem; gap: 3px; }
+  .rates { font-size: 0.8rem; }
+  .legend { font-size: 0.66rem; gap: 8px; }
+  .bars { height: 76px; }
+  .kv { grid-template-columns: repeat(2, 1fr); }
+  .sm-grid { grid-template-columns: repeat(3, 1fr); }
   .habit-board { grid-template-columns: 1fr; }
-  .hcol { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
-  .hrow { grid-template-columns: 1fr repeat(7, 20px) 38px; gap: 2px; font-size: 0.72rem; overflow-x: auto; }
-  .hhead { min-width: 260px; }
+  .hcol { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
+  .hrow { grid-template-columns: 1fr repeat(7, 18px) 34px; gap: 2px; font-size: 0.68rem; overflow-x: auto; }
+  .hhead { min-width: 240px; }
 
-  /* header: stack, compact actions */
-  .today-head { flex-direction: column; align-items: stretch; gap: 10px; }
-  .head-top { width: 100%; }
-  .head-top h2 { font-size: 1.35rem; }
-  .head-top .gear { margin-left: auto; }
-  .head-right { flex-wrap: wrap; gap: 6px; }
-  .head-right > * { flex: 0 0 auto; }
-  .head-right input[type=date] { flex: 1 1 auto; min-width: 0; }
-  .sub { font-size: 0.92rem; }
-  .sub-btns { flex-wrap: wrap; justify-content: flex-end; }
-  .card h3 { font-size: 0.95rem; }
-  .quote { font-size: 1rem; }
-  .mlist { font-size: 0.76rem; line-height: 1.85; }
-  .mcal, .cal, .pw-grid { gap: 2px; }
+  /* archive: whole month + summary in one screen */
+  .mcal { gap: 2px; }
+  .mcal-d { min-height: 40px; padding: 2px; border-radius: 4px; gap: 1px; }
+  .mcal-d b { font-size: 0.62rem; }
+  .mcal-h { font-size: 0.55rem; }
+  .mcal-e { font-size: 0.5rem; line-height: 1.25; padding: 0 2px; }
+  .mcal-d u { font-size: 0.45rem; }
+  .chart { height: 110px; }
   .pw-grid { grid-template-columns: repeat(3, 1fr); }
+  .photo-prev { max-height: 160px; }
+
+  .card { padding: 12px; margin-bottom: 12px; border-radius: 10px; }
+  .card textarea, .card input, .card select { padding: 8px 10px; }
+  .card-head { margin-bottom: 8px; }
+  .card-head .ghost-btn.sm { padding: 6px 8px; }
+  .page-title { margin: 4px 0 8px; }
+  .today-head { margin: 10px 0 12px; gap: 8px; }
+  .head-top h2 { font-size: 1.25rem; }
+  .head-right { gap: 5px; }
+  .head-right button { padding: 7px 9px; font-size: 0.78rem; min-height: 32px; }
+  .head-right input[type=date] { flex: 1 1 110px; min-width: 0; padding: 7px 8px; }
+  .hint.warn { color: #b3402f; font-weight: 600; }
+  .log-card .row2 { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .log-card .row2 + .row2 { margin-top: 8px !important; }
+  .sub { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 10px 0 4px; }
+  .sub-btns { display: flex; gap: 4px; margin-left: auto; }
+  .sub-btns .ghost-btn.sm { padding: 5px 7px; font-size: 0.7rem; min-height: 28px; }
+  #braindump { min-height: 70px; }
+  .quote { font-size: 0.95rem; }
+  .mlist { font-size: 0.72rem; line-height: 1.8; }
   .dfoot { display: none; }
   .foot-gear { display: none; }
+  .sm-card { padding: 7px; }
+  .sm-card b { font-size: 0.95rem; }
+  .kv > div { padding: 6px 8px; }
+  .kv b { font-size: 0.85rem; }
+  .block-row { font-size: 0.75rem; margin-top: 6px; }
+  .block-row input { font-size: 0.8rem; }
+  .todo-check span.txt { font-size: 0.85rem; }
+  .back { font-size: 0.85rem; }
 }
 .theme-switch { display: flex; gap: 8px; justify-content: center; }
 .theme-switch button { border: 1px solid var(--input-line); background: var(--card); color: var(--muted); border-radius: 999px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer; }

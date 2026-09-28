@@ -21,13 +21,32 @@ HOURS.forEach(h => {
 function load(d) {
   return Store.get("d:" + d, "ownmything:" + d) || {};
 }
-let dirty = false;
-function markDirty() { dirty = true; paintSaveBar(); }
+// Nothing is persisted until Save is pressed. Edits live in `drafts` in memory.
+const drafts = {};
+function isDirty() { return Object.keys(drafts).length > 0; }
+function markDirty() { drafts[date] = draftData(); paintSaveBar(); }
+function draftData() {
+  return {
+    lastSleep: $("lastSleep").value, wake: $("wake").value,
+    weight: $("weight").value, sleepH: $("sleepH").value,
+    braindump: $("braindump").value,
+    cells: cells, labels: labels, autoSleep: autoSleepIds,
+    todos: cleanTodos(todos),
+    habitDone: habitDone,
+    monthTodos: cleanTodos(monthTodos),
+  };
+}
 function paintSaveBar() {
+  const n = Object.keys(drafts).length;
   const b = $("saveState");
-  if (b) b.textContent = dirty ? "Unsaved" : "Saved";
+  if (b) {
+    b.textContent = n ? (n === 1 ? "Unsaved" : `Unsaved (${n})`) : "Saved";
+    b.classList.toggle("warn", n > 0);
+  }
   const s = $("saveBtn");
-  if (s) s.style.opacity = dirty ? "1" : "0.45";
+  if (s) s.style.opacity = n ? "1" : "0.45";
+  const r = $("revertBtn");
+  if (r) r.style.display = n ? "inline-block" : "none";
 }
 function cleanTodos(arr) {
   return (Array.isArray(arr) ? arr : [])
@@ -40,29 +59,40 @@ function cleanTodos(arr) {
     });
 }
 function commit() {
-  Store.set("d:" + date, Object.assign({}, load(date), {
-    lastSleep: $("lastSleep").value, wake: $("wake").value,
-    weight: $("weight").value, sleepH: $("sleepH").value,
-    braindump: $("braindump").value,
-    cells: cells, labels: labels, autoSleep: autoSleepIds,
-    todos: cleanTodos(todos),
-    habitDone: habitDone,
-  }));
-  Store.set(monthKey(date), cleanTodos(monthTodos));
-  dirty = false;
+  const keys = Object.keys(drafts);
+  if (keys.length) {
+    keys.forEach(k => {
+      const d = drafts[k];
+      Store.set("d:" + k, Object.assign({}, load(k), d));
+      Store.set(monthKey(k), d.monthTodos || []);
+    });
+    drafts[date] = drafts[date] || draftData();
+  }
+  const d = drafts[date] || draftData();
+  Store.set("d:" + date, Object.assign({}, load(date), d));
+  Store.set(monthKey(date), d.monthTodos || cleanTodos(monthTodos));
+  Object.keys(drafts).forEach(k => delete drafts[k]);
   paintSaveBar();
   return true;
 }
-// keep calendar auto-fill persisted even when the user has unsaved edits
+function revert() {
+  if (!isDirty()) return;
+  const keys = Object.keys(drafts);
+  if (!confirm(`Discard unsaved changes${keys.length > 1 ? ` on ${keys.length} days` : ""}?`)) return;
+  keys.forEach(k => delete drafts[k]);
+  apply(date);
+}
+// calendar auto-fill is machine data, not a user edit — keep it persisted
+// even while the user's own edits sit unsaved in `drafts`.
 function saveCal() {
   const prev = load(date);
-  if (dirty) prev.cells = prev.cells || {};
   Store.set("d:" + date, Object.assign({}, prev, {
     autoCal: prev.autoCal || {},
+    autoLabels: prev.autoLabels || {},
     allDay: prev.allDay || [],
   }));
 }
-function save() { commit(); }
+function save() { markDirty(); }
 function monthKey(d) { return "month:" + d.slice(0, 7); }
 
 // --- weekday + holiday red ---
@@ -137,28 +167,43 @@ function paintWorkHours() {
   if (touched) { paintAll(); renderBlocks(); saveCal(); }
 }
 
+// committed cells/labels carry auto-filled entries; peel them off, then
+// re-apply the fresh auto layer so auto data is never treated as user input.
+function merged(d) {
+  const committed = load(d);
+  const cc = Object.assign({}, committed.cells || {});
+  const cl = Object.assign({}, committed.labels || {});
+  const ac = committed.autoCal || {};
+  const al = committed.autoLabels || {};
+  Object.keys(ac).forEach(id => { if (cc[id] === ac[id]) delete cc[id]; });
+  Object.keys(al).forEach(id => { if (cl[id] === al[id]) delete cl[id]; });
+  Object.keys(ac).forEach(id => { if (cc[id] === undefined) cc[id] = ac[id]; });
+  Object.keys(al).forEach(id => { if (cl[id] === undefined) cl[id] = al[id]; });
+  return Object.assign({}, committed, { cells: cc, labels: cl });
+}
 function apply(d) {
-  const s = load(d);
-  $("lastSleep").value = s.lastSleep || "";
-  $("wake").value = s.wake || "";
-  $("weight").value = s.weight || "";
-  $("sleepH").value = s.sleepH || "";
-  $("braindump").value = s.braindump || "";
+  const s = merged(d);
+  const f = drafts[d] || s;
+  $("lastSleep").value = f.lastSleep || "";
+  $("wake").value = f.wake || "";
+  $("weight").value = f.weight || "";
+  $("sleepH").value = f.sleepH || "";
+  $("braindump").value = f.braindump || "";
   resizeBraindump();
-  cells = s.cells || {};
+  cells = f.cells || {};
   Object.keys(cells).forEach(id => {
     if (cells[id] === "obokwalk" || cells[id] === "walk") cells[id] = "obok";
   });
-  labels = s.labels || {};
-  autoSleepIds = s.autoSleep || [];
-  todos = cleanTodos(s.todos);
-  if (!Array.isArray(s.todos)) todos = [{ id: uid(), div: true }, { id: uid(), div: true }];
-  monthTodos = cleanTodos(Store.get(monthKey(d)));
+  labels = f.labels || {};
+  autoSleepIds = f.autoSleep || [];
+  todos = cleanTodos(f.todos);
+  if (!Array.isArray(f.todos)) todos = [{ id: uid(), div: true }, { id: uid(), div: true }];
+  monthTodos = cleanTodos(f.monthTodos || Store.get(monthKey(d)));
   const mn = ["January","February","March","April","May","June","July","August","September","October","November","December"][Number(d.slice(5, 7)) - 1];
   $("monthTitleSide").textContent = mn;
   migrateHabits(s);
-  habitDone = s.habitDone || {};
-  if (syncDumpMarks()) commit();
+  habitDone = f.habitDone || {};
+  if (syncDumpMarks()) markDirty();
   paintAll(); renderBlocks(); renderTodos(); renderMonthTodos(); renderHabitRate();
   paintSaveBar();
   title.textContent = d;
@@ -444,12 +489,17 @@ $("selMonth").onclick = () => {
   setSelBtn("selMonth", selMode);
   renderMonthTodos();
 };
-$("saveBtn").onclick = () => { commit(); };
+$("saveBtn").onclick = () => {
+  commit();
+  paintSaveBar();
+};
+$("revertBtn").onclick = () => revert();
 $("wipeBtn").onclick = () => {
   if (!confirm(`Delete all records for ${date}?`)) return;
   Store.set("d:" + date, {});
   Store.set(monthKey(date), []);
-  dirty = false;
+  delete drafts[date];
+  paintSaveBar();
   apply(date);
 };
 $("braindump").addEventListener("input", onDump);
@@ -738,6 +788,7 @@ window.pullCalendar = async function () {
   const prev = load(date).autoCal || {};
   Object.keys(prev).forEach(id => { if (cells[id] === prev[id]) delete cells[id]; });
   const autoCal = {};
+  const autoLabels = {};
   const allDay = [];
   dayEvents.forEach(ev => {
     if (/식물/.test(ev.cal || "")) return;
@@ -746,13 +797,14 @@ window.pullCalendar = async function () {
     const memo = calTitle(ev.title);
     const ids = slotsFor(ev.start, ev.end).filter(id => !cells[id]);
     ids.forEach(id => { cells[id] = color; autoCal[id] = color; });
-    if (ids.length && memo && !labels[ids[0]]) labels[ids[0]] = memo;
+    if (ids.length && memo && !labels[ids[0]]) { labels[ids[0]] = memo; autoLabels[ids[0]] = memo; }
   });
   const s = load(date);
   s.autoCal = autoCal;
+  s.autoLabels = autoLabels;
   s.allDay = allDay.map(e => ({ title: calTitle(e.title), cal: e.cal }));
-  if (!dirty) s.cells = cells;
   Store.set("d:" + date, s);
+  if (isDirty()) drafts[date] = draftData();
   paintAll(); renderBlocks();
   renderReminders(res.todos || []);
   renderAllDay(allDay);
@@ -855,8 +907,14 @@ function renderHabitRate() {
 // --- photo moved to Night page ---
 
 ["weight", "sleepH"].forEach(id => $(id).addEventListener("input", markDirty));
-picker.onchange = () => { commit(); date = picker.value; apply(date); };
-$("goToday").onclick = () => { commit(); date = todayStr(); picker.value = date; apply(date); if (window.pullCalendar) pullCalendar(); };
+// date switching never writes — drafts stay in memory until Save is pressed
+picker.onchange = () => { date = picker.value; apply(date); if (window.pullCalendar) pullCalendar(); };
+$("goToday").onclick = () => { date = todayStr(); picker.value = date; apply(date); if (window.pullCalendar) pullCalendar(); };
+window.addEventListener("beforeunload", (e) => {
+  if (!isDirty()) return;
+  e.preventDefault();
+  e.returnValue = "";
+});
 
 // --- realtime sync: refresh when cloud data changes ---
 let pendingTodoSync = false;
@@ -875,7 +933,9 @@ if (window.Auth && Auth.onCloudChange) {
     // Rendering todos while the user types recreates the <input> and
     // causes flicker/shake + lost keystrokes. So: apply everything that
     // is NOT focused now, and defer the todo-list re-render until blur.
-    const s = load(date);
+    // The draft always wins: never let a cloud echo clobber unsaved edits.
+    if (isDirty()) return;
+    const s = merged(date);
     if (s.cells) { cells = s.cells; paintAll(); renderBlocks(); }
     if (s.labels) labels = s.labels;
     if (!editingDump && s.braindump !== undefined && $("braindump").value !== s.braindump) {
