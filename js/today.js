@@ -210,7 +210,7 @@ function apply(d) {
   labels = f.labels || {};
   autoSleepIds = f.autoSleep || [];
   todos = cleanTodos(f.todos);
-  if (!Array.isArray(f.todos)) todos = [{ id: uid(), div: true }, { id: uid(), div: true }];
+  if (!Array.isArray(f.todos)) todos = [];
   monthTodos = cleanTodos(f.monthTodos || Store.get(monthKey(d)));
   const mn = Number(d.slice(5, 7));
   $("monthTitleSide").textContent = mn + "월";
@@ -275,35 +275,18 @@ function todoRow(item, list, render, box, opts) {
   const l = document.createElement("div");
   l.className = "todo-check";
   l.dataset.id = item.id;
-  if (item.div) {
-    l.classList.add("divider");
-    const grip = document.createElement("span");
-    grip.className = "grip";
-    grip.textContent = "⋮⋮";
-    const line = document.createElement("span");
-    line.className = "divline";
-    const del = document.createElement("button");
-    del.textContent = "×";
-    del.onclick = () => { list.splice(list.indexOf(item), 1); markDirty(); render(); };
-    l.append(grip, line, del);
-    bindGrip(grip, l, box, list, item);
-    return l;
-  }
+  if (item.div) return l; // legacy dividers are dropped
   const cb = document.createElement("input");
   cb.type = "checkbox"; cb.checked = !!item.done;
   cb.onchange = () => { item.done = cb.checked; save(); render(); };
-  const grip0 = document.createElement("span");
-  grip0.className = "grip";
-  grip0.textContent = "⋮⋮";
-  l.append(grip0, cb);
+  l.append(cb);
   if (moveMode && moveMode === moveTarget(list)) {
     l.classList.add("movable");
     l.onclick = (e) => {
-      if (e.target.closest(".grip") || e.target.closest("button") || e.target.closest("input[type=checkbox]")) return;
+      if (e.target.closest("button") || e.target.closest("input[type=checkbox]")) return;
       moveItem(item, list);
     };
   }
-  bindGrip(grip0, l, box, list, item);
   if (item.editing) {
     const inp = document.createElement("input");
     inp.className = "todo-edit";
@@ -369,58 +352,6 @@ function todoRow(item, list, render, box, opts) {
   }
   return l;
 }
-function bindGrip(grip, row, box, list, item) {
-  const otherBox = () => (box === $("todos") ? $("monthTodos") : $("todos"));
-  const otherArr = () => (box === $("todos") ? monthTodos : todos);
-  const otherRender = () => (box === $("todos") ? renderMonthTodos() : renderTodos());
-  grip.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    row.classList.add("dragging");
-    let crossed = false;
-    const move = (ev) => {
-      const el = document.elementFromPoint(ev.clientX, ev.clientY);
-      if (!el) return;
-      const ob = otherBox();
-      if (el.closest("#" + ob.id)) {
-        crossed = true;
-        row.classList.add("over-other");
-        const r = ob.getBoundingClientRect();
-        const after = (ev.clientY - r.top) > r.height / 2;
-        ob.insertBefore(row, after ? ob.lastElementChild : ob.firstElementChild);
-        return;
-      }
-      const over = el.closest(".todo-check");
-      if (over && over !== row && over.parentElement === box) {
-        crossed = false;
-        row.classList.remove("over-other");
-        const r = over.getBoundingClientRect();
-        const after = (ev.clientY - r.top) > r.height / 2;
-        box.insertBefore(row, after ? over.nextSibling : over);
-      }
-    };
-    const up = () => {
-      document.removeEventListener("pointermove", move);
-      document.removeEventListener("pointerup", up);
-      document.removeEventListener("pointercancel", up);
-      row.classList.remove("dragging", "over-other");
-      if (crossed) {
-        const i = list.indexOf(item);
-        if (i !== -1) list.splice(i, 1);
-        otherArr().push(item);
-        otherRender();
-        render();
-        markDirty();
-        return;
-      }
-      const order = Array.from(box.children).map(c => c.dataset.id);
-      list.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
-      markDirty();
-    };
-    document.addEventListener("pointermove", move);
-    document.addEventListener("pointerup", up);
-    document.addEventListener("pointercancel", up);
-  });
-}
 function renderTodos() {
   const box = $("todos");
   box.innerHTML = "";
@@ -466,8 +397,6 @@ async function autoMonth() {
   } catch (e) { box.innerHTML = "<p class='hint'>—</p>"; }
   finally { autoMonthBusy = false; }
 }
-$("addDiv").onclick = () => { todos.push({ id: uid(), div: true }); save(); renderTodos(); };
-
 // Move mode: press → 월간 (or → 오늘), then tap the rows you want to move.
 let moveMode = null; // "month" | "today" | null
 function moveTarget(list) { return list === monthTodos ? "today" : "month"; }

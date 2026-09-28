@@ -76,6 +76,48 @@
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
   sheet.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
 
+  // Freeze the page behind the drawer without losing the scroll position.
+  let lockedY = 0;
+  const freeze = () => {
+    lockedY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = -lockedY + "px";
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+  };
+  const thaw = () => {
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.width = "";
+    window.scrollTo(0, lockedY);
+  };
+  const sync = () => {
+    const open = document.body.classList.contains("sheet-open");
+    if (open && document.body.style.position !== "fixed") freeze();
+    else if (!open && document.body.style.position === "fixed") thaw();
+  };
+  new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+  window.addEventListener("resize", () => { if (!document.body.classList.contains("sheet-open") && document.body.style.position === "fixed") thaw(); });
+
+  // Restore where you were on each page when you navigate back and forth.
+  const SKIP = /#|^\s*javascript:/i;
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("a[href]");
+    if (!a) return;
+    const href = a.getAttribute("href");
+    if (!href || SKIP.test(href) || href.startsWith("http")) return;
+    try { sessionStorage.setItem("scroll:" + location.pathname, String(window.scrollY)); } catch (err) {}
+  });
+  addEventListener("load", () => {
+    const k = "scroll:" + location.pathname;
+    let y = 0;
+    try { y = Number(sessionStorage.getItem(k) || 0); } catch (err) {}
+    if (y > 0) requestAnimationFrame(() => window.scrollTo(0, y));
+  });
+
   // ---------- desktop footer (full list, English) ----------
   const f = document.createElement("div");
   f.id = "dfoot";

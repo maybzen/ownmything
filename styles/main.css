@@ -6,9 +6,37 @@
   -webkit-text-size-adjust: 100%;
 }
 
-html { overflow-x: hidden; }
+html {
+  overflow-x: hidden;
+  /* keep the page from shifting when the drawer locks scrolling */
+  scrollbar-gutter: stable;
+  /* stop pull-to-refresh fighting the app while scrolling */
+  overscroll-behavior-y: none;
+  background: var(--bg, #f9f9fb);
+  -webkit-text-size-adjust: 100%;
+}
+body { overscroll-behavior-y: none; }
 img { max-width: 100%; }
 input, textarea, select, button { font-family: inherit; }
+
+/* Korean wraps at spaces, never mid-word; long latin/numbers still break. */
+body, input, textarea, select, button, .hint, .sm-card span, .mlist, .todo-check,
+.hrow, .rep-row, .sheet-t, .flist > label > span, .block-row, .kv, .flist {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+/* nothing may spill out of its box */
+.card, .page, section, .sm-card, .sheet-row, .todo-check, .flist > label { min-width: 0; }
+
+/* Every tap target answers immediately — cheap transform/opacity only. */
+button, .bna, .sheet-row, .todo-check, .cal-day, .sw, .pill, .theme-card,
+.book-card, .mcal-d, .gal-item, .key, .day-tile {
+  transition: transform 0.12s ease, opacity 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+}
+button:active:not(:disabled), .bna:active, .cal-day:active, .sw:active,
+.pill:active, .theme-card:active, .gal-item:active { transform: scale(0.96); }
+.sheet-row:active, .todo-check:active { background-color: color-mix(in srgb, var(--ink) 8%, transparent); }
+.movable, .todo-check.sel-on { transition: background-color 0.15s ease, box-shadow 0.15s ease; }
 
 :root {
   /* iOS: SF Pro for latin, Apple SD Gothic Neo for hangul */
@@ -141,7 +169,7 @@ h1, h2 {
 }
 .date-tap:active h2 { opacity: 0.5; }
 .head-top .hint { white-space: nowrap; }
-.head-top h2 { min-width: 0; overflow-wrap: anywhere; }
+.head-top h2 { min-width: 0; overflow-wrap: break-word; }
 .head-top h2 .holiday { white-space: nowrap; }
 .head-right { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 .gear { text-decoration: none; font-size: 1.1rem; }
@@ -157,23 +185,15 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .todo-check:last-child { border-bottom: none; }
 .todo-check input[type="checkbox"] { width: 16px; height: 16px; flex: none; margin-top: 3px; accent-color: var(--ink); }
 .todo-check span { flex: none; }
-.todo-check span.txt { flex: 1; min-width: 0; text-align: left; white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.45; }
+.todo-check span.txt { flex: 1; min-width: 0; text-align: left; white-space: normal; overflow-wrap: break-word; word-break: keep-all; line-height: 1.45; }
 .todo-check span.done { text-decoration: line-through; color: var(--muted); }
 .todo-check button { border: none; background: none; cursor: pointer; color: var(--muted); font-size: 0.8rem; padding: 2px 4px; }
 .todo-check.dragging { opacity: 0.6; }
-.todo-check.picking { cursor: pointer; }
 .todo-check.movable { cursor: pointer; background: color-mix(in srgb, var(--ink) 7%, transparent); box-shadow: inset 3px 0 0 var(--ink); }
 .todo-check.movable::after { content: "옮기기"; margin-left: auto; font-size: 0.66rem; color: var(--muted); letter-spacing: 0.02em; flex: none; }
 .todo-check.movable:active { background: color-mix(in srgb, var(--ink) 18%, transparent); }
 .ghost-btn.on { color: var(--ink); border-color: var(--ink); }
-.todo-check.over-other { background: var(--cell); border-radius: 6px; outline: 1px dashed var(--muted); }
 .todo-check span.txt { cursor: text; }
-.grip { cursor: grab; color: var(--line); touch-action: none; padding: 2px 1px; flex: none; font-size: 0.75rem; letter-spacing: -1px; }
-.todo-check.divider { position: relative; border-bottom: none; padding: 10px 0; }
-.todo-check.divider .divline { position: absolute; left: 0; right: 0; top: 50%; border-bottom: 1px solid var(--line); height: 0; }
-.todo-check.divider .grip, .todo-check.divider button { position: relative; z-index: 1; background: var(--card); border-radius: 4px; }
-.todo-check.divider button { margin-left: auto; }
-.grip { flex: none; }
 .todo-edit { border: none !important; background: transparent !important; flex: 1; min-width: 0; width: 100%; padding: 0 !important; font: inherit; color: var(--ink); line-height: 1.45; }
 .todo-edit:focus { outline: none; }
 .block-row { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
@@ -353,7 +373,9 @@ details.card > summary:hover { color: var(--ink); }
 .mlist .ml { white-space: nowrap; }
 .mlist .ml.past { text-decoration: line-through; opacity: 0.5; }
 .mlist i { color: var(--line); font-style: normal; margin: 0 7px; }
-.bnav { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: color-mix(in srgb, var(--card) 92%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+/* Solid, not blurred: a backdrop-filter on a fixed bar over a scrolling
+   page repaints on every frame and is the single biggest scroll-jank source. */
+.bnav { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: var(--card); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
 .dfoot { display: flex; justify-content: center; align-items: center; gap: 18px; flex-wrap: wrap; margin: 0 auto; padding: 30px 0 42px; }
 .dfoot a { font-size: 0.82rem; color: var(--muted); text-decoration: none; border-bottom: 1px solid transparent; }
 .dfoot a:hover { color: var(--ink); border-bottom-color: var(--line); }
@@ -398,6 +420,7 @@ details.card > summary:hover { color: var(--ink); }
 body.sheet-open { overflow: hidden; }
 body.sheet-open .sheet { transform: translateY(0); }
 body.sheet-open .sheet-scrim { opacity: 1; pointer-events: auto; }
+/* the freeze is done in JS (position:fixed) so the scroll position survives */
 @media (min-width: 900px) { .bnav { display: none; } .dfoot { display: flex; } }
 @media (max-width: 899px) { .bnav { display: flex; } .dfoot { display: none; } .pad-b { height: 84px; } }
 .tog { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.9rem; padding: 7px 0; }
@@ -491,7 +514,6 @@ button.btn:active { transform: scale(0.98); }
   .mcal-d { min-height: 46px; }
   .todo-check { padding: 9px 0; font-size: 16px; }
   .todo-check button { font-size: 0.8rem; }
-  .todo-check .grip { font-size: 0.7rem; }
   .flist { grid-template-columns: 62px 1fr; gap: 0 8px; }
   .flist > label > input, .flist > label > select { padding: 8px 2px; }
 
@@ -558,7 +580,7 @@ button.btn:active { transform: scale(0.98); }
   .card-head .ghost-btn.sm { padding: 6px 8px; }
   .today-head { flex-direction: column; align-items: stretch; gap: 8px; margin: 10px 0 12px; }
   .head-top { display: flex; align-items: center; gap: 8px; width: 100%; }
-  .head-top h2 { font-size: 1.3rem; min-width: 0; overflow-wrap: anywhere; }
+  .head-top h2 { font-size: 1.3rem; min-width: 0; overflow-wrap: break-word; }
   .head-top .hint { flex: 0 0 auto; font-size: 0.6rem; white-space: nowrap; }
   .head-right { display: flex; flex-wrap: wrap; gap: 5px; flex-shrink: 1; }
   .head-right button { padding: 6px 7px; font-size: 0.72rem; min-height: 30px; flex: 0 0 auto; }
