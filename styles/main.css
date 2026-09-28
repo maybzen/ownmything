@@ -150,7 +150,7 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .block-row input { border: none !important; background: transparent !important; border-bottom: 1px solid var(--line) !important; border-radius: 0 !important; flex: 1; padding: 2px !important; font-size: 0.85rem; }
 .cell.labeled { overflow: visible; text-align: center; position: relative; z-index: 1; }
 .cell.sel { outline: 2px solid var(--ink); outline-offset: -2px; }
-.dot.work { background: #d9dee9; } .dot.promise { background: #dad5e9; }
+.dot.work { background: #d9dee9; } .dot.lunch { background: #e3e8ef; } .dot.promise { background: #dad5e9; }
 .dot.personal { background: #f0e7de; } .dot.family { background: #efdcd4; }
 .dot.obok, .dot.obokwalk { background: #dce5d8; } .dot.plant { background: #c9dfc9; } .dot.sleep { background: #d9e7ea; }
 .stepper { display: flex; gap: 4px; align-items: stretch; border: 1px solid var(--input-line); background: var(--card); border-radius: 8px; padding: 4px; }
@@ -244,6 +244,7 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .cell.fill { box-shadow: inset 0 0 0 1px rgba(18,19,22,0.04); }
 .timetable { touch-action: none; }
 .cell.fill.work, .cell.fill.study { background: #d9dee9; border-color: #c3cad9; }
+.cell.fill.lunch { background: #eceff4; border-color: #d3d9e4; }
 .cell.fill.promise { background: #dad5e9; border-color: #c2b9d9; }
 .cell.fill.personal, .cell.fill.move, .cell.fill.home { background: #f0e7de; border-color: #ddcbb8; }
 .cell.fill.family { background: #efdcd4; border-color: #dfc0b2; }
@@ -269,7 +270,7 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .mcal-d.cur { border-color: var(--ink); }
 .mcal-d b { font-size: 0.7rem; font-weight: 600; }
 .mcal-e { font-style: normal; font-size: 0.6rem; line-height: 1.35; border-radius: 3px; padding: 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mcal-e.work { background: #d9dee9; } .mcal-e.promise { background: #dad5e9; }
+.mcal-e.work { background: #d9dee9; } .mcal-e.lunch { background: #e3e8ef; } .mcal-e.promise { background: #dad5e9; }
 .mcal-e.personal { background: #f0e7de; } .mcal-e.family { background: #efdcd4; }
 .mcal-e.obok { background: #dce5d8; } .mcal-e.sleep { background: #d9e7ea; }
 .mcal-d u { font-size: 0.55rem; color: var(--muted); text-decoration: none; }

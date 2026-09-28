@@ -118,14 +118,23 @@ function isWorkday(d) {
 
 function paintWorkHours() {
   if (!isWorkday(date)) return;
-  const slots = [];
+  const isLunch = (id) => id >= "11:40" && id < "13:00";
+  const inWorkRange = (id) => id >= "09:30" && id < "17:30";
+  const filled = [];
   for (let t = 9 * 60 + 30; t < 17 * 60 + 30; t += 10) {
     const h = Math.floor(t / 60), m = t % 60;
     const id = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-    if (id >= "11:40" && id < "13:00") continue;
-    if (!cells[id]) { cells[id] = "work"; slots.push(id); }
+    const want = isLunch(id) ? "lunch" : "work";
+    if (!cells[id]) { cells[id] = want; filled.push(id); }
   }
-  if (slots.length) { paintAll(); renderBlocks(); saveCal(); }
+  // Auto memo: company slots → BZen, lunch → 점심 (only when empty, never overwrite).
+  let touched = filled.length > 0;
+  runs().forEach(r => {
+    if (!inWorkRange(r.start)) return;
+    if (r.color === "work" && !labels[r.start]) { labels[r.start] = "BZen"; touched = true; }
+    if (r.color === "lunch" && !labels[r.start]) { labels[r.start] = "점심"; touched = true; }
+  });
+  if (touched) { paintAll(); renderBlocks(); saveCal(); }
 }
 
 function apply(d) {
@@ -592,7 +601,7 @@ function runs() {
   if (cur) out.push(cur);
   return out;
 }
-const CNAMES = { work: "Work", promise: "Meet", personal: "Me", family: "Family", obok: "Obok", sleep: "Record" };
+const CNAMES = { work: "Work", lunch: "Lunch", promise: "Meet", personal: "Me", family: "Family", obok: "Obok", sleep: "Record" };
 function cellEl(id) {
   return tt.querySelector(`[data-id="${id}"]`);
 }
