@@ -1,4 +1,4 @@
-const CACHE = "ownmything-v22";
+const CACHE = "ownmything-v23";
 const ASSETS = [
   "./", "./index.html", "./menu.html", "./today.html",
   "./styles/main.css",

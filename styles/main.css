@@ -10,6 +10,11 @@ html { overflow-x: hidden; }
 img { max-width: 100%; }
 input, textarea, select, button { font-family: inherit; }
 
+:root {
+  /* iOS: SF Pro for latin, Apple SD Gothic Neo for hangul */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Malgun Gothic", "Segoe UI", Roboto, sans-serif;
+}
+
 :root, [data-theme="mono"] {
   --bg: #f9f9fb;
   --ink: #121316;
@@ -43,7 +48,7 @@ input, textarea, select, button { font-family: inherit; }
 body {
   background: var(--bg);
   color: var(--ink);
-  font-family: "Manrope", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font);
   min-height: 100vh;
   font-feature-settings: "tnum";
 }
@@ -56,7 +61,7 @@ h1 {
   letter-spacing: -0.02em;
 }
 h2 {
-  font-family: "Manrope", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font);
   font-weight: 600;
   letter-spacing: -0.015em;
 }
@@ -407,7 +412,7 @@ body.sheet-open .sheet-scrim { opacity: 1; pointer-events: auto; }
 .ghost-btn.danger { color: #b3402f; border-color: #e0c3bd; }
 .rep-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 5px 0; border-bottom: 1px solid var(--line); }
 .rep-row b { font-weight: 600; }
-body.noserif h1, body.noserif .quote, body.noserif .sm-card b { font-family: "Manrope", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", -apple-system, BlinkMacSystemFont, sans-serif; }
+body.noserif h1, body.noserif .quote, body.noserif .sm-card b { font-family: var(--font); }
 .pad-b { height: 8px; }
 
 .sm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }

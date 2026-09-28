@@ -207,7 +207,7 @@ function renderWeek() {
   const WD = ["일","월","화","수","목","금","토"];
   head.innerHTML = `<span></span>` +
     days.map(d => `<span>${WD[new Date(d + "T00:00:00").getDay()]}${d.slice(8)}</span>`).join("") +
-    `<span>Rate</span>`;
+    `<span>율</span>`;
   t.appendChild(head);
   [["morning", "아침"], ["anytime", "낮"], ["night", "밤"]].forEach(([slot, label]) => {
     const items = defs.filter(d => (d.slot || "anytime") === slot);
