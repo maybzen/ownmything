@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const TXN = "ledger-txns";
 const LOAN = "ledger-loans";
+const lastMonth = () => { const d = new Date(); d.setDate(0); return Store.day(d).slice(0, 7); };
 const STMT = "ledger-statements";
 const LEGACY_TXN = "ownmything:ledger-txns";
 const LEGACY_LOAN = "ownmything:ledger-loans";
@@ -226,6 +227,7 @@ function renderStmts(mv) {
 }
 
 $("mPicker").onchange = render;
+$("goPrevMonth").onclick = () => { $("mPicker").value = lastMonth(); render(); };
 $("goTodayDate").onclick = () => { $("mPicker").value = Store.today().slice(0, 7); render(); };
 $("tDate").value = Store.today();
 cats();

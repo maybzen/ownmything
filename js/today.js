@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const picker = $("datePicker"), title = $("dateTitle");
-const todayStr = () => Store.today();
+const todayStr = (d) => Store.day(d || new Date());
+const yestStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return Store.day(d); };
 const uid = () => "t" + Date.now().toString(36) + Math.floor(Math.random() * 99);
 
 let date = todayStr();
@@ -958,6 +959,10 @@ function renderHabitRate() {
 ["weight", "sleepH"].forEach(id => $(id).addEventListener("input", markDirty));
 // date switching never writes — drafts stay in memory until Save is pressed
 picker.onchange = () => { date = picker.value; apply(date); if (window.pullCalendar) pullCalendar(); };
+$("goYest").onclick = () => {
+  const d = new Date(); d.setDate(d.getDate() - 1);
+  date = yestStr(); picker.value = date; apply(date); if (window.pullCalendar) pullCalendar();
+};
 $("goToday").onclick = () => { date = todayStr(); picker.value = date; apply(date); if (window.pullCalendar) pullCalendar(); };
 window.addEventListener("beforeunload", (e) => {
   if (!isDirty()) return;

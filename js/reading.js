@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const K = "books";
 const LEGACY_K = "ownmything:books";
+const yestStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return Store.day(d); };
 const load = () => Store.get(K, LEGACY_K) || [];
 const store = (v) => Store.set(K, v);
 $("addBook").onclick = () => {
@@ -41,5 +42,6 @@ function render() {
   });
 }
 $("dateFilter").onchange = render;
+$("goYest").onclick = () => { $("dateFilter").value = yestStr(); render(); };
 $("goTodayDate").onclick = () => { $("dateFilter").value = ""; render(); };
 render();

@@ -2,6 +2,7 @@ const $ = (id) => document.getElementById(id);
 const DEFS_KEY = "habit-defs";
 const LEGACY_DEFS = "ownmything:habit-defs";
 const fmt = (d) => Store.day(d);
+const yestStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return Store.day(d); };
 let selDate = Store.today();
 $("datePicker").value = selDate;
 
@@ -264,6 +265,7 @@ function renderMonth() {
 }
 $("monthPicker").onchange = renderMonth;
 $("datePicker").onchange = () => { selDate = $("datePicker").value; renderToday(); };
+$("goYest").onclick = () => { selDate = yestStr(); $("datePicker").value = selDate; renderToday(); };
 $("goTodayDate").onclick = () => { selDate = Store.today(); $("datePicker").value = selDate; renderToday(); };
 
 function renderReport() {

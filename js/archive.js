@@ -199,6 +199,7 @@ function renderWeight() {
   $("wDelta").textContent = (diff > 0 ? "+" : "") + diff + " kg";
 }
 
+$("mLast").onclick = () => { const d = new Date(); d.setDate(0); ym = Store.day(d).slice(0, 7); $("mPicker").value = ym; renderAll(); };
 $("mPrev").onclick = () => { const [y, m] = ym.split("-").map(Number); const d = new Date(y, m - 2, 1); ym = `${d.getFullYear()}-${P2(d.getMonth() + 1)}`; $("mPicker").value = ym; renderAll(); };
 $("mNext").onclick = () => { const [y, m] = ym.split("-").map(Number); const d = new Date(y, m, 1); ym = `${d.getFullYear()}-${P2(d.getMonth() + 1)}`; $("mPicker").value = ym; renderAll(); };
 $("mPicker").onchange = () => { ym = $("mPicker").value; renderAll(); };

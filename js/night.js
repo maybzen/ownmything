@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const picker = $("datePicker");
-const todayStr = () => Store.today();
+const todayStr = (d) => Store.day(d || new Date());
+const yestStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return Store.day(d); };
 let date = todayStr();
 picker.value = date;
 let calYM = date.slice(0, 7);
@@ -160,6 +161,10 @@ $("calNext").onclick = () => {
   const d = new Date(y, m, 1);
   calYM = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   renderCal();
+};
+$("goYest").onclick = () => {
+  date = yestStr(); picker.value = date; calYM = date.slice(0, 7);
+  apply(date); renderCal();
 };
 $("goTodayDate").onclick = () => {
   date = Store.today();
