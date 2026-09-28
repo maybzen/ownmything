@@ -19,17 +19,17 @@
 <body>
   <div class="page today">
     <header class="today-head">
-      <div>
+      <div class="head-top">
         <a class="back" href="./menu.html">←</a>
-        <h2 id="dateTitle" style="display:inline">Today</h2>
+        <h2 id="dateTitle">Today</h2>
+        <a class="gear" href="./pages/settings.html">⚙</a>
       </div>
       <div class="head-right">
-        <span class="hint" id="saveState">Saved</span>
+        <input type="date" id="datePicker" />
+        <button id="goToday" class="ghost-btn sm">Today</button>
         <button id="saveBtn" class="btn sm">Save</button>
         <button id="wipeBtn" class="ghost-btn sm">Delete</button>
-        <button id="goToday" class="ghost-btn sm">Today</button>
-        <input type="date" id="datePicker" />
-        <a class="gear" href="./pages/settings.html">⚙</a>
+        <span class="hint" id="saveState">Saved</span>
       </div>
     </header>
 
