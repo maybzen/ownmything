@@ -6,6 +6,9 @@ window.Auth = (() => {
   );
   let uid = null;
   const timers = {};
+  const recentlyPushed = {};
+  let realtimeChannel = null;
+  const cloudListeners = [];
   const inPages = () => location.pathname.includes("/pages/");
   const loginUrl = () => (inPages() ? "./login.html" : "./pages/login.html");
 
@@ -16,6 +19,7 @@ window.Auth = (() => {
 
   function queuePush(key, value) {
     if (!uid) return;
+    recentlyPushed[key] = Date.now();
     clearTimeout(timers[key]);
     timers[key] = setTimeout(async () => {
       const { error } = await sb.from("store").upsert({ user_id: uid, key, value });
@@ -25,6 +29,31 @@ window.Auth = (() => {
         setMeta(m);
       }
     }, 1500);
+  }
+
+  function handleCloudEvent(payload) {
+    const row = payload.new;
+    if (!row || row.user_id !== uid) return;
+    if (recentlyPushed[row.key] && Date.now() - recentlyPushed[row.key] < 3000) return;
+    try {
+      localStorage.setItem("ownmything:" + uid + ":" + row.key, JSON.stringify(row.value));
+      const m = meta();
+      m[uid + ":" + row.key] = new Date(row.updated_at).getTime();
+      setMeta(m);
+      cloudListeners.forEach(fn => { try { fn(row.key); } catch (e) {} });
+    } catch (e) {}
+  }
+
+  function startRealtime() {
+    if (realtimeChannel || !uid) return;
+    realtimeChannel = sb.channel("ownmything-store-" + uid)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "store", filter: "user_id=eq." + uid }, handleCloudEvent)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "store", filter: "user_id=eq." + uid }, handleCloudEvent)
+      .subscribe();
+  }
+
+  function onCloudChange(fn) {
+    cloudListeners.push(fn);
   }
 
   async function pull() {
@@ -84,6 +113,7 @@ window.Auth = (() => {
         }
       }
     }
+    startRealtime();
     const flag = "ownmything:synced:" + uid;
     if ((changed || migrated) && !sessionStorage.getItem(flag)) {
       sessionStorage.setItem(flag, "1");
@@ -110,5 +140,5 @@ window.Auth = (() => {
     location.href = loginUrl();
   }
 
-  return { sb, guard, logout, session: async () => (await sb.auth.getSession()).data.session };
+  return { sb, guard, logout, onCloudChange, session: async () => (await sb.auth.getSession()).data.session };
 })();

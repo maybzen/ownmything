@@ -63,7 +63,7 @@ async function loadHolidays() {
   const y = date.slice(0, 4);
   try {
     const raw = localStorage.getItem("ownmything:hol:" + y);
-    if (raw) { holSet = new Set(JSON.parse(raw)); renderDateTitle(); return; }
+    if (raw) { holSet = new Set(JSON.parse(raw)); renderDateTitle(); paintWorkHours(); return; }
   } catch (e) {}
   try {
     const r = await fetch(`https://date.nager.at/api/v3/publicholidays/${y}/KR`);
@@ -73,6 +73,7 @@ async function loadHolidays() {
       holSet = new Set(mmdd);
       try { localStorage.setItem("ownmything:hol:" + y, JSON.stringify(mmdd)); } catch (e) {}
       renderDateTitle();
+      paintWorkHours();
     }
   } catch (e) {}
 }
@@ -97,6 +98,26 @@ function renderDateTitle() {
 let cells = {}, labels = {}, autoSleepIds = [], todos = [], monthTodos = [];
 let selMode = false;
 
+function isWorkday(d) {
+  const day = new Date(d + "T12:00:00").getDay();
+  if (day === 0 || day === 6) return false;
+  const mmdd = d.slice(5);
+  if (holSet.has(mmdd)) return false;
+  return true;
+}
+
+function paintWorkHours() {
+  if (!isWorkday(date)) return;
+  const slots = [];
+  for (let t = 9 * 60 + 30; t < 17 * 60 + 30; t += 10) {
+    const h = Math.floor(t / 60), m = t % 60;
+    const id = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    if (id >= "11:40" && id < "13:00") continue;
+    if (!cells[id]) { cells[id] = "work"; slots.push(id); }
+  }
+  if (slots.length) { paintAll(); renderBlocks(); saveCal(); }
+}
+
 function apply(d) {
   const s = load(d);
   $("lastSleep").value = s.lastSleep || "";
@@ -104,6 +125,7 @@ function apply(d) {
   $("weight").value = s.weight || "";
   $("sleepH").value = s.sleepH || "";
   $("braindump").value = s.braindump || "";
+  resizeBraindump();
   cells = s.cells || {};
   Object.keys(cells).forEach(id => {
     if (cells[id] === "obokwalk" || cells[id] === "walk") cells[id] = "obok";
@@ -111,7 +133,7 @@ function apply(d) {
   labels = s.labels || {};
   autoSleepIds = s.autoSleep || [];
   todos = Array.isArray(s.todos) ? s.todos : [];
-  if (!s.todos && !todos.length) todos = [{ id: uid(), div: true }, { id: uid(), div: true }];
+  if (!Array.isArray(s.todos)) todos = [{ id: uid(), div: true }, { id: uid(), div: true }];
   monthTodos = Store.get(monthKey(d)) || [];
   const mn = ["January","February","March","April","May","June","July","August","September","October","November","December"][Number(d.slice(5, 7)) - 1];
   $("monthTitleSide").textContent = mn;
@@ -207,27 +229,43 @@ function todoRow(item, list, render, box, opts) {
     const inp = document.createElement("input");
     inp.className = "todo-edit";
     inp.value = item.t || "";
-    inp.placeholder = o.draft ? "To do" : "To do";
-    const commit = () => {
-      if (o.draft && !item.t) { delete item.editing; list.splice(list.indexOf(item), 1); render(); return; }
+    inp.placeholder = "To do";
+    let saved = false;
+    const commit = (skipRender) => {
+      if (saved) return;
+      saved = true;
       item.t = inp.value.trim();
       delete item.editing;
-      if (!item.t) list.splice(list.indexOf(item), 1);
-      save(); render();
+      if (!item.t) {
+        const idx = list.indexOf(item);
+        if (idx !== -1) list.splice(idx, 1);
+      }
+      save();
+      if (!skipRender) render();
     };
     inp.onkeydown = (e) => {
+      if (e.isComposing || e.keyCode === 229) return;
       if (e.key === "Enter") {
-        commit();
+        e.preventDefault();
+        commit(true);
         if (o.chain) {
           const i = list.indexOf(item);
-          list.splice(i + 1, 0, { id: uid(), t: "", done: false, editing: true });
-          save(); render();
+          if (i !== -1) {
+            list.splice(i + 1, 0, { id: uid(), t: "", done: false, editing: true });
+          }
         }
+        save(); render();
       }
-      if (e.key === "Escape") { list.splice(list.indexOf(item), 1); save(); render(); }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        saved = true;
+        delete item.editing;
+        const idx = list.indexOf(item);
+        if (idx !== -1) list.splice(idx, 1);
+        save(); render();
+      }
     };
-    if (o.draft) inp.onblur = () => {};
-    else inp.onblur = commit;
+    inp.onblur = () => { if (!saved) commit(); };
     l.appendChild(inp);
     requestAnimationFrame(() => inp.focus());
   } else {
@@ -307,12 +345,13 @@ function renderTodos() {
 function renderMonthTodos() {
   const box = $("monthTodos");
   box.innerHTML = "";
-  monthTodos.forEach(t => box.appendChild(todoRow(t, monthTodos, renderMonthTodos, box, { chain: true })));
   const marks = (load(date).dumpMarks) || [];
   if (marks.length) {
     const seen = new Set(monthTodos.map(t => t.t));
     marks.forEach(m => { if (m && !seen.has(m)) monthTodos.push({ id: uid(), t: m, done: false }); });
+    save();
   }
+  monthTodos.forEach(t => box.appendChild(todoRow(t, monthTodos, renderMonthTodos, box, { chain: true })));
   if (!monthTodos.some(t => t.editing)) {
     const d = { id: uid(), t: "", done: false, editing: true };
     monthTodos.push(d);
@@ -379,8 +418,15 @@ $("wipeBtn").onclick = () => {
   apply(date);
 };
 $("braindump").addEventListener("input", onDump);
+function resizeBraindump() {
+  const bd = $("braindump");
+  if (!bd) return;
+  bd.style.height = "auto";
+  bd.style.height = Math.max(80, bd.scrollHeight) + "px";
+}
 function onDump() {
   markDirty();
+  resizeBraindump();
   const v = $("braindump").value;
   const marks = v.split("\n").filter(l => /^\s*[-*]?\s*\[\s*\]\s*/.test(l));
   const key = "d:" + date;
@@ -775,6 +821,40 @@ function renderHabitRate() {
 ["weight", "sleepH"].forEach(id => $(id).addEventListener("input", markDirty));
 picker.onchange = () => { commit(); date = picker.value; apply(date); };
 $("goToday").onclick = () => { commit(); date = todayStr(); picker.value = date; apply(date); if (window.pullCalendar) pullCalendar(); };
-$("goToday").onclick = () => { save(); date = todayStr(); picker.value = date; apply(date); };
+
+// --- realtime sync: refresh when cloud data changes ---
+if (window.Auth && Auth.onCloudChange) {
+  Auth.onCloudChange((key) => {
+    const curD = "d:" + date;
+    const curM = "month:" + date.slice(0, 7);
+    if (key !== curD && key !== curM) return;
+    const active = document.activeElement;
+    const editingTodo = !!(active && active.classList && active.classList.contains("todo-edit"));
+    const editingDump = !!(active && active.id === "braindump");
+    // Never destroy a focused todo input: the cloud value is already in
+    // localStorage, so it will be picked up on the next render.
+    if (editingTodo) return;
+    const s = load(date);
+    if (s.todos !== undefined) {
+      const fresh = Array.isArray(s.todos) ? s.todos : [];
+      todos.length = 0;
+      fresh.forEach(t => todos.push(t));
+    }
+    if (s.cells) { cells = s.cells; paintAll(); renderBlocks(); }
+    if (s.labels) labels = s.labels;
+    if (!editingDump && s.braindump !== undefined && $("braindump").value !== s.braindump) {
+      $("braindump").value = s.braindump;
+      if (typeof resizeBraindump === "function") resizeBraindump();
+    }
+    if (document.activeElement !== $("lastSleep") && s.lastSleep !== undefined) $("lastSleep").value = s.lastSleep || "";
+    if (document.activeElement !== $("wake") && s.wake !== undefined) $("wake").value = s.wake || "";
+    if (document.activeElement !== $("weight") && s.weight !== undefined) $("weight").value = s.weight || "";
+    const freshM = Store.get(monthKey(date)) || [];
+    monthTodos.length = 0;
+    freshM.forEach(t => monthTodos.push(t));
+    renderTodos(); renderMonthTodos();
+    paintSaveBar();
+  });
+}
 
 apply(date);
