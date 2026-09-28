@@ -18,15 +18,11 @@ $("goalWeight").onchange = () => Store.set("goal-weight", $("goalWeight").value)
 $("sysDark").onchange = () => {
   const on = $("sysDark").checked;
   const dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  window.setTheme(on && dark ? "dark" : ($("serifHead") && currentTheme() === "dark" ? "dark" : ($("sysDark").checked ? "dark" : currentTheme())));
+  window.setTheme(on && dark ? "dark" : currentTheme());
 };
 function currentTheme() {
   try { return localStorage.getItem("ownmything:theme") || "mono"; } catch (e) { return "mono"; }
 }
-$("serifHead").onchange = () => {
-  document.body.classList.toggle("noserif", !$("serifHead").checked);
-  Store.set("serif-head", $("serifHead").checked);
-};
 $("autoExport").onchange = () => {
   Store.set("auto-export", $("autoExport").checked);
   Store.set("last-backup", Date.now());
@@ -69,8 +65,6 @@ $("exportBtn2").onclick = () => $("exportBtn").click();
     const lb = Store.get("last-backup", "");
     $("lastBackup").textContent = lb ? "Last export " + new Date(lb).toLocaleString() : "No export yet";
   }
-  const sh = Store.get("serif-head", "");
-  if (typeof sh === "boolean") $("serifHead").checked = sh;
   const ae = Store.get("auto-export", "");
   if (typeof ae === "boolean") $("autoExport").checked = ae;
   if (s.user.email === "dlwjdgus417@gmail.com") {

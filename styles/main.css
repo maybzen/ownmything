@@ -53,17 +53,13 @@ body {
   font-feature-settings: "tnum";
 }
 
-/* Newsreader stays for the landing hero and journal quotes.
-   Everything navigational / list-like is sans for a cleaner read. */
-h1 {
-  font-family: "Newsreader", Georgia, serif;
-  font-weight: 400;
-  letter-spacing: -0.02em;
-}
-h2 {
+/* One typeface for the whole app: the platform's own UI font.
+   Latin -> SF Pro, hangul -> Apple SD Gothic Neo, both are already
+   on the phone, so nothing downloads and nothing shifts on load. */
+h1, h2 {
   font-family: var(--font);
   font-weight: 600;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.01em;
 }
 
 .center {
@@ -82,10 +78,10 @@ h2 {
 }
 
 .landing {
-  font-family: "Newsreader", Georgia, serif;
-  font-size: 3rem;
-  font-weight: 400;
-  letter-spacing: -0.02em;
+  font-family: var(--font);
+  font-size: 2.6rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
   color: var(--ink);
   text-decoration: none;
 }
@@ -108,7 +104,6 @@ h2 {
 .hint {
   font-size: 0.75rem;
   color: var(--muted);
-  letter-spacing: 0.01em;
 }
 .hint.warn { color: #b3402f; font-weight: 600; }
 
@@ -233,7 +228,7 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .book-card { border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 3px rgba(18, 19, 22, 0.03), 0 4px 12px rgba(18, 19, 22, 0.02); }
 .book-card b { font-weight: 600; font-size: 0.95rem; }
 .book-card button { align-self: flex-end; border: none; background: none; cursor: pointer; color: var(--muted); }
-.chip { align-self: flex-start; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; color: var(--muted); }
+.chip { align-self: flex-start; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.02em; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; color: var(--muted); }
 .loan-detail { border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
 .bar { height: 6px; background: var(--cell); border-radius: 999px; overflow: hidden; }
 .bar i { display: block; height: 100%; background: var(--ink); }
@@ -246,7 +241,7 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
   margin-bottom: 16px;
   box-shadow: 0 1px 3px rgba(18, 19, 22, 0.03), 0 4px 12px rgba(18, 19, 22, 0.02);
 }
-.card h3 { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.card h3 { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
 /* Minimal list form: label column + underline field, one row per field. */
 .flist { display: grid; grid-template-columns: 68px 1fr; gap: 0 10px; align-items: center; }
 .flist > label, .card .flist > label { display: contents; }
@@ -264,7 +259,7 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .btn-row { display: flex; gap: 8px; margin-top: 10px; }
 .btn-row > * { flex: 1; }
 details.card > summary {
-  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em;
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em;
   text-transform: uppercase; color: var(--muted); cursor: pointer;
   list-style: none; display: flex; align-items: center; gap: 6px;
 }
@@ -363,7 +358,7 @@ details.card > summary:hover { color: var(--ink); }
 .dfoot a { font-size: 0.82rem; color: var(--muted); text-decoration: none; border-bottom: 1px solid transparent; }
 .dfoot a:hover { color: var(--ink); border-bottom-color: var(--line); }
 .dfoot a.on { color: var(--ink); border-bottom-color: var(--ink); }
-.bna { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 0 8px; font-size: 0.55rem; color: var(--muted); text-decoration: none; letter-spacing: 0.02em; min-width: 0; background: none; border: none; font-family: inherit; cursor: pointer; }
+.bna { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 0 8px; font-size: 0.55rem; color: var(--muted); text-decoration: none; min-width: 0; background: none; border: none; font-family: inherit; cursor: pointer; }
 .bna .material-symbols-outlined { font-size: 19px; }
 .bna.on { color: var(--ink); font-weight: 600; }
 .bna-mid .material-symbols-outlined { position: relative; }
@@ -388,7 +383,7 @@ details.card > summary:hover { color: var(--ink); }
 }
 .sheet-grab { width: 34px; height: 4px; border-radius: 999px; background: var(--line); margin: 4px auto 10px; }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 0 8px; }
-.sheet-head > span { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; color: var(--muted); }
+.sheet-head > span { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em; color: var(--muted); }
 .sheet-row {
   display: flex; align-items: center; gap: 13px; padding: 15px 2px;
   border-top: 1px solid var(--line); color: var(--ink); text-decoration: none; font-size: 1rem;
@@ -412,12 +407,11 @@ body.sheet-open .sheet-scrim { opacity: 1; pointer-events: auto; }
 .ghost-btn.danger { color: #b3402f; border-color: #e0c3bd; }
 .rep-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 5px 0; border-bottom: 1px solid var(--line); }
 .rep-row b { font-weight: 600; }
-body.noserif h1, body.noserif .quote, body.noserif .sm-card b { font-family: var(--font); }
 .pad-b { height: 8px; }
 
 .sm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
 .sm-card { border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 2px; background: var(--card); }
-.sm-card span { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.04em; }
+.sm-card span { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.02em; }
 .sm-card b { font-size: 1.15rem; font-weight: 500; }
 .sm-card i { font-style: normal; font-size: 0.65rem; color: var(--muted); }
 
@@ -427,7 +421,7 @@ body.noserif h1, body.noserif .quote, body.noserif .sm-card b { font-family: var
 .kv b { font-size: 1rem; font-weight: 500; }
 .kv i { font-style: normal; font-size: 0.62rem; color: var(--muted); }
 
-.quote { font-family: "Newsreader", Georgia, serif; font-size: 1.05rem; line-height: 1.5; color: var(--ink); margin-top: 6px; }
+.quote { font-size: 1.05rem; line-height: 1.5; color: var(--ink); margin-top: 6px; }
 .mcal .cal-day { cursor: pointer; }
 .mcal .cal-day.has::after { display: none; }
 .mcal .cal-day i { font-style: normal; font-size: 0.58rem; color: var(--muted); }
@@ -443,7 +437,7 @@ button.btn { background: var(--ink); color: var(--bg); border: none; border-radi
 button.btn:active { transform: scale(0.98); }
 .habit-board { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
 .hcol { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; align-content: start; }
-.hcol h4 { grid-column: 1 / -1; font-size: 0.8rem; font-style: normal; letter-spacing: 0.08em; text-transform: uppercase; margin: 0; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.hcol h4 { grid-column: 1 / -1; font-size: 0.8rem; font-style: normal; letter-spacing: 0.02em; text-transform: uppercase; margin: 0; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
 .hcol h4.slot-morning, .hcol h4.slot-anytime, .hcol h4.slot-night { color: var(--ink); }
 .pill { border: 1px solid var(--input-line); background: var(--card); color: var(--ink); border-radius: 10px; padding: 9px 10px; font-size: 0.85rem; cursor: pointer; text-align: center; }
 .pill.done { background: var(--ink); color: var(--bg); border-color: var(--ink); }
@@ -593,4 +587,4 @@ button.btn:active { transform: scale(0.98); }
 .theme-card i.t-warm { background: #fbf6ee; }
 .theme-card i.t-dark { background: #101014; }
 .profile-row { display: flex; gap: 12px; align-items: center; }
-.avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--ink); color: var(--bg); display: flex; align-items: center; justify-content: center; font-family: "Newsreader", serif; font-size: 1.2rem; flex: none; }
+.avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--ink); color: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1.1rem; flex: none; }
