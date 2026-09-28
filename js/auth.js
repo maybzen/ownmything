@@ -8,6 +8,10 @@ window.Auth = (() => {
   const timers = {};
   const recentlyPushed = {};
   const lastPushed = {};
+  // Keys with a local write that has not reached the cloud yet. A pull must
+  // never overwrite these — otherwise a focus/online resync silently reverts
+  // whatever the user just typed.
+  const pendingPush = new Set();
   let realtimeChannel = null;
   const cloudListeners = [];
   const inPages = () => location.pathname.includes("/pages/");
@@ -21,6 +25,7 @@ window.Auth = (() => {
   function queuePush(key, value) {
     if (!uid) return;
     try { lastPushed[key] = JSON.stringify(value); } catch (e) {}
+    pendingPush.add(key);
     clearTimeout(timers[key]);
     timers[key] = setTimeout(async () => {
       recentlyPushed[key] = Date.now();
@@ -29,6 +34,10 @@ window.Auth = (() => {
         const m = meta();
         m[uid + ":" + key] = Date.now();
         setMeta(m);
+        pendingPush.delete(key);
+      } else {
+        // keep it pending: a later resync must still not clobber it
+        try { await sb.from("store").upsert({ user_id: uid, key, value }); pendingPush.delete(key); } catch (e) {}
       }
     }, 800);
   }
@@ -108,6 +117,7 @@ window.Auth = (() => {
     const m = meta();
     let changed = false;
     data.forEach(r => {
+      if (pendingPush.has(r.key)) return; // local write wins until it lands
       const mk = uid + ":" + r.key;
       const cloudTs = new Date(r.updated_at).getTime();
       if (!m[mk] || cloudTs > m[mk]) {
