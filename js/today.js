@@ -40,8 +40,9 @@ function paintSaveBar() {
   const n = Object.keys(drafts).length;
   const b = $("saveState");
   if (b) {
-    b.textContent = n ? (n === 1 ? "Unsaved" : `Unsaved (${n})`) : "Saved";
+    b.textContent = n ? (n === 1 ? "Unsaved" : `Unsaved ×${n}`) : "Saved";
     b.classList.toggle("warn", n > 0);
+    b.title = n ? "Tap Save to keep these changes" : "All changes saved";
   }
   const s = $("saveBtn");
   if (s) s.style.opacity = n ? "1" : "0.45";

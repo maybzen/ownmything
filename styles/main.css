@@ -120,6 +120,8 @@ h1, h2 {
   margin: 16px 0 20px;
 }
 .head-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.head-top .gear { margin-left: auto; flex: none; }
+.head-top .hint { white-space: nowrap; }
 .head-top h2 { min-width: 0; overflow-wrap: anywhere; }
 .head-top h2 .holiday { white-space: nowrap; }
 .head-right { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
@@ -342,6 +344,7 @@ button.btn:active { transform: scale(0.98); }
 #expList li { display: flex; padding: 4px 0; border-bottom: 1px solid var(--line); }
 .htable { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; }
 .hrow { display: grid; grid-template-columns: 1fr repeat(7, 28px) 48px; gap: 4px; align-items: center; }
+.hrow.hsec span { text-align: left; }
 .hrow.hhead { color: var(--muted); font-size: 0.75rem; }
 .hrow .on { color: var(--ink); font-weight: 700; }
 .hrow span:not(.hname) { text-align: center; }
@@ -393,8 +396,10 @@ button.btn:active { transform: scale(0.98); }
   .tlabel { font-size: 0.56rem; }
   .tgrid { gap: 2px; }
   .run-label { font-size: 8px; }
-  .palette { gap: 4px; margin-bottom: 8px; }
-  .palette .sw { flex: 1 1 auto; min-width: 0; padding: 6px 2px; font-size: 0.68rem; text-align: center; }
+  .palette { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; margin-bottom: 8px; }
+  .palette .sw { min-width: 0; padding: 6px 2px; font-size: 0.58rem; justify-content: center; }
+  .palette .sw::before { width: 6px; height: 6px; margin-right: 3px; flex: none; }
+  .palette .sw span, .palette .sw { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* reorder: Log → Time plan → BrainDump → Month (time plan high on screen) */
   .page.today { display: flex; flex-direction: column; }
@@ -413,6 +418,10 @@ button.btn:active { transform: scale(0.98); }
   .book-card b { font-size: 0.9rem; }
   .cal { gap: 2px; }
   .htable { font-size: 0.75rem; gap: 3px; }
+  .hrow { grid-template-columns: 1fr repeat(7, 28px) 34px; gap: 2px; font-size: 0.66rem; }
+  .hrow.hhead { font-size: 0.55rem; }
+  .hrow > span { white-space: nowrap; overflow: hidden; }
+  .hrow.hsec span { text-align: left; }
   .rates { font-size: 0.8rem; }
   .legend { font-size: 0.66rem; gap: 8px; }
   .bars { height: 76px; }
@@ -421,7 +430,6 @@ button.btn:active { transform: scale(0.98); }
   .habit-board { grid-template-columns: 1fr; }
   .hcol { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
   .hrow { grid-template-columns: 1fr repeat(7, 18px) 34px; gap: 2px; font-size: 0.68rem; overflow-x: auto; }
-  .hhead { min-width: 240px; }
 
   /* archive: whole month + summary in one screen */
   .mcal { gap: 2px; }
@@ -439,11 +447,14 @@ button.btn:active { transform: scale(0.98); }
   .card-head { margin-bottom: 8px; }
   .card-head .ghost-btn.sm { padding: 6px 8px; }
   .page-title { margin: 4px 0 8px; }
-  .today-head { margin: 10px 0 12px; gap: 8px; }
-  .head-top h2 { font-size: 1.25rem; }
-  .head-right { gap: 5px; }
-  .head-right button { padding: 7px 9px; font-size: 0.78rem; min-height: 32px; }
-  .head-right input[type=date] { flex: 1 1 110px; min-width: 0; padding: 7px 8px; }
+  .today-head { flex-direction: column; align-items: stretch; gap: 8px; margin: 10px 0 12px; }
+  .head-top { display: flex; align-items: center; gap: 8px; width: 100%; }
+  .head-top h2 { font-size: 1.3rem; min-width: 0; overflow-wrap: anywhere; }
+  .head-top .hint { flex: 0 0 auto; font-size: 0.6rem; white-space: nowrap; }
+  .head-top .gear { margin-left: auto; flex: none; }
+  .head-right { display: flex; flex-wrap: wrap; gap: 5px; flex-shrink: 1; }
+  .head-right button { padding: 6px 7px; font-size: 0.72rem; min-height: 30px; flex: 0 0 auto; }
+  .head-right input[type=date] { flex: 1 1 130px; min-width: 0; max-width: 200px; padding: 7px 6px; }
   .hint.warn { color: #b3402f; font-weight: 600; }
   .log-card .row2 { grid-template-columns: 1fr 1fr; gap: 8px; }
   .log-card .row2 + .row2 { margin-top: 8px !important; }

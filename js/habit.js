@@ -147,7 +147,10 @@ function renderWeek() {
   t.innerHTML = "";
   const head = document.createElement("div");
   head.className = "hrow hhead";
-  head.innerHTML = `<span></span>` + days.map(d => `<span>${d.slice(5)}</span>`).join("") + `<span>Rate</span>`;
+  const WD = ["S", "M", "T", "W", "T", "F", "S"];
+  head.innerHTML = `<span></span>` +
+    days.map(d => `<span>${WD[new Date(d + "T00:00:00").getDay()]}${d.slice(8)}</span>`).join("") +
+    `<span>Rate</span>`;
   t.appendChild(head);
   [["morning", "Morning"], ["anytime", "Anytime"], ["night", "Night"]].forEach(([slot, label]) => {
     const items = defs.filter(d => (d.slot || "anytime") === slot);
