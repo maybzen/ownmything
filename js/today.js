@@ -21,10 +21,20 @@ HOURS.forEach(h => {
 function load(d) {
   return Store.get("d:" + d, "ownmything:" + d) || {};
 }
-// Nothing is persisted until Save is pressed. Edits live in `drafts` in memory.
-const drafts = {};
+// Nothing is persisted until Save is pressed. Edits live in `drafts`
+// (mirrored to sessionStorage so an accidental reload doesn't lose them).
+const DKEY = "omt:drafts";
+const drafts = (function () {
+  try { return JSON.parse(sessionStorage.getItem(DKEY)) || {}; } catch (e) { return {}; }
+})();
+function stashDrafts() {
+  try {
+    if (Object.keys(drafts).length) sessionStorage.setItem(DKEY, JSON.stringify(drafts));
+    else sessionStorage.removeItem(DKEY);
+  } catch (e) {}
+}
 function isDirty() { return Object.keys(drafts).length > 0; }
-function markDirty() { drafts[date] = draftData(); paintSaveBar(); }
+function markDirty() { drafts[date] = draftData(); stashDrafts(); paintSaveBar(); }
 function draftData() {
   return {
     lastSleep: $("lastSleep").value, wake: $("wake").value,
@@ -73,6 +83,7 @@ function commit() {
   Store.set("d:" + date, Object.assign({}, load(date), d));
   Store.set(monthKey(date), d.monthTodos || cleanTodos(monthTodos));
   Object.keys(drafts).forEach(k => delete drafts[k]);
+  stashDrafts();
   paintSaveBar();
   return true;
 }
@@ -81,6 +92,7 @@ function revert() {
   const keys = Object.keys(drafts);
   if (!confirm(`Discard unsaved changes${keys.length > 1 ? ` on ${keys.length} days` : ""}?`)) return;
   keys.forEach(k => delete drafts[k]);
+  stashDrafts();
   apply(date);
 }
 // calendar auto-fill is machine data, not a user edit — keep it persisted
@@ -271,7 +283,7 @@ function todoRow(item, list, render, box, opts) {
     line.className = "divline";
     const del = document.createElement("button");
     del.textContent = "×";
-    del.onclick = () => { list.splice(list.indexOf(item), 1); commit(); render(); };
+    del.onclick = () => { list.splice(list.indexOf(item), 1); markDirty(); render(); };
     l.append(grip, line, del);
     bindGrip(grip, l, box, list, item);
     return l;
@@ -335,7 +347,7 @@ function todoRow(item, list, render, box, opts) {
         save(); render();
       }
     };
-    inp.onblur = () => { if (!saved) commit(); };
+    inp.onblur = () => { if (!saved) markDirty(); };
     // Preserve in-progress text so a re-render (cloud sync, calendar) never wipes typing.
     inp.oninput = () => { item.t = inp.value; };
     l.appendChild(inp);
@@ -353,7 +365,7 @@ function todoRow(item, list, render, box, opts) {
     s.onclick = () => { if (!item.editing) { item.editing = true; nextFocusId = item.id; render(); } };
     const del = document.createElement("button");
     del.textContent = "×";
-    del.onclick = () => { list.splice(list.indexOf(item), 1); commit(); render(); };
+    del.onclick = () => { list.splice(list.indexOf(item), 1); markDirty(); render(); };
     l.append(s, del);
   }
   return l;
@@ -398,12 +410,12 @@ function bindGrip(grip, row, box, list, item) {
         otherArr().push(item);
         otherRender();
         render();
-        commit();
+        markDirty();
         return;
       }
       const order = Array.from(box.children).map(c => c.dataset.id);
       list.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
-      commit();
+      markDirty();
     };
     document.addEventListener("pointermove", move);
     document.addEventListener("pointerup", up);
@@ -466,7 +478,7 @@ $("moveMonth").onclick = () => {
   monthTodos.push(...items.map(t => ({ id: uid(), t: t.t, done: t.done })));
   todos = todos.filter(t => items.indexOf(t) === -1);
   selMode = false; setSelBtn("selToday", false);
-  commit(); renderTodos(); renderMonthTodos();
+  markDirty(); renderTodos(); renderMonthTodos();
 };
 $("moveToday").onclick = () => {
   const picked = selectedIn(monthTodos);
@@ -476,7 +488,7 @@ $("moveToday").onclick = () => {
   todos.push(...items.map(t => ({ id: uid(), t: t.t, done: t.done })));
   monthTodos = monthTodos.filter(t => items.indexOf(t) === -1);
   selMode = false; setSelBtn("selMonth", false);
-  commit(); renderTodos(); renderMonthTodos();
+  markDirty(); renderTodos(); renderMonthTodos();
 };
 $("selToday").onclick = () => {
   selMode = !selMode;
@@ -491,6 +503,7 @@ $("selMonth").onclick = () => {
   renderMonthTodos();
 };
 $("saveBtn").onclick = () => {
+  if (!isDirty()) return;
   commit();
   paintSaveBar();
 };
@@ -500,6 +513,7 @@ $("wipeBtn").onclick = () => {
   Store.set("d:" + date, {});
   Store.set(monthKey(date), []);
   delete drafts[date];
+  stashDrafts();
   paintSaveBar();
   apply(date);
 };
