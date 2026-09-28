@@ -149,12 +149,12 @@ function apply(d) {
   $("monthTitleSide").textContent = mn;
   migrateHabits(s);
   habitDone = s.habitDone || {};
+  if (syncDumpMarks()) commit();
   paintAll(); renderBlocks(); renderTodos(); renderMonthTodos(); renderHabitRate();
   paintSaveBar();
   title.textContent = d;
   renderDateTitle();
   loadHolidays();
-  if (!$("sleepH").value) { autoSleepCalc(); paintSleepGrid(); }
   if (!$("sleepH").value) { autoSleepCalc(); paintSleepGrid(); }
 }
 
@@ -199,6 +199,9 @@ function paintSleepGrid() {
 }
 
 // --- todo (notion-style) ---
+// Focus is only stolen when the user explicitly starts editing (click / Enter-chain).
+// Plain re-renders (save, cloud sync, calendar pull) must never call focus().
+let nextFocusId = null;
 function todoRow(item, list, render, box, opts) {
   const o = opts || {};
   const l = document.createElement("div");
@@ -261,7 +264,9 @@ function todoRow(item, list, render, box, opts) {
         if (o.chain) {
           const i = list.indexOf(item);
           if (i !== -1) {
-            list.splice(i + 1, 0, { id: uid(), t: "", done: false, editing: true });
+            const nid = uid();
+            nextFocusId = nid;
+            list.splice(i + 1, 0, { id: nid, t: "", done: false, editing: true });
           }
         }
         save(); render();
@@ -276,13 +281,21 @@ function todoRow(item, list, render, box, opts) {
       }
     };
     inp.onblur = () => { if (!saved) commit(); };
+    // Preserve in-progress text so a re-render (cloud sync, calendar) never wipes typing.
+    inp.oninput = () => { item.t = inp.value; };
     l.appendChild(inp);
-    requestAnimationFrame(() => inp.focus());
+    if (item.id === nextFocusId) {
+      nextFocusId = null;
+      requestAnimationFrame(() => {
+        inp.focus();
+        try { inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) {}
+      });
+    }
   } else {
     const s = document.createElement("span");
     s.textContent = item.t;
     s.className = "txt" + (item.done ? " done" : "");
-    s.onclick = () => { if (!item.editing) { item.editing = true; render(); } };
+    s.onclick = () => { if (!item.editing) { item.editing = true; nextFocusId = item.id; render(); } };
     const del = document.createElement("button");
     del.textContent = "×";
     del.onclick = () => { list.splice(list.indexOf(item), 1); commit(); render(); };
@@ -352,16 +365,18 @@ function renderTodos() {
     box.appendChild(todoRow(d, todos, renderTodos, box, { chain: true, draft: true }));
   }
 }
+function syncDumpMarks() {
+  const marks = (load(date).dumpMarks) || [];
+  if (!marks.length) return false;
+  const seen = new Set(monthTodos.map(t => t.t));
+  let added = 0;
+  marks.forEach(m => { if (m && !seen.has(m)) { monthTodos.push({ id: uid(), t: m, done: false }); seen.add(m); added++; } });
+  return added > 0;
+}
 function renderMonthTodos() {
   const box = $("monthTodos");
+  // Render must be pure: never write to Store here (write caused save→render loops).
   box.innerHTML = "";
-  const marks = (load(date).dumpMarks) || [];
-  if (marks.length) {
-    const seen = new Set(monthTodos.map(t => t.t));
-    let added = 0;
-    marks.forEach(m => { if (m && !seen.has(m)) { monthTodos.push({ id: uid(), t: m, done: false }); seen.add(m); added++; } });
-    if (added) save();
-  }
   monthTodos.forEach(t => box.appendChild(todoRow(t, monthTodos, renderMonthTodos, box, { chain: true })));
   if (!monthTodos.some(t => t.editing)) {
     const d = { id: uid(), t: "", done: false, editing: true };
@@ -445,6 +460,7 @@ function onDump() {
   prev.dumpMarks = marks.map(m => m.replace(/^\s*[-*]?\s*\[\s*\]\s*/, "").trim()).filter(Boolean);
   prev.braindump = v;
   Store.set(key, prev);
+  if (syncDumpMarks()) { Store.set(monthKey(date), cleanTodos(monthTodos)); renderMonthTodos(); }
 }
 
 // --- timetable ---
@@ -841,10 +857,14 @@ if (window.Auth && Auth.onCloudChange) {
     if (key !== curD && key !== curM) return;
     const active = document.activeElement;
     const editingTodo = !!(active && active.classList && active.classList.contains("todo-edit"));
+    const focusInTodos = !!($("todos") && $("todos").contains(active));
+    const focusInMonth = !!($("monthTodos") && $("monthTodos").contains(active));
     const editingDump = !!(active && active.id === "braindump");
-    // Never destroy a focused todo input: the cloud value is already in
-    // localStorage, so it will be picked up on the next render.
-    if (editingTodo) return;
+    // Never destroy focused inputs: cloud value is already in
+    // localStorage, so it will be picked up on the next render/save.
+    // Rendering todos while the user types recreates the <input> and
+    // causes flicker/shake + lost keystrokes.
+    if (editingTodo || focusInTodos || focusInMonth) return;
     const s = load(date);
     if (s.todos !== undefined) {
       const fresh = cleanTodos(s.todos);
