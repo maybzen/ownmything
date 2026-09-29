@@ -56,7 +56,7 @@
         '<span class="sheet-go">→</span></a>').join("") +
     '<a href="' + base + 'menu.html" class="sheet-row sheet-all">' +
       '<span class="sheet-ico material-symbols-outlined">language</span>' +
-      '<span class="sheet-t">English menu</span>' +
+      '<span class="sheet-t">메인 메뉴</span>' +
       '<span class="sheet-go">→</span></a>';
   document.body.appendChild(scrim);
   document.body.appendChild(sheet);
