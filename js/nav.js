@@ -1,6 +1,5 @@
-// Bottom nav for mobile — 3 items, Notion style.
-//   오늘 (Today) · 기록 (drawer of the detailed sections) · 보관함 (Archive)
-// The desktop footer keeps the full English list.
+// Bottom nav for mobile — daily pages only: 투데이 · 습관 · 야간 · 메뉴.
+// Archive and Settings live in the main menu (menu.html) and the drawer.
 (function () {
   if (document.getElementById("bnav")) return;
   const path = location.pathname;
@@ -8,9 +7,6 @@
   const here = (f) => path.endsWith(f);
 
   const DRAWER = [
-    ["today.html", "view_day", "오늘"],
-    ["pages/habit.html", "checklist", "습관"],
-    ["pages/night.html", "bedtime", "야간"],
     ["pages/archive.html", "calendar_month", "기록"],
     ["pages/settings.html", "settings", "설정"],
   ];
@@ -21,7 +17,7 @@
     ["pages/archive.html", "calendar_month", "Archive"],
     ["pages/settings.html", "settings", "Settings"],
   ];
-  const inDrawer = DRAWER.slice(1).some(([f]) => here(f));
+  const inDrawer = DRAWER.some(([f]) => here(f)) || here("menu.html");
 
   // ---------- bottom bar ----------
   const el = document.createElement("nav");
@@ -29,11 +25,13 @@
   el.className = "bnav";
   el.innerHTML =
     '<a href="' + base + 'today.html" class="bna' + (here("today.html") ? " on" : "") + '">' +
-      '<span class="material-symbols-outlined">view_day</span>오늘</a>' +
+      '<span class="material-symbols-outlined">view_day</span>투데이</a>' +
+    '<a href="' + base + 'pages/habit.html" class="bna' + (here("pages/habit.html") ? " on" : "") + '">' +
+      '<span class="material-symbols-outlined">checklist</span>습관</a>' +
+    '<a href="' + base + 'pages/night.html" class="bna' + (here("pages/night.html") ? " on" : "") + '">' +
+      '<span class="material-symbols-outlined">bedtime</span>나잇</a>' +
     '<button id="bnaMore" class="bna bna-mid' + (inDrawer ? " on" : "") + '" aria-haspopup="true" aria-expanded="false">' +
-      '<span class="material-symbols-outlined">apps</span>기록</button>' +
-    '<a href="' + base + 'pages/archive.html" class="bna' + (here("pages/archive.html") ? " on" : "") + '">' +
-      '<span class="material-symbols-outlined">inventory_2</span>보관함</a>';
+      '<span class="material-symbols-outlined">menu</span>메뉴</button>';
   document.body.appendChild(el);
 
   // ---------- drawer: the whole menu ----------
