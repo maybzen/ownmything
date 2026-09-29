@@ -273,7 +273,7 @@ let nextFocusId = null;
 function todoRow(item, list, render, box, opts) {
   const o = opts || {};
   const l = document.createElement("div");
-  l.className = "todo-check";
+  l.className = "todo-check" + (item.done && !item.editing ? " done-item" : "");
   l.dataset.id = item.id;
   if (item.div) return l; // legacy dividers are dropped
   const cb = document.createElement("input");

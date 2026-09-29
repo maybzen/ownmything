@@ -188,6 +188,11 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .todo-check span { flex: none; }
 .todo-check span.txt { flex: 1; min-width: 0; text-align: left; white-space: normal; overflow-wrap: break-word; word-break: keep-all; line-height: 1.45; }
 .todo-check span.done { text-decoration: line-through; color: var(--muted); }
+/* done items sink below the input and shrink — data order is untouched */
+#todos, #monthTodos { display: flex; flex-direction: column; }
+.todo-check.done-item { order: 99; padding: 5px 0; font-size: 0.8rem; }
+.todo-check.done-item .txt { color: var(--muted); }
+.todo-check.done-item input[type="checkbox"] { width: 14px; height: 14px; }
 .todo-check button { border: none; background: none; cursor: pointer; color: var(--muted); font-size: 0.8rem; padding: 2px 4px; }
 .todo-check.dragging { opacity: 0.6; }
 .todo-check.movable { cursor: pointer; background: color-mix(in srgb, var(--ink) 7%, transparent); box-shadow: inset 3px 0 0 var(--ink); }
@@ -513,6 +518,7 @@ button.btn:active { transform: scale(0.98); }
   .cal-day { min-height: 34px; font-size: 0.75rem; }
   .mcal-d { min-height: 46px; }
   .todo-check { padding: 9px 0; font-size: 16px; }
+  .todo-check.done-item { padding: 6px 0; font-size: 13px; }
   .todo-check button { font-size: 0.8rem; }
   .flist { grid-template-columns: 62px 1fr; gap: 0 8px; }
   .flist > label > input, .flist > label > select { padding: 8px 2px; }
