@@ -1,10 +1,9 @@
 const $ = (id) => document.getElementById(id);
-const picker = $("datePicker");
 const todayStr = (d) => Store.day(d || new Date());
 const yestStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return Store.day(d); };
 let date = todayStr();
-picker.value = date;
 let calYM = date.slice(0, 7);
+function setDate(ds) { date = ds; calYM = ds.slice(0, 7); apply(ds); renderCal(); }
 
 function load(d) {
   return Store.get("d:" + d, "ownmything:" + d) || {};
@@ -99,7 +98,8 @@ $("oneline").addEventListener("input", markDirty);
 $("oneline").addEventListener("keydown", (e) => {
   if (e.key === "Enter") { e.preventDefault(); if (isDirty()) commit(); $("oneline").blur(); }
 });
-picker.onchange = () => { date = picker.value; calYM = date.slice(0, 7); apply(date); renderCal(); };
+$("goYest").onclick = () => setDate(yestStr());
+$("goTodayDate").onclick = () => setDate(Store.today());
 
 // --- calendar ---
 const MN = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
@@ -124,7 +124,7 @@ function renderCal() {
     c.textContent = d;
     c.onmouseenter = (e) => showTip(e, ds);
     c.onmouseleave = hideTip;
-    c.onclick = () => { date = ds; picker.value = ds; apply(ds); renderCal(); };
+    c.onclick = () => setDate(ds);
     box.appendChild(c);
   }
 }
@@ -162,16 +162,5 @@ $("calNext").onclick = () => {
   calYM = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   renderCal();
 };
-$("goYest").onclick = () => {
-  date = yestStr(); picker.value = date; calYM = date.slice(0, 7);
-  apply(date); renderCal();
-};
-$("goTodayDate").onclick = () => {
-  date = Store.today();
-  picker.value = date;
-  calYM = date.slice(0, 7);
-  apply(date); renderCal();
-};
-
 apply(date);
 renderCal();

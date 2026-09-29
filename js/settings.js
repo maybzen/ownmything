@@ -48,8 +48,9 @@ $("exportBtn2").onclick = () => $("exportBtn").click();
 (async () => {
   const s = await Auth.guard();
   if (!s) return;
-  $("accountEmail").textContent = s.user.email || "";
-  $("avatar").textContent = (s.user.email || "o").charAt(0).toUpperCase();
+  $("accountEmail").textContent = "자동 동기화 중";
+  $("avatar").textContent = "o";
+  const lo = $("logoutBtn"); if (lo) lo.style.display = "none";
   const gw = Store.get("goal-weight", "");
   if (gw !== undefined) $("goalWeight").value = gw;
   let n = 0;

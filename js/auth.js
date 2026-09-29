@@ -4,7 +4,12 @@ window.Auth = (() => {
     "sb_publishable_pnREwJ9hLSj54xtKVGtXWg_50fdSJWN",
     { auth: { persistSession: true, autoRefreshToken: true, storageKey: "ownmything-auth" } }
   );
-  let uid = null;
+  // Single-user app: no login screen. All devices share one fixed sync id,
+  // so phone/home/office stay on the same data without signing in.
+  // NOTE: anon key + URL are in the client, so treat this as obscurity,
+  // not privacy. Make the GitHub repo private if that matters.
+  const SHARED_UID = "4a20011b-5788-48bf-8833-259c5c0598d4";
+  let uid = SHARED_UID;
   const timers = {};
   const recentlyPushed = {};
   const lastPushed = {};
@@ -14,8 +19,6 @@ window.Auth = (() => {
   const pendingPush = new Set();
   let realtimeChannel = null;
   const cloudListeners = [];
-  const inPages = () => location.pathname.includes("/pages/");
-  const loginUrl = () => (inPages() ? "./login.html" : "./pages/login.html");
 
   const meta = () => {
     try { return JSON.parse(localStorage.getItem("ownmything:meta") || "{}"); } catch (e) { return {}; }
@@ -182,23 +185,12 @@ window.Auth = (() => {
   }
 
   async function guard() {
-    let session = null;
-    try {
-      const r = await sb.auth.getSession();
-      session = r.data.session;
-    } catch (e) {}
-    if (!session) {
-      if (!location.pathname.endsWith("login.html")) location.href = loginUrl();
-      return null;
-    }
-    await startSync(session.user.id);
-    return session;
+    // No login screen: always sync as the shared single-user id.
+    try { await startSync(SHARED_UID); } catch (e) {}
+    return { user: { id: SHARED_UID, email: "" } };
   }
 
-  async function logout() {
-    try { await sb.auth.signOut(); } catch (e) {}
-    location.href = loginUrl();
-  }
+  async function logout() { return; }
 
-  return { sb, guard, logout, onCloudChange, resync, session: async () => (await sb.auth.getSession()).data.session };
+  return { sb, guard, logout, onCloudChange, resync, session: async () => ({ user: { id: SHARED_UID } }) };
 })();
