@@ -79,6 +79,7 @@ body {
   font-family: var(--font);
   min-height: 100vh;
   font-feature-settings: "tnum";
+  -webkit-font-smoothing: antialiased;
 }
 
 /* One typeface for the whole app: the platform's own UI font.
@@ -245,7 +246,7 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .gal-item img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; display: block; }
 .gal-item span { display: block; text-align: center; font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
 .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
-.book-card { border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 3px rgba(18, 19, 22, 0.03), 0 4px 12px rgba(18, 19, 22, 0.02); }
+.book-card { border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
 .book-card b { font-weight: 600; font-size: 0.95rem; }
 .book-card button { align-self: flex-end; border: none; background: none; cursor: pointer; color: var(--muted); }
 .chip { align-self: flex-start; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.02em; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; color: var(--muted); }
@@ -256,10 +257,9 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .card {
   border: 1px solid var(--line);
   background: var(--card);
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
-  box-shadow: 0 1px 3px rgba(18, 19, 22, 0.03), 0 4px 12px rgba(18, 19, 22, 0.02);
 }
 .card h3 { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
 /* Minimal list form: label column + underline field, one row per field. */
@@ -601,11 +601,12 @@ button.btn:active { transform: scale(0.98); }
 .theme-switch { display: flex; gap: 8px; justify-content: center; }
 .theme-switch button { border: 1px solid var(--input-line); background: var(--card); color: var(--muted); border-radius: 999px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer; }
 .theme-switch button.on { color: var(--ink); border-color: var(--ink); }
-.theme-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.theme-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .theme-card { border: 1px solid var(--input-line); background: var(--card); color: var(--ink); border-radius: 12px; padding: 12px 8px; font-size: 0.8rem; cursor: pointer; display: flex; flex-direction: column; gap: 8px; align-items: center; }
 .theme-card.on { border-color: var(--ink); }
 .theme-card i { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); }
 .theme-card i.t-mono { background: #f9f9fb; }
+.theme-card i.t-sys { background: linear-gradient(135deg, #f9f9fb 50%, #101014 50%); }
 .theme-card i.t-warm { background: #fbf6ee; }
 .theme-card i.t-dark { background: #101014; }
 .profile-row { display: flex; gap: 12px; align-items: center; }

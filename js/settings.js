@@ -16,12 +16,10 @@ $("exportBtn").onclick = () => {
 $("goalWeight").onchange = () => Store.set("goal-weight", $("goalWeight").value);
 
 $("sysDark").onchange = () => {
-  const on = $("sysDark").checked;
-  const dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  window.setTheme(on && dark ? "dark" : currentTheme());
+  window.setTheme($("sysDark").checked ? "system" : "mono");
 };
 function currentTheme() {
-  try { return localStorage.getItem("ownmything:theme") || "mono"; } catch (e) { return "mono"; }
+  try { return localStorage.getItem("ownmything:theme") || "system"; } catch (e) { return "system"; }
 }
 $("autoExport").onchange = () => {
   Store.set("auto-export", $("autoExport").checked);
@@ -68,6 +66,7 @@ $("exportBtn2").onclick = () => $("exportBtn").click();
   }
   const ae = Store.get("auto-export", "");
   if (typeof ae === "boolean") $("autoExport").checked = ae;
+  if ($("sysDark")) $("sysDark").checked = currentTheme() === "system";
   if (s.user.email === "dlwjdgus417@gmail.com") {
     $("adminCard").style.display = "";
     loadMembers();

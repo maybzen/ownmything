@@ -10,8 +10,6 @@
   const DRAWER = [
     ["today.html", "view_day", "오늘"],
     ["pages/habit.html", "checklist", "습관"],
-    ["pages/ledger.html", "account_balance_wallet", "가계부"],
-    ["pages/reading.html", "auto_stories", "서재"],
     ["pages/night.html", "bedtime", "야간"],
     ["pages/archive.html", "calendar_month", "기록"],
     ["pages/settings.html", "settings", "설정"],
@@ -19,8 +17,6 @@
   const ALL = [
     ["today.html", "view_day", "Today"],
     ["pages/habit.html", "checklist", "Habit"],
-    ["pages/ledger.html", "account_balance_wallet", "Ledger"],
-    ["pages/reading.html", "auto_stories", "Library"],
     ["pages/night.html", "bedtime", "Night"],
     ["pages/archive.html", "calendar_month", "Archive"],
     ["pages/settings.html", "settings", "Settings"],
