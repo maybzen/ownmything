@@ -545,8 +545,8 @@ button.btn:active { transform: scale(0.98); }
   /* tap targets — compact but usable */
   button, .sw, .pill, .theme-card, .cal-day { min-height: 34px; }
   .sw, .pill, .theme-card { padding: 7px 10px; font-size: 0.78rem; }
-  .bna { min-height: 70px; padding: 10px 0 11px; font-size: 0.75rem; gap: 4px; }
-  .bna .material-symbols-outlined { font-size: 28px; }
+  .bna { min-height: 58px; padding: 6px 0; font-size: 0.65rem; gap: 2px; }
+  .bna .material-symbols-outlined { font-size: 27px; }
   .cal-day { min-height: 34px; font-size: 0.75rem; }
   .mcal-d { min-height: 46px; }
   .todo-check { padding: 9px 0; font-size: 16px; }
