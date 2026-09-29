@@ -9,19 +9,23 @@ function load(d) {
   return Store.get("d:" + d, "ownmything:" + d) || {};
 }
 
-// --- explicit save: the one-liner stays in memory until Save is pressed ---
+// --- explicit save: oneline + photo both stay pending until Save is pressed ---
 const DKEY = "omt:night-draft";
 const drafts = (function () {
   try { return JSON.parse(sessionStorage.getItem(DKEY)) || {}; } catch (e) { return {}; }
 })();
+// date -> dataUrl string (new/changed), "" (delete), undefined (no change).
+// In-memory only: dataURLs are too big for sessionStorage.
+const photoDraft = {};
 function stash() {
   try {
     if (Object.keys(drafts).length) sessionStorage.setItem(DKEY, JSON.stringify(drafts));
     else sessionStorage.removeItem(DKEY);
   } catch (e) {}
 }
-function isDirty() { return Object.keys(drafts).length > 0; }
+function isDirty() { return Object.keys(drafts).length > 0 || Object.keys(photoDraft).length > 0; }
 function markDirty() { drafts[date] = $("oneline").value; stash(); paintSaveBar(); }
+function markPhotoDirty() { stash(); paintSaveBar(); }
 function paintSaveBar() {
   const n = isDirty();
   const b = $("saveState");
@@ -32,20 +36,30 @@ function paintSaveBar() {
   if (r) r.style.display = n ? "inline-block" : "none";
 }
 function commit() {
-  Object.keys(drafts).forEach(k => {
-    const s = load(k);
-    s.oneline = drafts[k];
-    Store.set("d:" + k, s);
-  });
+  try {
+    const keys = new Set([...Object.keys(drafts), ...Object.keys(photoDraft)]);
+    keys.forEach(k => {
+      const s = load(k); // load first so timetable etc. are preserved
+      if (drafts[k] !== undefined) s.oneline = drafts[k];
+      if (photoDraft[k] !== undefined) s.photo = photoDraft[k];
+      Store.set("d:" + k, s);
+    });
+  } catch (e) {
+    alert("저장에 실패했어요. 사진이 너무 크면 사진을 지우고 다시 시도해주세요.");
+    return;
+  }
   Object.keys(drafts).forEach(k => delete drafts[k]);
+  Object.keys(photoDraft).forEach(k => delete photoDraft[k]);
   stash();
   paintSaveBar();
+  apply(date);
   renderCal();
 }
 function revert() {
   if (!isDirty()) return;
   if (!confirm("저장하지 않은 내용을 되돌릴까요?")) return;
   Object.keys(drafts).forEach(k => delete drafts[k]);
+  Object.keys(photoDraft).forEach(k => delete photoDraft[k]);
   stash();
   apply(date);
 }
@@ -56,44 +70,81 @@ window.addEventListener("beforeunload", (e) => {
   e.preventDefault(); e.returnValue = "";
 });
 
+function curPhoto(d) {
+  if (photoDraft[d] !== undefined) return photoDraft[d];
+  return load(d).photo || "";
+}
 function hasEntry(d) {
   const s = load(d);
   const o = drafts[d];
-  return !!(o !== undefined ? o : s.oneline) || !!s.photo;
+  return !!(o !== undefined ? o : s.oneline) || !!curPhoto(d);
 }
 function apply(d) {
   const s = load(d);
   const o = drafts[d];
   $("oneline").value = o !== undefined ? o : (s.oneline || "");
-  $("photoPrev").src = s.photo || "";
-  $("photoPrev").style.display = s.photo ? "" : "none";
+  const ph = curPhoto(d);
+  $("photoPrev").src = ph || "";
+  $("photoPrev").style.display = ph ? "" : "none";
+  $("photo").value = "";
   $("headDate").textContent = d;
   $("goToday").href = `../today.html?date=${d}`;
   paintSaveBar();
 }
-// photo is an explicit pick/confirm action, so it persists right away
-function savePhoto() {
-  const s = load(date);
-  const attr = $("photoPrev").getAttribute("src") || "";
-  s.photo = attr.startsWith("data:") ? attr : "";
-  Store.set("d:" + date, s);
-  $("photoPrev").style.display = s.photo ? "" : "none";
-  renderCal();
-}
+// photo is pending until Save, same as oneline. pickDate is captured so a
+// slow compress can't leak the image into another date.
 $("photo").onchange = (e) => {
   const f = e.target.files[0];
   if (!f) return;
-  const r = new FileReader();
-  r.onload = () => { $("photoPrev").src = r.result; savePhoto(); };
-  r.readAsDataURL(f);
+  const pickDate = date;
+  fileToPhotoDataUrl(f).then((dataUrl) => {
+    photoDraft[pickDate] = dataUrl;
+    if (pickDate === date) {
+      $("photoPrev").src = dataUrl;
+      $("photoPrev").style.display = dataUrl ? "" : "none";
+    }
+    markPhotoDirty();
+    renderCal();
+  }).catch(() => alert("사진을 읽지 못했어요."));
 };
 $("delPhoto").onclick = () => {
-  if (!$("photoPrev").getAttribute("src")) return;
+  if (!curPhoto(date)) return;
   if (!confirm("사진을 지울까요?")) return;
-  $("photoPrev").setAttribute("src", "");
+  photoDraft[date] = "";
+  $("photoPrev").src = "";
+  $("photoPrev").style.display = "none";
   $("photo").value = "";
-  savePhoto();
+  markPhotoDirty();
+  renderCal();
 };
+function fileToPhotoDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const MAX = 800;
+          let w = img.naturalWidth || img.width;
+          let h = img.naturalHeight || img.height;
+          const scale = Math.min(1, MAX / Math.max(w, h));
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+          const c = document.createElement("canvas");
+          c.width = w; c.height = h;
+          c.getContext("2d").drawImage(img, 0, 0, w, h);
+          resolve(c.toDataURL("image/jpeg", 0.7));
+        } catch (e) {
+          resolve(r.result);
+        }
+      };
+      img.onerror = () => resolve(r.result);
+      img.src = r.result;
+    };
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
 $("oneline").addEventListener("input", markDirty);
 $("oneline").addEventListener("keydown", (e) => {
   if (e.key === "Enter") { e.preventDefault(); if (isDirty()) commit(); $("oneline").blur(); }
@@ -131,12 +182,13 @@ function renderCal() {
 function showTip(e, ds) {
   const s = load(ds);
   const line = drafts[ds] !== undefined ? drafts[ds] : s.oneline;
-  if (!line && !s.photo) return;
+  const ph = curPhoto(ds);
+  if (!line && !ph) return;
   const tip = $("calTip");
   tip.innerHTML = "";
-  if (s.photo) {
+  if (ph) {
     const img = document.createElement("img");
-    img.src = s.photo;
+    img.src = ph;
     tip.appendChild(img);
   }
   if (line) {
