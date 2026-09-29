@@ -152,6 +152,17 @@ $("oneline").addEventListener("keydown", (e) => {
 $("goYest").onclick = () => setDate(yestStr());
 $("goTodayDate").onclick = () => setDate(Store.today());
 
+function storedHas(d) { const s = load(d); return !!(s.oneline || s.photo); }
+function renderStreak() {
+  const el = $("streak");
+  if (!el) return;
+  const shift = (ds, n) => { const d = new Date(ds + "T12:00:00"); d.setDate(d.getDate() + n); return Store.day(d); };
+  let cur = Store.today();
+  if (!storedHas(cur)) cur = shift(cur, -1);
+  let n = 0;
+  while (storedHas(cur) && n < 3650) { n++; cur = shift(cur, -1); }
+  el.textContent = n > 0 ? n + "일 연속" : "";
+}
 // --- calendar ---
 const MN = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
 function renderCal() {
@@ -176,6 +187,7 @@ function renderCal() {
     c.onclick = () => setDate(ds);
     box.appendChild(c);
   }
+  renderStreak();
 }
 $("calPrev").onclick = () => {
   const [y, m] = calYM.split("-").map(Number);

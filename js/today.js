@@ -382,6 +382,17 @@ function renderMonthTodos() {
   }
 }
 $("loadMonthCal").onclick = () => { autoMonthDone = ""; autoMonth(); pullCalendar(); };
+// Month section stays folded for a lighter daily screen; choice persists.
+try {
+  const MO = "omt:month-open";
+  const setMonth = (on) => {
+    $("monthBody").style.display = on ? "" : "none";
+    $("monthFold").textContent = on ? "접기" : "펼치기";
+    try { localStorage.setItem(MO, on ? "1" : "0"); } catch (e) {}
+  };
+  setMonth(localStorage.getItem(MO) === "1");
+  $("monthFold").onclick = () => setMonth($("monthBody").style.display === "none");
+} catch (e) {}
 let autoMonthBusy = false, autoMonthDone = "";
 async function autoMonth() {
   const ym = date.slice(0, 7);

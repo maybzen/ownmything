@@ -73,6 +73,38 @@ button:active:not(:disabled), .bna:active, .cal-day:active, .sw:active,
   --card: #17171c;
 }
 
+/* dark: timetable + event fills go dim so they don't glow */
+[data-theme="dark"] .cell { color: #e8e8ea; }
+[data-theme="dark"] .cell.fill.work, [data-theme="dark"] .cell.fill.study { background: #2e3a4a; border-color: #3d4c61; }
+[data-theme="dark"] .cell.fill.lunch { background: #26292f; border-color: #353b44; }
+[data-theme="dark"] .cell.fill.promise { background: #38324e; border-color: #4a4266; }
+[data-theme="dark"] .cell.fill.personal, [data-theme="dark"] .cell.fill.move, [data-theme="dark"] .cell.fill.home { background: #463a2c; border-color: #5a4a38; }
+[data-theme="dark"] .cell.fill.family { background: #4a332a; border-color: #5f4438; }
+[data-theme="dark"] .cell.fill.obokwalk, [data-theme="dark"] .cell.fill.obok, [data-theme="dark"] .cell.fill.walk, [data-theme="dark"] .cell.fill.rest { background: #2c3a2c; border-color: #3a4d3a; }
+[data-theme="dark"] .cell.fill.plant { background: #2c402e; border-color: #3a523d; }
+[data-theme="dark"] .cell.fill.sleep { background: #27414a; border-color: #334f59; }
+[data-theme="dark"] .run-label { color: #d8d8dc; }
+[data-theme="dark"] .sw.work.on { background: #2e3a4a; }
+[data-theme="dark"] .sw.promise.on { background: #38324e; }
+[data-theme="dark"] .sw.personal.on { background: #463a2c; }
+[data-theme="dark"] .sw.family.on { background: #4a332a; }
+[data-theme="dark"] .sw.obokwalk.on { background: #2c3a2c; }
+[data-theme="dark"] .sw.plant.on { background: #2c402e; }
+[data-theme="dark"] .sw.sleep.on { background: #27414a; }
+[data-theme="dark"] .mcal-e.work { background: #2e3a4a; }
+[data-theme="dark"] .mcal-e.lunch { background: #26292f; }
+[data-theme="dark"] .mcal-e.promise { background: #38324e; }
+[data-theme="dark"] .mcal-e.personal { background: #463a2c; }
+[data-theme="dark"] .mcal-e.family { background: #4a332a; }
+[data-theme="dark"] .mcal-e.obok { background: #2c3a2c; }
+[data-theme="dark"] .mcal-e.sleep { background: #27414a; }
+[data-theme="dark"] .cal-day.mrate.r100 { background: #2c402e; }
+[data-theme="dark"] .cal-day.mrate.r100 i { color: #bcd8be; }
+[data-theme="dark"] .cal-day.mrate.r70 { background: #34361f; }
+[data-theme="dark"] .cal-day.mrate.r30 { background: #3d3627; }
+[data-theme="dark"] .bar-col i.good { background: #2c402e; }
+[data-theme="dark"] .bar-col i.low { background: #4a332a; }
+
 body {
   background: var(--bg);
   color: var(--ink);
