@@ -412,14 +412,15 @@ details.card > summary:hover { color: var(--ink); }
 .mlist i { color: var(--line); font-style: normal; margin: 0 7px; }
 /* Solid, not blurred: a backdrop-filter on a fixed bar over a scrolling
    page repaints on every frame and is the single biggest scroll-jank source. */
-.bnav { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: var(--card); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.bnav { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: var(--card); padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); }
 .dfoot { display: flex; justify-content: center; align-items: center; gap: 18px; flex-wrap: wrap; margin: 0 auto; padding: 30px 0 42px; }
 .dfoot a { font-size: 0.82rem; color: var(--muted); text-decoration: none; border-bottom: 1px solid transparent; }
 .dfoot a:hover { color: var(--ink); border-bottom-color: var(--line); }
 .dfoot a.on { color: var(--ink); border-bottom-color: var(--ink); }
 .bna { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 0 8px; font-size: 0.55rem; color: var(--muted); text-decoration: none; min-width: 0; background: none; border: none; font-family: inherit; cursor: pointer; }
-.bna .material-symbols-outlined { font-size: 19px; }
+.bna .material-symbols-outlined { font-size: 19px; font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
 .bna.on { color: var(--ink); font-weight: 600; }
+.bna.on .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
 .bna-mid .material-symbols-outlined { position: relative; }
 .bna-mid.on .material-symbols-outlined::after {
   content: ""; position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%);
@@ -545,8 +546,8 @@ button.btn:active { transform: scale(0.98); }
   /* tap targets — compact but usable */
   button, .sw, .pill, .theme-card, .cal-day { min-height: 34px; }
   .sw, .pill, .theme-card { padding: 7px 10px; font-size: 0.78rem; }
-  .bna { min-height: 58px; padding: 6px 0; font-size: 0.65rem; gap: 2px; }
-  .bna .material-symbols-outlined { font-size: 27px; }
+  .bna { min-height: 66px; padding: 8px 0 6px; font-size: 0.7rem; gap: 3px; }
+  .bna .material-symbols-outlined { font-size: 30px; }
   .cal-day { min-height: 34px; font-size: 0.75rem; }
   .mcal-d { min-height: 46px; }
   .todo-check { padding: 9px 0; font-size: 16px; }
