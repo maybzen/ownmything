@@ -381,17 +381,16 @@ function renderMonthTodos() {
     box.appendChild(todoRow(d, monthTodos, renderMonthTodos, box, { chain: true, draft: true }));
   }
 }
-$("loadMonthCal").onclick = () => { autoMonthDone = ""; autoMonth(); pullCalendar(); };
-// Month section stays folded for a lighter daily screen; choice persists.
+$("loadMonthCal").onclick = (e) => { if (e) e.stopPropagation(); autoMonthDone = ""; autoMonth(); pullCalendar(); };
+// Month section folds by tapping its header; choice persists.
 try {
   const MO = "omt:month-open";
   const setMonth = (on) => {
     $("monthBody").style.display = on ? "" : "none";
-    $("monthFold").textContent = on ? "접기" : "펼치기";
     try { localStorage.setItem(MO, on ? "1" : "0"); } catch (e) {}
   };
   setMonth(localStorage.getItem(MO) === "1");
-  $("monthFold").onclick = () => setMonth($("monthBody").style.display === "none");
+  $("monthHead").onclick = () => setMonth($("monthBody").style.display === "none");
 } catch (e) {}
 let autoMonthBusy = false, autoMonthDone = "";
 async function autoMonth() {
