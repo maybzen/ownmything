@@ -173,35 +173,10 @@ function renderCal() {
     const c = document.createElement("button");
     c.className = "cal-day" + (hasEntry(ds) ? " has" : "") + (ds === date ? " cur" : "");
     c.textContent = d;
-    c.onmouseenter = (e) => showTip(e, ds);
-    c.onmouseleave = hideTip;
     c.onclick = () => setDate(ds);
     box.appendChild(c);
   }
 }
-function showTip(e, ds) {
-  const s = load(ds);
-  const line = drafts[ds] !== undefined ? drafts[ds] : s.oneline;
-  const ph = curPhoto(ds);
-  if (!line && !ph) return;
-  const tip = $("calTip");
-  tip.innerHTML = "";
-  if (ph) {
-    const img = document.createElement("img");
-    img.src = ph;
-    tip.appendChild(img);
-  }
-  if (line) {
-    const p = document.createElement("p");
-    p.textContent = line;
-    tip.appendChild(p);
-  }
-  tip.style.display = "block";
-  const r = e.target.getBoundingClientRect();
-  tip.style.left = Math.min(window.innerWidth - 190, r.left + window.scrollX) + "px";
-  tip.style.top = (r.bottom + window.scrollY + 6) + "px";
-}
-function hideTip() { $("calTip").style.display = "none"; }
 $("calPrev").onclick = () => {
   const [y, m] = calYM.split("-").map(Number);
   const d = new Date(y, m - 2, 1);
