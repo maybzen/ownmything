@@ -303,13 +303,26 @@ button.btn.sm { padding: 4px 12px; font-size: 0.75rem; }
 .flist { display: grid; grid-template-columns: 68px 1fr; gap: 0 10px; align-items: center; }
 .flist > label, .card .flist > label { display: contents; }
 .flist > label > span { font-size: 0.72rem; color: var(--muted); }
-.flist > label > input, .flist > label > select {
+.flist > label > input, .flist > label > select, .flist > label > textarea {
   border: none; border-bottom: 1px solid var(--line); border-radius: 0;
   background: transparent; padding: 7px 2px; min-width: 0; width: 100%;
 }
+/* 한 줄 일기: 길어져도 다 보이도록 자동 높이 증가, 줄바꿈 유지 */
+#oneline {
+  align-self: start;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.5;
+  min-height: 38px;
+  max-height: 50vh;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: keep-all;
+}
 .flist > label > span { align-self: start; padding-top: 9px; }
-.flist > label > input:focus, .flist > label > select:focus { outline: none; border-bottom-color: var(--ink); }
-.flist > label > input::placeholder { color: var(--line); }
+.flist > label > input:focus, .flist > label > select:focus, .flist > label > textarea:focus { outline: none; border-bottom-color: var(--ink); }
+.flist > label > input::placeholder, .flist > label > textarea::placeholder { color: var(--line); }
 .flist > .frow { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
 .flist > .frow > .hint { flex: 1; }
 .flist .btn, .flist > .frow .btn { justify-self: end; }
@@ -482,7 +495,12 @@ body.sheet-open .sheet-scrim { opacity: 1; pointer-events: auto; }
 .kv b { font-size: 1rem; font-weight: 500; }
 .kv i { font-style: normal; font-size: 0.62rem; color: var(--muted); }
 
-.quote { font-size: 1.05rem; line-height: 1.5; color: var(--ink); margin-top: 6px; }
+.quote { font-size: 1.05rem; line-height: 1.5; color: var(--ink); margin-top: 6px; white-space: pre-wrap; overflow-wrap: break-word; word-break: keep-all; }
+#todayHabits { display: flex; flex-wrap: wrap; gap: 6px; }
+#searchList .todo-check { cursor: pointer; text-align: left; width: 100%; background: none; border: none; border-bottom: 1px solid var(--line); font: inherit; color: inherit; }
+#searchList .todo-check b { font-size: 0.8rem; }
+#photoModal { z-index: 100; }
+#photoModal .quote { margin-top: 8px; }
 .mcal .cal-day { cursor: pointer; }
 .mcal .cal-day.has::after { display: none; }
 .mcal .cal-day i { font-style: normal; font-size: 0.58rem; color: var(--muted); }
@@ -554,7 +572,7 @@ button.btn:active { transform: scale(0.98); }
   .todo-check.done-item { padding: 6px 0; font-size: 13px; }
   .todo-check button { font-size: 0.8rem; }
   .flist { grid-template-columns: 62px 1fr; gap: 0 8px; }
-  .flist > label > input, .flist > label > select { padding: 8px 2px; }
+  .flist > label > input, .flist > label > select, .flist > label > textarea { padding: 8px 2px; }
 
   /* time plan: whole day visible without scrolling */
   .trow .cell { height: 18px; font-size: 8px; line-height: 16px; border-radius: 3px; }

@@ -15,8 +15,23 @@ const drafts = (function () {
   try { return JSON.parse(sessionStorage.getItem(DKEY)) || {}; } catch (e) { return {}; }
 })();
 // date -> dataUrl string (new/changed), "" (delete), undefined (no change).
-// In-memory only: dataURLs are too big for sessionStorage.
+// Persisted to sessionStorage when it fits; otherwise kept in memory.
+// (beforeunload still guards the in-memory case.)
 const photoDraft = {};
+const PKEY = "omt:night-photo-draft";
+try {
+  const raw = JSON.parse(sessionStorage.getItem(PKEY) || "{}");
+  Object.keys(raw).forEach(k => { if (typeof raw[k] === "string") photoDraft[k] = raw[k]; });
+} catch (e) {}
+function stashPhoto() {
+  try {
+    if (Object.keys(photoDraft).length) sessionStorage.setItem(PKEY, JSON.stringify(photoDraft));
+    else sessionStorage.removeItem(PKEY);
+  } catch (e) {
+    // Too big for sessionStorage: keep in memory only.
+    try { sessionStorage.removeItem(PKEY); } catch (_) {}
+  }
+}
 function stash() {
   try {
     if (Object.keys(drafts).length) sessionStorage.setItem(DKEY, JSON.stringify(drafts));
@@ -24,8 +39,14 @@ function stash() {
   } catch (e) {}
 }
 function isDirty() { return Object.keys(drafts).length > 0 || Object.keys(photoDraft).length > 0; }
-function markDirty() { drafts[date] = $("oneline").value; stash(); paintSaveBar(); }
-function markPhotoDirty() { stash(); paintSaveBar(); }
+function autoGrow() {
+  const el = $("oneline");
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}
+function markDirty() { drafts[date] = $("oneline").value; stash(); paintSaveBar(); autoGrow(); }
+function markPhotoDirty() { stash(); stashPhoto(); paintSaveBar(); }
 function paintSaveBar() {
   const n = isDirty();
   const b = $("saveState");
@@ -51,6 +72,7 @@ function commit() {
   Object.keys(drafts).forEach(k => delete drafts[k]);
   Object.keys(photoDraft).forEach(k => delete photoDraft[k]);
   stash();
+  stashPhoto();
   paintSaveBar();
   apply(date);
   renderCal();
@@ -61,6 +83,7 @@ function revert() {
   Object.keys(drafts).forEach(k => delete drafts[k]);
   Object.keys(photoDraft).forEach(k => delete photoDraft[k]);
   stash();
+  stashPhoto();
   apply(date);
 }
 $("saveBtn").onclick = () => { if (!isDirty()) return; commit(); };
@@ -83,6 +106,7 @@ function apply(d) {
   const s = load(d);
   const o = drafts[d];
   $("oneline").value = o !== undefined ? o : (s.oneline || "");
+  autoGrow();
   const ph = curPhoto(d);
   $("photoPrev").src = ph || "";
   $("photoPrev").style.display = ph ? "" : "none";
@@ -124,7 +148,7 @@ function fileToPhotoDataUrl(file) {
       const img = new Image();
       img.onload = () => {
         try {
-          const MAX = 800;
+          const MAX = 720;
           let w = img.naturalWidth || img.width;
           let h = img.naturalHeight || img.height;
           const scale = Math.min(1, MAX / Math.max(w, h));
@@ -133,7 +157,7 @@ function fileToPhotoDataUrl(file) {
           const c = document.createElement("canvas");
           c.width = w; c.height = h;
           c.getContext("2d").drawImage(img, 0, 0, w, h);
-          resolve(c.toDataURL("image/jpeg", 0.7));
+          resolve(c.toDataURL("image/jpeg", 0.65));
         } catch (e) {
           resolve(r.result);
         }
@@ -147,7 +171,8 @@ function fileToPhotoDataUrl(file) {
 }
 $("oneline").addEventListener("input", markDirty);
 $("oneline").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") { e.preventDefault(); if (isDirty()) commit(); $("oneline").blur(); }
+  // 길어질 수 있으니 Enter는 줄바꿈, Cmd/Ctrl+Enter는 저장
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); if (isDirty()) commit(); $("oneline").blur(); }
 });
 $("goYest").onclick = () => setDate(yestStr());
 $("goTodayDate").onclick = () => setDate(Store.today());

@@ -49,6 +49,16 @@
     </section>
 
     <section class="card">
+      <div class="card-head">
+        <h3>Habit · 오늘</h3>
+        <div class="head-right">
+          <a class="hint" href="./pages/habit.html">관리 →</a>
+        </div>
+      </div>
+      <div id="todayHabits" class="hcol" style="grid-template-columns:repeat(auto-fill,minmax(92px,1fr))"></div>
+    </section>
+
+    <section class="card">
       <div class="card-head" id="monthHead" style="cursor:pointer">
         <h3 id="monthTitleSide">월간</h3>
         <div class="head-right">
@@ -74,6 +84,7 @@
       <h4 class="sub">할 일
         <span class="sub-btns">
           <span class="hint" id="moveHintTo" style="display:none">누를 것 옮기기</span>
+          <button id="carryBtn" class="ghost-btn sm">어제 → 오늘</button>
           <button id="moveMonth" class="ghost-btn sm">→ 월간</button>
         </span>
       </h4>
@@ -85,9 +96,11 @@
       <div class="card-head">
         <h3>시간표</h3>
         <div class="head-right">
+          <button id="workfillBtn" class="ghost-btn sm">평일 자동채움 켬</button>
           <button id="undoGrid" class="ghost-btn sm" disabled style="opacity:.4" title="Undo the last time-plan change">↶ 되돌리기</button>
         </div>
       </div>
+      <p class="hint" id="ttTotals" style="margin-bottom:8px">비어 있음</p>
       <div class="palette" id="palette">
         <button data-c="work" class="sw work on">일</button>
         <button data-c="promise" class="sw promise">약속</button>
@@ -99,6 +112,7 @@
       <div id="timetable" class="timetable"></div>
       <div id="blocks"></div>
       <div class="btn-row">
+        <button id="routineBtn" class="ghost-btn sm">평일 루틴</button>
         <button id="delChecked" class="ghost-btn sm">선택 삭제</button>
         <button id="clearDay" class="ghost-btn sm">시간표 비우기</button>
       </div>

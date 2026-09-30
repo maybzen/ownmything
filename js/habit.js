@@ -363,3 +363,10 @@ $("wipeDays").onclick = () => {
 
 function renderAll() { renderToday(); renderDefs(); renderWeek(); renderMonth(); renderReport(); renderData(); paintSaveBar(); }
 renderAll();
+if (window.Auth && Auth.onCloudChange) {
+  Auth.onCloudChange(() => {
+    if (isDirty()) return;
+    renderAll();
+  });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && !isDirty()) renderAll(); });
+}

@@ -21,7 +21,14 @@
       <a class="back" href="../menu.html">←</a>
       <h2>기록</h2>
     </div>
+    <div class="head-right">
+      <input id="search" class="mini" type="search" placeholder="검색" style="min-width:120px" />
+    </div>
   </header>
+  <section class="card" id="searchCard" style="display:none">
+    <div class="card-head"><h3>검색 결과</h3><span class="hint" id="searchCount"></span></div>
+    <div id="searchList"></div>
+  </section>
 
     <div class="card-head" style="margin-top:14px">
       <h3 id="calLabel"></h3>
@@ -74,6 +81,16 @@
     </section>
 
     <div class="pad-b"></div>
+  </div>
+  <div id="photoModal" class="sheet-scrim" style="display:none;align-items:center;justify-content:center;padding:20px">
+    <div style="background:var(--card);border-radius:12px;max-width:520px;width:100%;padding:12px">
+      <img id="modalImg" class="photo-prev" alt="" style="width:100%;margin-top:0" />
+      <p class="quote" id="modalCap" style="font-size:0.9rem"></p>
+      <p class="hint" id="modalDate"></p>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px">
+        <button id="modalClose" class="ghost-btn sm">닫기</button>
+      </div>
+    </div>
   </div>
   <script src="../js/store.js"></script>
   <script src="../js/archive.js"></script>

@@ -142,9 +142,22 @@ function renderLoans() {
     const pct = l.principal ? Math.min(100, Math.round(100 * (l.principal - left) / l.principal)) : 0;
     const div = document.createElement("div");
     div.className = "loan-detail";
-    div.innerHTML = `<b>${l.name}</b> <span class="hint">${l.bank} ${l.rate ? l.rate + "%" : ""} ${l.start || ""}</span>
-      <div class="bar"><i style="width:${pct}%"></i></div>
-      <div class="hint">잔여 ${left.toLocaleString()} / ${l.principal.toLocaleString()} · 월납 ${Number(l.monthly).toLocaleString()}${l.memo ? " · " + l.memo : ""}</div>`;
+    const head = document.createElement("p");
+    const b = document.createElement("b");
+    b.textContent = l.name;
+    const sub = document.createElement("span");
+    sub.className = "hint";
+    sub.textContent = ` ${l.bank} ${l.rate ? l.rate + "%" : ""} ${l.start || ""}`;
+    head.append(b, sub);
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    const fill = document.createElement("i");
+    fill.style.width = pct + "%";
+    bar.appendChild(fill);
+    const meta = document.createElement("div");
+    meta.className = "hint";
+    meta.textContent = `잔여 ${left.toLocaleString()} / ${l.principal.toLocaleString()} · 월납 ${Number(l.monthly).toLocaleString()}${l.memo ? " · " + l.memo : ""}`;
+    div.append(head, bar, meta);
     const row = document.createElement("div");
     row.className = "row2";
     const pay = document.createElement("button");
@@ -189,7 +202,11 @@ function renderStmts(mv) {
     const div = document.createElement("div");
     div.className = "loan-detail";
     const p = document.createElement("p");
-    p.innerHTML = `<b>${s.card}</b> — ${s.amt.toLocaleString()}${s.note ? " · " + s.note : ""}`;
+    const b = document.createElement("b");
+    b.textContent = s.card;
+    const rest = document.createElement("span");
+    rest.textContent = ` — ${s.amt.toLocaleString()}${s.note ? " · " + s.note : ""}`;
+    p.append(b, rest);
     div.appendChild(p);
     if (s.receipt) {
       const img = document.createElement("img");

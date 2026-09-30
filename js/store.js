@@ -23,7 +23,18 @@ window.Store = (() => {
     } catch (e) {}
     return undefined;
   };
-  const set = (nk, v) => localStorage.setItem(k(nk), JSON.stringify(v));
+  const set = (nk, v) => {
+    try {
+      localStorage.setItem(k(nk), JSON.stringify(v));
+      return true;
+    } catch (e) {
+      // QuotaExceededError: photos fill localStorage fast. Let callers handle it.
+      if (e && (e.name === "QuotaExceededError" || e.code === 22)) {
+        try { alert("저장 공간이 부족해요. 오래된 사진 몇 장을 지워주세요."); } catch (_) {}
+      }
+      throw e;
+    }
+  };
   return {
     profile, profiles,
     saveProfiles: (p) => localStorage.setItem(LKEY, JSON.stringify(p)),

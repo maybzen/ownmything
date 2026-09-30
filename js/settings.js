@@ -12,6 +12,8 @@ $("exportBtn").onclick = () => {
   a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" }));
   a.download = "ownmything-backup.json";
   a.click();
+  try { Store.set("last-backup", Date.now()); } catch (_) {}
+  if ($("lastBackup")) $("lastBackup").textContent = "Last export " + new Date().toLocaleString();
 };
 $("goalWeight").onchange = () => Store.set("goal-weight", $("goalWeight").value);
 
@@ -21,34 +23,38 @@ $("sysDark").onchange = () => {
 function currentTheme() {
   try { return localStorage.getItem("ownmything:theme") || "system"; } catch (e) { return "system"; }
 }
-$("autoExport").onchange = () => {
-  Store.set("auto-export", $("autoExport").checked);
-  Store.set("last-backup", Date.now());
-};
 $("importBtn").onclick = () => $("importFile").click();
 $("importFile").onchange = (e) => {
   const f = e.target.files[0];
   if (!f) return;
+  if (!confirm("현재 기록 위에 가져온 파일을 덮어쓸까요? 먼저 내보내기로 백업하세요.")) { e.target.value = ""; return; }
   const r = new FileReader();
   r.onload = () => {
     try {
       const obj = JSON.parse(r.result);
+      const keys = Object.keys(obj).filter(k => k.startsWith("ownmything:"));
+      if (!keys.length) throw new Error("empty");
+      const pre = "ownmything:" + Store.profile() + ":";
       let n = 0;
-      Object.keys(obj).forEach(k => { localStorage.setItem(k, JSON.stringify(obj[k])); n++; });
-      Store.set("last-backup", Date.now());
+      keys.forEach(k => {
+        // Route through Store.set so cloud sync picks it up.
+        const short = k.startsWith(pre) ? k.slice(pre.length) : null;
+        if (short) { try { Store.set(short, obj[k]); n++; return; } catch (_) {} }
+        try { localStorage.setItem(k, JSON.stringify(obj[k])); n++; } catch (_) {}
+      });
+      try { Store.set("last-backup", Date.now()); } catch (_) {}
+      alert(`${n}건 가져옴`);
       location.reload();
     } catch (err) { $("lastBackup").textContent = "가져오기 실패"; }
   };
   r.readAsText(f);
 };
-$("exportBtn2").onclick = () => $("exportBtn").click();
 
 (async () => {
   const s = await Auth.guard();
   if (!s) return;
   $("accountEmail").textContent = "자동 동기화 중";
   $("avatar").textContent = "o";
-  const lo = $("logoutBtn"); if (lo) lo.style.display = "none";
   const gw = Store.get("goal-weight", "");
   if (gw !== undefined) $("goalWeight").value = gw;
   let n = 0;
@@ -64,15 +70,8 @@ $("exportBtn2").onclick = () => $("exportBtn").click();
     const lb = Store.get("last-backup", "");
     $("lastBackup").textContent = lb ? "Last export " + new Date(lb).toLocaleString() : "No export yet";
   }
-  const ae = Store.get("auto-export", "");
-  if (typeof ae === "boolean") $("autoExport").checked = ae;
   if ($("sysDark")) $("sysDark").checked = currentTheme() === "system";
-  if (s.user.email === "dlwjdgus417@gmail.com") {
-    $("adminCard").style.display = "";
-    loadMembers();
-  }
 })();
-$("logoutBtn").onclick = () => Auth.logout();
 
 async function callAdmin(body) {
   const { data, error } = await Auth.sb.functions.invoke("admin-users", { body });

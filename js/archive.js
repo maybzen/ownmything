@@ -153,14 +153,65 @@ function renderPhotos() {
     const it = document.createElement("button");
     it.className = "pw";
     const i = document.createElement("img");
-    i.src = p.photo; i.loading = "lazy";
+    i.src = p.photo; i.loading = "lazy"; i.alt = p.ds;
     const c = document.createElement("span");
     c.textContent = p.ds.slice(5);
     it.append(i, c);
-    it.onclick = () => { date = p.ds; renderDay(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+    it.onclick = () => openPhoto(p);
+    it.ondblclick = () => { date = p.ds; renderDay(); window.scrollTo({ top: 0, behavior: "smooth" }); };
     box.appendChild(it);
   });
 }
+function openPhoto(p) {
+  const m = $("photoModal");
+  if (!m) { date = p.ds; renderDay(); return; }
+  $("modalImg").src = p.photo;
+  $("modalCap").textContent = p.line || "—";
+  $("modalDate").textContent = p.ds;
+  m.style.display = "flex";
+}
+if ($("modalClose")) $("modalClose").onclick = () => { $("photoModal").style.display = "none"; $("modalImg").removeAttribute("src"); };
+if ($("photoModal")) $("photoModal").onclick = (e) => { if (e.target.id === "photoModal") { $("photoModal").style.display = "none"; $("modalImg").removeAttribute("src"); } };
+function runSearch() {
+  const q = ($("search").value || "").trim().toLowerCase();
+  const card = $("searchCard");
+  if (!q) { card.style.display = "none"; return; }
+  const hits = [];
+  for (let i = 0; i < localStorage.length && hits.length < 50; i++) {
+    const k = localStorage.key(i) || "";
+    const pre = "ownmything:" + Store.profile() + ":d:";
+    if (k.indexOf(pre) !== 0) continue;
+    const ds = k.slice(pre.length);
+    let s = {};
+    try { s = JSON.parse(localStorage.getItem(k)) || {}; } catch (_) {}
+    const hay = [s.oneline, s.braindump, (s.todos || []).map(t => t.t).join("\n")].filter(Boolean).join("\n").toLowerCase();
+    if (hay.includes(q)) {
+      const idx = hay.indexOf(q);
+      hits.push({ ds, s, snippet: hay.slice(Math.max(0, idx - 30), idx + 60) });
+    }
+  }
+  hits.sort((a, b) => a.ds < b.ds ? 1 : -1);
+  card.style.display = "";
+  $("searchCount").textContent = `${hits.length}건`;
+  const box = $("searchList");
+  box.innerHTML = "";
+  if (!hits.length) { box.innerHTML = "<p class='hint'>없음</p>"; return; }
+  hits.forEach(h => {
+    const b = document.createElement("button");
+    b.className = "todo-check";
+    b.style.width = "100%";
+    const d = document.createElement("b");
+    d.textContent = h.ds;
+    d.style.flex = "none";
+    const sp = document.createElement("span");
+    sp.className = "txt";
+    sp.textContent = h.snippet;
+    b.append(d, sp);
+    b.onclick = () => { date = h.ds; renderDay(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+    box.appendChild(b);
+  });
+}
+if ($("search")) $("search").oninput = runSearch;
 
 function renderWeight() {
   const s = stats(ym);

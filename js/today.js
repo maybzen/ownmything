@@ -71,18 +71,23 @@ function cleanTodos(arr) {
     });
 }
 function commit() {
-  const keys = Object.keys(drafts);
-  if (keys.length) {
-    keys.forEach(k => {
-      const d = drafts[k];
-      Store.set("d:" + k, Object.assign({}, load(k), d));
-      Store.set(monthKey(k), d.monthTodos || []);
-    });
-    drafts[date] = drafts[date] || draftData();
+  try {
+    const keys = Object.keys(drafts);
+    if (keys.length) {
+      keys.forEach(k => {
+        const d = drafts[k];
+        Store.set("d:" + k, Object.assign({}, load(k), d));
+        Store.set(monthKey(k), d.monthTodos || []);
+      });
+      drafts[date] = drafts[date] || draftData();
+    }
+    const d = drafts[date] || draftData();
+    Store.set("d:" + date, Object.assign({}, load(date), d));
+    Store.set(monthKey(date), d.monthTodos || cleanTodos(monthTodos));
+  } catch (e) {
+    alert("저장에 실패했어요. 사진이 너무 크면 Night에서 사진을 지워주세요.");
+    return false;
   }
-  const d = drafts[date] || draftData();
-  Store.set("d:" + date, Object.assign({}, load(date), d));
-  Store.set(monthKey(date), d.monthTodos || cleanTodos(monthTodos));
   Object.keys(drafts).forEach(k => delete drafts[k]);
   stashDrafts();
   paintSaveBar();
@@ -159,7 +164,12 @@ function isWorkday(d) {
   return true;
 }
 
+function isWorkfillOn() {
+  const v = Store.get("auto-workfill", "ownmything:auto-workfill");
+  return v === undefined ? true : !!v;
+}
 function paintWorkHours() {
+  if (!isWorkfillOn()) return;
   if (!isWorkday(date)) return;
   const isLunch = (id) => id >= "11:40" && id < "13:00";
   const inWorkRange = (id) => id >= "09:30" && id < "17:30";
@@ -220,10 +230,13 @@ function apply(d) {
   paintAll(); renderBlocks(); renderTodos(); renderMonthTodos(); renderHabitRate();
   paintSaveBar();
   paintUndoBtn();
+  paintWorkfillBtn();
+  renderTodayHabits();
   title.textContent = d;
   renderDateTitle();
   loadHolidays();
   if (!$("sleepH").value) { autoSleepCalc(); paintSleepGrid(); }
+  if (d === Store.today()) carryOver(false);
 }
 
 // --- time input: OS native ---
@@ -363,11 +376,18 @@ function renderTodos() {
   }
 }
 function syncDumpMarks() {
-  const marks = (load(date).dumpMarks) || [];
-  if (!marks.length) return false;
+  // Legacy: old records stored dumpMarks; new ones parse braindump live.
+  const src = ($("braindump") && $("braindump").value) || "";
+  const legacy = (load(date).dumpMarks) || [];
+  const marks = src.split("\n")
+    .filter(l => /^\s*[-*]?\s*\[\s*\]\s*/.test(l))
+    .map(m => m.replace(/^\s*[-*]?\s*\[\s*\]\s*/, "").trim())
+    .filter(Boolean);
+  const all = marks.length ? marks : legacy;
+  if (!all.length) return false;
   const seen = new Set(monthTodos.map(t => t.t));
   let added = 0;
-  marks.forEach(m => { if (m && !seen.has(m)) { monthTodos.push({ id: uid(), t: m, done: false }); seen.add(m); added++; } });
+  all.forEach(m => { if (m && !seen.has(m)) { monthTodos.push({ id: uid(), t: m, done: false }); seen.add(m); added++; } });
   return added > 0;
 }
 function renderMonthTodos() {
@@ -461,14 +481,17 @@ function resizeBraindump() {
 function onDump() {
   markDirty();
   resizeBraindump();
+  // - [ ] lines become month todos, but only in memory until Save.
+  // (No direct Store.set here: everything persists via commit.)
   const v = $("braindump").value;
-  const marks = v.split("\n").filter(l => /^\s*[-*]?\s*\[\s*\]\s*/.test(l));
-  const key = "d:" + date;
-  const prev = load(date);
-  prev.dumpMarks = marks.map(m => m.replace(/^\s*[-*]?\s*\[\s*\]\s*/, "").trim()).filter(Boolean);
-  prev.braindump = v;
-  Store.set(key, prev);
-  if (syncDumpMarks()) { Store.set(monthKey(date), cleanTodos(monthTodos)); renderMonthTodos(); }
+  const marks = v.split("\n")
+    .filter(l => /^\s*[-*]?\s*\[\s*\]\s*/.test(l))
+    .map(m => m.replace(/^\s*[-*]?\s*\[\s*\]\s*/, "").trim())
+    .filter(Boolean);
+  const seen = new Set(monthTodos.map(t => t.t));
+  let added = false;
+  marks.forEach(m => { if (m && !seen.has(m)) { monthTodos.push({ id: uid(), t: m, done: false }); seen.add(m); added = true; } });
+  if (added) renderMonthTodos();
 }
 
 // --- timetable ---
@@ -545,11 +568,29 @@ HOURS.forEach(h => {
     c.title = id;
     c.addEventListener("pointerdown", (e) => {
       e.preventDefault();
+      try { c.setPointerCapture(e.pointerId); } catch (_) {}
       pushUndo();
       const id = c.dataset.id;
-      if (cells[id] === curColor) delete cells[id];
+      // tap toggles; drag paints (decided on first move)
+      dragActive = true; dragMoved = false;
+      dragErase = cells[id] === curColor;
+      if (dragErase) delete cells[id];
       else cells[id] = curColor;
       paintCell(c);
+      markDirty(); renderBlocks();
+    });
+    c.addEventListener("pointermove", (e) => {
+      if (!dragActive) return;
+      if (e.buttons === 0 && e.pointerType === "mouse") return;
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const t = el && el.closest ? el.closest(".cell") : null;
+      if (!t || t === lastDragCell) return;
+      lastDragCell = t;
+      dragMoved = true;
+      const tid = t.dataset.id;
+      if (dragErase) { if (cells[tid] === curColor) delete cells[tid]; }
+      else if (cells[tid] !== curColor) cells[tid] = curColor;
+      paintCell(t);
       markDirty(); renderBlocks();
     });
     grid.appendChild(c);
@@ -557,9 +598,11 @@ HOURS.forEach(h => {
   row.appendChild(grid);
   tt.appendChild(row);
 });
+let dragActive = false, dragMoved = false, dragErase = false, lastDragCell = null;
 document.addEventListener("pointerup", () => {
   if (painting || erasing) { markDirty(); renderBlocks(); }
   painting = false; erasing = false;
+  dragActive = false; lastDragCell = null;
 });
 
 function toggleCell(c, drag) {
@@ -662,6 +705,14 @@ function renderBlocks() {
   box.innerHTML = "";
   const list = runs();
   paintOverlays(list);
+  // category totals (10min cells → hours)
+  const totals = {};
+  Object.values(cells).forEach(c => { totals[c] = (totals[c] || 0) + 1; });
+  const tEl = $("ttTotals");
+  if (tEl) {
+    const parts = Object.keys(totals).sort().map(k => `${CNAMES[k] || k} ${(totals[k] / 6).toFixed(1)}h`);
+    tEl.textContent = parts.length ? parts.join(" · ") : "비어 있음";
+  }
   list.forEach(r => {
     const txt = labels[r.start] || "";
     const row = document.createElement("div");
@@ -805,12 +856,19 @@ function renderMonthCals(events, ym) {
   const p = document.createElement("p");
   p.className = "mlist";
   const today = Store.today();
-  p.innerHTML = items.map(ev => {
+  items.forEach((ev, i) => {
     const d = new Date(ev.day + "T12:00:00");
     const wk = WD[d.getDay()];
-    const past = ev.day < today;
-    return `<span class="ml${past ? " past" : ""}">${d.getDate()}${wk} ${calTitle(ev.title)}</span>`;
-  }).join("<i>·</i>");
+    const s = document.createElement("span");
+    s.className = "ml" + (ev.day < today ? " past" : "");
+    s.textContent = `${d.getDate()}${wk} ${calTitle(ev.title)}`;
+    p.appendChild(s);
+    if (i < items.length - 1) {
+      const sep = document.createElement("i");
+      sep.textContent = "·";
+      p.appendChild(sep);
+    }
+  });
   box.appendChild(p);
   box.style.opacity = "0.75";
 }
@@ -880,10 +938,59 @@ function migrateHabits(s) {
 }
 function renderHabitRate() {
   const el = $("habitRate");
-  if (!el) return;
-  const rate = habitDefs.length
-    ? Math.round(100 * habitDefs.filter(h => habitDone[h.id]).length / habitDefs.length) : 0;
-  el.textContent = `${rate}% →`;
+  if (el) {
+    const rate = habitDefs.length
+      ? Math.round(100 * habitDefs.filter(h => habitDone[h.id]).length / habitDefs.length) : 0;
+    el.textContent = `${rate}% →`;
+  }
+  renderTodayHabits();
+}
+function renderTodayHabits() {
+  const box = $("todayHabits");
+  if (!box) return;
+  box.innerHTML = "";
+  if (!habitDefs.length) { box.innerHTML = "<p class='hint'>습관 없음</p>"; return; }
+  habitDefs.forEach(def => {
+    const b = document.createElement("button");
+    b.className = "pill" + (habitDone[def.id] ? " done" : "");
+    b.textContent = def.t;
+    b.onclick = () => {
+      habitDone[def.id] = !habitDone[def.id];
+      if (!habitDone[def.id]) delete habitDone[def.id];
+      markDirty(); renderTodayHabits(); renderHabitRate();
+    };
+    box.appendChild(b);
+  });
+}
+// --- carry-over: yesterday's unfinished todos → today (once per day + manual) ---
+function carryOver(manual) {
+  const y = new Date(date + "T12:00:00"); y.setDate(y.getDate() - 1);
+  const yds = Store.day(y);
+  const ys = load(yds);
+  const undone = (ys.todos || []).filter(t => t && t.t && !t.done).map(t => t.t.trim()).filter(Boolean);
+  if (!undone.length) { if (manual) alert("어제 미완료 할 일이 없어요."); return; }
+  const flag = "carried:" + date;
+  if (!manual && Store.get(flag)) return;
+  const seen = new Set(todos.map(t => (t.t || "").trim()));
+  let added = 0;
+  undone.forEach(t => { if (!seen.has(t)) { todos.push({ id: uid(), t, done: false }); seen.add(t); added++; } });
+  if (added) { markDirty(); renderTodos(); }
+  try { Store.set(flag, true); } catch (_) {}
+  if (manual && !added) alert("이미 가져왔어요.");
+}
+// --- routine template (explicit; replaces the old silent auto-fill) ---
+function applyRoutine() {
+  pushUndo();
+  for (let t = 9 * 60 + 30; t < 17 * 60 + 30; t += 10) {
+    const h = Math.floor(t / 60), m = t % 60;
+    const id = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    if (!cells[id]) cells[id] = (id >= "11:40" && id < "13:00") ? "lunch" : "work";
+  }
+  paintAll(); renderBlocks(); markDirty();
+}
+function paintWorkfillBtn() {
+  const b = $("workfillBtn");
+  if (b) b.textContent = `평일 자동채움 ${isWorkfillOn() ? "켬" : "끔"}`;
 }
 
 // --- photo moved to Night page ---
@@ -896,6 +1003,12 @@ $("goYest").onclick = () => {
   date = yestStr(); picker.value = date; apply(date); if (window.pullCalendar) pullCalendar();
 };
 $("goToday").onclick = () => { date = todayStr(); picker.value = date; apply(date); if (window.pullCalendar) pullCalendar(); };
+if ($("carryBtn")) $("carryBtn").onclick = () => carryOver(true);
+if ($("routineBtn")) $("routineBtn").onclick = () => { if (confirm("평일 루틴(09:30–17:30)을 빈 칸에 채울까요?")) applyRoutine(); };
+if ($("workfillBtn")) $("workfillBtn").onclick = () => {
+  try { Store.set("auto-workfill", !isWorkfillOn()); } catch (_) {}
+  paintWorkfillBtn();
+};
 window.addEventListener("beforeunload", (e) => {
   if (!isDirty()) return;
   e.preventDefault();
