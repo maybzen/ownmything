@@ -359,6 +359,8 @@ details.card > summary:hover { color: var(--ink); }
   font-family: inherit;
 }
 .card textarea { resize: vertical; margin: 8px 0; }
+/* 브레인덤프: 쓴 만큼 길어져서 스크롤 없이 한 번에 다 보임 */
+#braindump { resize: none; overflow-y: hidden; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .row2 > *, .row3 > *, .lgrid > * { min-width: 0; }
 .card input[type="time"], .card input[type="date"] { max-width: 100%; }
@@ -632,7 +634,7 @@ button.btn:active { transform: scale(0.98); }
   .log-card .row2 label > span { flex: none; white-space: nowrap; color: var(--muted); }
   .log-card .row2 label input { min-height: 28px; width: auto; flex: 1 1 auto; min-width: 0; padding: 4px 6px; }
   .block-row input { padding: 4px 6px; min-height: 26px; }
-  #braindump { min-height: 56px; height: auto; font-size: 16px; }
+  #braindump { min-height: 56px; font-size: 16px; }
   .card-head { margin-bottom: 8px; }
   .card-head .ghost-btn.sm { padding: 6px 8px; }
   .today-head { flex-direction: column; align-items: stretch; gap: 8px; margin: 10px 0 12px; }

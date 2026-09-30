@@ -495,9 +495,19 @@ $("braindump").addEventListener("input", onDump);
 function resizeBraindump() {
   const bd = $("braindump");
   if (!bd) return;
-  bd.style.height = "auto";
-  bd.style.height = Math.max(80, bd.scrollHeight) + "px";
+  const fit = () => {
+    bd.style.height = "auto";
+    // box-sizing이 border-box라 scrollHeight에 테두리가 빠져 있다. 더해줘야 스크롤이 안 생긴다.
+    const cs = getComputedStyle(bd);
+    const border = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+    bd.style.height = Math.max(80, bd.scrollHeight + border) + "px";
+  };
+  fit();
+  // 레이아웃/폰트 로딩 뒤에 한 번 더 맞춰 스크롤이 절대 안 생기게
+  requestAnimationFrame(fit);
 }
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => resizeBraindump());
+window.addEventListener("resize", () => resizeBraindump());
 function onDump() {
   markDirty();
   resizeBraindump();
