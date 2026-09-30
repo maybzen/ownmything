@@ -38,7 +38,7 @@
     <section class="card log-card">
       <div class="card-head">
         <h3>기록</h3>
-        <span class="hint">자동</span>
+        <span class="hint"><a class="hint" href="./pages/stats.html">추이 →</a></span>
       </div>
       <div class="row2 log-row">
         <label><span>취침</span><input type="time" id="lastSleep" /></label>
@@ -46,16 +46,6 @@
         <label><span>체중</span><input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="kg" /></label>
         <label><span>시간</span><input id="sleepH" type="number" inputmode="decimal" step="0.5" placeholder="자동" /></label>
       </div>
-    </section>
-
-    <section class="card">
-      <div class="card-head">
-        <h3>Habit · 오늘</h3>
-        <div class="head-right">
-          <a class="hint" href="./pages/habit.html">관리 →</a>
-        </div>
-      </div>
-      <div id="todayHabits" class="hcol" style="grid-template-columns:repeat(auto-fill,minmax(92px,1fr))"></div>
     </section>
 
     <section class="card">
@@ -124,7 +114,7 @@
   <script src="./js/today.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./js/auth.js"></script>
-  <script>Auth.guard().then(s => { if (s && window.pullCalendar) pullCalendar(); });</script>
+  <script>Auth.guard().then(s => { if (window.refreshToday) refreshToday(); if (s && window.pullCalendar) pullCalendar(); });</script>
   <script src="./js/nav.js"></script>
 </body>
 </html>

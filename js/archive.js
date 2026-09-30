@@ -124,17 +124,6 @@ function renderDay() {
   const img = $("dayPhoto");
   if (s.photo) { img.src = s.photo; img.style.display = "block"; }
   else { img.removeAttribute("src"); img.style.display = "none"; }
-  $("dayLedger").textContent = monthSettle(ym);
-}
-
-function monthSettle(m) {
-  try {
-    const t = (Store.get("ledger-txns", "ownmything:ledger-txns") || []).filter(x => (x.date || "").slice(0, 7) === m);
-    if (!t.length) return "없음";
-    const inc = t.filter(x => x.kind === "income").reduce((a, x) => a + x.amt, 0);
-    const exp = t.filter(x => x.kind === "expense").reduce((a, x) => a + x.amt, 0);
-    return `${(inc - exp).toLocaleString()} KRW`;
-  } catch (e) { return "없음"; }
 }
 
 function renderPhotos() {
@@ -258,3 +247,4 @@ $("mPicker").onchange = () => { ym = $("mPicker").value; renderAll(); };
 function renderAll() { renderSummary(); renderCal(); renderDay(); renderPhotos(); renderWeight(); }
 $("mPicker").value = ym;
 renderAll();
+window.refreshArchive = renderAll;

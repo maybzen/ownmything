@@ -59,7 +59,6 @@
         <div><span>수면</span><b id="dayS">—</b></div>
         <div><span>시간</span><b id="dayB">—</b><i id="dayBlock"></i></div>
         <div><span>습관</span><b id="dayH">—</b><i id="dayHSub"></i></div>
-        <div><span>정산</span><b id="dayLedger">—</b></div>
       </div>
       <img id="dayPhoto" class="photo-prev" alt="" style="display:none" />
     </section>
@@ -97,5 +96,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/nav.js"></script>
+  <script>Auth.guard().then(() => { if (window.refreshArchive) refreshArchive(); });</script>
 </body>
 </html>

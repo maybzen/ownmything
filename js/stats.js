@@ -79,3 +79,4 @@ function renderSleep() {
 
 renderWeight();
 renderSleep();
+window.refreshStats = () => { renderWeight(); renderSleep(); };

@@ -228,3 +228,4 @@ $("calNext").onclick = () => {
 };
 apply(date);
 renderCal();
+window.refreshNight = () => { apply(date); renderCal(); };

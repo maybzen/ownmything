@@ -55,7 +55,7 @@
   <script src="../js/night.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
-  <script>Auth.guard();</script>
+  <script>Auth.guard().then(() => { if (window.refreshNight) refreshNight(); });</script>
   <script src="../js/nav.js"></script>
 </body>
 </html>

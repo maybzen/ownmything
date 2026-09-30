@@ -363,6 +363,8 @@ $("wipeDays").onclick = () => {
 
 function renderAll() { renderToday(); renderDefs(); renderWeek(); renderMonth(); renderReport(); renderData(); paintSaveBar(); }
 renderAll();
+// Auth switches Store.profile async; pages render before sync — re-render after guard.
+window.refreshHabits = renderAll;
 if (window.Auth && Auth.onCloudChange) {
   Auth.onCloudChange(() => {
     if (isDirty()) return;

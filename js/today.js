@@ -1084,3 +1084,6 @@ if (window.Auth && Auth.onCloudChange) {
 }
 
 apply(date);
+// Auth switches Store.profile (me → shared id) async; re-apply so the
+// timetable/habits/todos reload under the synced profile.
+window.refreshToday = () => apply(date);

@@ -11,8 +11,6 @@
     ["pages/habit.html", "checklist", "Habit"],
     ["pages/night.html", "bedtime", "Night"],
     ["pages/archive.html", "calendar_month", "Archive"],
-    ["pages/ledger.html", "account_balance", "Ledger"],
-    ["pages/reading.html", "book", "Library"],
     ["pages/stats.html", "monitoring", "Stats"],
     ["pages/settings.html", "settings", "Settings"],
   ];
