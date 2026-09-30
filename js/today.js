@@ -54,6 +54,9 @@ function stashDrafts() {
 // lets the next burst snapshot afresh instead of rewinding to the very first.
 let SAVED = null;
 let UNDO = null;
+// Set only when the user edits the month list this session, so a braindump
+// keystroke never rewrites `month:<ym>` and drops other days' todos.
+let monthTouched = false;
 let undoAt = 0;      // timestamp of the last autosave
 const UNDO_WINDOW = 30 * 60 * 1000; // 되돌리기 is offered for 30 min
 let saveTimer = null;
@@ -78,15 +81,20 @@ function flushSave() {
 // Persist immediately: used where a later render depends on the write.
 function saveNow() { flushSave(); }
 function draftData() {
-  return {
-    lastSleep: logGet("lastSleep"), wake: logGet("wake"),
-    weight: logGet("weight"), sleepH: logGet("sleepH"),
+  // Today owns only the timetable, braindump and its todo lists. The sleep/weight
+  // fields belong to Stats and habitDone to the Habit page; writing them back
+  // from state loaded at page-open silently reverted newer values from those
+  // pages (and pushed the regression to every device). Same reason monthTodos
+  // is absent: its canonical copy lives in `month:<ym>`, shared by the month.
+  const d = {
     braindump: $("braindump").value,
     cells: cells, labels: labels, autoSleep: autoSleepIds,
     todos: cleanTodos(todos),
-    habitDone: habitDone,
-    monthTodos: cleanTodos(monthTodos),
   };
+  if ($("lastSleep")) { d.lastSleep = logGet("lastSleep"); d.wake = logGet("wake"); }
+  if ($("weight")) d.weight = logGet("weight");
+  if (habitPills) d.habitDone = habitDone;
+  return d;
 }
 function canUndo() { return !!UNDO && (Date.now() - undoAt) < UNDO_WINDOW; }
 function paintSaveBar() {
@@ -117,17 +125,24 @@ function commit() {
   // single undo step rather than one per keystroke.
   if (!SAVED) SAVED = persistedFor(date);
   try {
+    // Drop any legacy per-day monthTodos so it can never resurface as a
+    // stale copy that shadows the canonical month list.
     keys.forEach(k => {
       const d = drafts[k];
-      Store.set("d:" + k, Object.assign({}, load(k), d));
-      Store.set(monthKey(k), d.monthTodos || []);
+      const merged = Object.assign({}, load(k), d);
+      delete merged.monthTodos;
+      Store.set("d:" + k, merged);
     });
+    // The month list is only written by the date on screen, and only when the
+    // user actually touched it — otherwise a day edit would clobber siblings.
+    if (monthTouched) Store.set(monthKey(date), cleanTodos(monthTodos));
   } catch (e) {
     alert("저장에 실패했어요. 사진이 너무 크면 Night에서 사진을 지워주세요.");
     return false;
   }
   keys.forEach(k => delete drafts[k]);
   stashDrafts();
+  monthTouched = false;
   // This burst's pre-write state becomes the undo target; the next burst
   // starts from whatever is on disk right now.
   UNDO = SAVED;
@@ -282,11 +297,13 @@ function apply(d) {
   autoSleepIds = f.autoSleep || [];
   todos = cleanTodos(f.todos);
   if (!Array.isArray(f.todos)) todos = [];
-  monthTodos = cleanTodos(f.monthTodos || Store.get(monthKey(d)));
+  monthTodos = cleanTodos(Store.get(monthKey(d)));
+  monthTouched = false;
   const mn = Number(d.slice(5, 7));
   $("monthTitleSide").textContent = mn + "월";
   migrateHabits(s);
   habitDone = f.habitDone || {};
+  habitPills = false; // re-established by renderTodayHabits below
   if (syncDumpMarks()) markDirty();
   paintAll(); renderBlocks(); renderTodos(); renderMonthTodos(); renderHabitRate();
   paintSaveBar();
@@ -353,7 +370,7 @@ function todoRow(item, list, render, box, opts) {
   if (item.div) return l; // legacy dividers are dropped
   const cb = document.createElement("input");
   cb.type = "checkbox"; cb.checked = !!item.done;
-  cb.onchange = () => { item.done = cb.checked; save(); render(); };
+  cb.onchange = () => { item.done = cb.checked; if (list === monthTodos) monthTouched = true; save(); render(); };
   l.append(cb);
   if (moveMode && moveMode === moveTarget(list)) {
     l.classList.add("movable");
@@ -377,6 +394,7 @@ function todoRow(item, list, render, box, opts) {
         const idx = list.indexOf(item);
         if (idx !== -1) list.splice(idx, 1);
       }
+      if (list === monthTodos) monthTouched = true;
       save();
       if (!skipRender) render();
     };
@@ -450,6 +468,7 @@ function syncDumpMarks() {
   const seen = new Set(monthTodos.map(t => t.t));
   let added = 0;
   all.forEach(m => { if (m && !seen.has(m)) { monthTodos.push({ id: uid(), t: m, done: false }); seen.add(m); added++; } });
+  if (added > 0) monthTouched = true;
   return added > 0;
 }
 function renderMonthTodos() {
@@ -511,6 +530,7 @@ function moveItem(item, list) {
   const to = moveTarget(list);
   list.splice(i, 1);
   (to === "month" ? monthTodos : todos).push({ id: uid(), t: item.t, done: item.done });
+  if (list === monthTodos || to === "month") monthTouched = true;
   moveMode = null;
   markDirty();
   renderTodos(); renderMonthTodos();
@@ -551,8 +571,7 @@ window.addEventListener("resize", () => resizeBraindump());
 function onDump() {
   markDirty();
   resizeBraindump();
-  // - [ ] lines become month todos, but only in memory until Save.
-  // (No direct Store.set here: everything persists via commit.)
+  // - [ ] lines become month todos; commit persists them.
   const v = $("braindump").value;
   const marks = v.split("\n")
     .filter(l => /^\s*[-*]?\s*\[\s*\]\s*/.test(l))
@@ -561,12 +580,12 @@ function onDump() {
   const seen = new Set(monthTodos.map(t => t.t));
   let added = false;
   marks.forEach(m => { if (m && !seen.has(m)) { monthTodos.push({ id: uid(), t: m, done: false }); seen.add(m); added = true; } });
-  if (added) renderMonthTodos();
+  if (added) { monthTouched = true; renderMonthTodos(); }
 }
 
 // --- timetable ---
-// The time plan uses the same explicit Save as everything else.
-// Undo in the card head is the safety net for mis-taps.
+// Cells autosave like everything else; Undo in the card head is the safety net
+// for mis-taps.
 const tt = $("timetable");
 let curColor = "work";
 let painting = false, erasing = false, eraseColor = null;
@@ -975,11 +994,17 @@ const DEFS_KEY = "habit-defs";
 const LEGACY_DEFS = "ownmything:habit-defs";
 let habitDefs = [];
 let habitDone = {};
+// True only once the habit pills are actually rendered. Today and Habit both
+// write habitDone, so an un-rendered page must not re-stamp a stale copy.
+let habitPills = false;
 function getDefs() { return Store.get(DEFS_KEY, LEGACY_DEFS) || []; }
 function setDefs(d) { Store.set(DEFS_KEY, d); }
 function migrateHabits(s) {
   habitDefs = getDefs();
   if (habitDefs.length === 0) {
+    // Only seed the starter set once. Seeding on every empty list meant that
+    // deleting your last habit silently brought all three defaults back.
+    if (Store.get("habit-seeded")) { setDefs(habitDefs = []); return; }
     if (Array.isArray(s.habits) && s.habits.length) {
       habitDefs = s.habits.map(h => ({ id: "h" + Math.random().toString(36).slice(2, 8), t: h.t, slot: "anytime" }));
       const done = {};
@@ -993,6 +1018,7 @@ function migrateHabits(s) {
       ];
     }
     setDefs(habitDefs);
+    try { Store.set("habit-seeded", true); } catch (e) {}
   } else {
     let changed = false;
     const migrated = Store.get("habit-en-v1");
@@ -1021,6 +1047,7 @@ function renderHabitRate() {
 function renderTodayHabits() {
   const box = $("todayHabits");
   if (!box) return;
+  habitPills = true; // this page can edit habitDone, so it may write it back
   box.innerHTML = "";
   if (!habitDefs.length) { box.innerHTML = "<p class='hint'>습관 없음</p>"; return; }
   habitDefs.forEach(def => {

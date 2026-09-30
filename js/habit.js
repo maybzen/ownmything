@@ -20,12 +20,16 @@ function cleanHabit(t) {
 function getDefs() {
   let d = Store.get(DEFS_KEY, LEGACY_DEFS) || [];
   if (!d.length) {
+    // Seed the starter set only once. Seeding whenever the list was empty made
+    // deleting your last habit silently resurrect all three defaults.
+    if (Store.get("habit-seeded")) return d;
     d = [
       { id: "h-water", t: "Water", slot: "morning" },
       { id: "h-walk", t: "Obok walk", slot: "night" },
       { id: "h-read", t: "Read 10m", slot: "anytime" },
     ];
     Store.set(DEFS_KEY, d);
+    try { Store.set("habit-seeded", true); } catch (e) {}
     return d;
   }
   let changed = false;
@@ -303,9 +307,22 @@ function renderWeek() {
       row.className = "hrow";
       const done = days.filter(d => isDone(d, def)).length;
       const rate = Math.round(100 * done / days.length);
-      row.innerHTML = `<span class="hname">${def.t}</span>` +
-        days.map(d => `<span class="${isDone(d, def) ? "on" : ""}">${isDone(d, def) ? "●" : "○"}</span>`).join("") +
-        `<span>${rate}%</span>`;
+      // Build with DOM nodes: def.t is user-editable and synced, so innerHTML
+      // here would execute markup pasted into a habit title.
+      const name = document.createElement("span");
+      name.className = "hname";
+      name.textContent = def.t;
+      row.appendChild(name);
+      days.forEach(d => {
+        const on = isDone(d, def);
+        const cell = document.createElement("span");
+        if (on) cell.className = "on";
+        cell.textContent = on ? "●" : "○";
+        row.appendChild(cell);
+      });
+      const pct = document.createElement("span");
+      pct.textContent = rate + "%";
+      row.appendChild(pct);
       t.appendChild(row);
     });
   });
@@ -396,7 +413,12 @@ function renderReport() {
   rows.forEach(r => {
     const p = document.createElement("p");
     p.className = "rep-row";
-    p.innerHTML = `<span>${r.def.t}</span><b>${r.rate}%</b>`;
+    // DOM nodes, not innerHTML: r.def.t is user-editable and synced.
+    const s = document.createElement("span");
+    s.textContent = r.def.t;
+    const b = document.createElement("b");
+    b.textContent = r.rate + "%";
+    p.append(s, b);
     ul.appendChild(p);
   });
   box.appendChild(ul);

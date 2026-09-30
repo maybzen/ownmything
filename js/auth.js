@@ -1,4 +1,19 @@
 window.Auth = (() => {
+  // The Supabase CDN can be blocked (offline, corporate proxy, ad blocker).
+  // Without this guard the createClient throw left `Auth` undefined, so every
+  // `Auth.guard()` in the pages raised ReferenceError and the profile migration
+  // never ran. Degrade to local-only instead of breaking the whole page.
+  if (!window.supabase || typeof window.supabase.createClient !== "function") {
+    const offline = {
+      sb: null, uid: "me",
+      session: () => Promise.resolve(null),
+      onCloudChange: () => {},
+      guard: () => Promise.resolve(),
+      logout: () => Promise.resolve(),
+      resync: () => Promise.resolve(),
+    };
+    return offline;
+  }
   const sb = window.supabase.createClient(
     "https://fxfzpkhsfvstutdmndyc.supabase.co",
     "sb_publishable_pnREwJ9hLSj54xtKVGtXWg_50fdSJWN",
@@ -39,8 +54,17 @@ window.Auth = (() => {
         setMeta(m);
         pendingPush.delete(key);
       } else {
-        // keep it pending: a later resync must still not clobber it
-        try { await sb.from("store").upsert({ user_id: uid, key, value }); pendingPush.delete(key); } catch (e) {}
+        // Retry once. The error is checked too: an unchecked retry used to drop
+        // the key from pendingPush and mark it landed even when it never made
+        // it, so the next pull() overwrote the local edit with the older row.
+        try {
+          const { error: e2 } = await sb.from("store").upsert({ user_id: uid, key, value });
+          if (e2) return; // stays pending: a later resync must not clobber it
+          const m = meta();
+          m[uid + ":" + key] = Date.now();
+          setMeta(m);
+          pendingPush.delete(key);
+        } catch (e) {}
       }
     }, 800);
   }

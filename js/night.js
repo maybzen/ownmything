@@ -176,7 +176,9 @@ function apply(d) {
   $("oneline").value = o !== undefined ? o : (s.oneline || "");
   autoGrow();
   const ph = curPhoto(d);
-  $("photoPrev").src = ph || "";
+  // removeAttribute, not src = "": an empty src re-requests the page URL.
+  if (ph) $("photoPrev").src = ph;
+  else $("photoPrev").removeAttribute("src");
   $("photoPrev").style.display = ph ? "" : "none";
   $("photo").value = "";
   $("headDate").textContent = d;
@@ -203,7 +205,7 @@ $("delPhoto").onclick = () => {
   if (!curPhoto(date)) return;
   if (!confirm("사진을 지울까요?")) return;
   photoDraft[date] = "";
-  $("photoPrev").src = "";
+  $("photoPrev").removeAttribute("src");
   $("photoPrev").style.display = "none";
   $("photo").value = "";
   markPhotoDirty();
@@ -227,10 +229,14 @@ function fileToPhotoDataUrl(file) {
           c.getContext("2d").drawImage(img, 0, 0, w, h);
           resolve(c.toDataURL("image/jpeg", 0.65));
         } catch (e) {
-          resolve(r.result);
+          // Never fall back to the original: an uncompressed phone photo is
+          // 4-6 MB of base64 and would blow the localStorage quota on its own.
+          reject(new Error("resize failed"));
         }
       };
-      img.onerror = () => resolve(r.result);
+      // The image could not be decoded, so there is nothing to downscale.
+      // Storing the raw original here is what used to fill the quota.
+      img.onerror = () => reject(new Error("decode failed"));
       img.src = r.result;
     };
     r.onerror = reject;
