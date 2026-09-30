@@ -42,7 +42,7 @@ function getDefs() {
   return d;
 }
 
-// --- explicit save: edits live in memory until Save is pressed -------------
+// --- autosave: definition edits and check-offs persist automatically -------
 // done: { "2026-09-28": { habitId: true } }
 // defs: habit definition edits, or null when untouched
 const DKEY = "omt:habit-draft";
@@ -65,40 +65,116 @@ function stash() {
   } catch (e) {}
 }
 function isDirty() { return dDirty; }
-function markDirty() { dDirty = true; stash(); paintSaveBar(); }
+// --- autosave -------------------------------------------------------------
+// SAVED holds the pre-edit definitions and the habitDone map of every day
+// touched in the current burst; on commit it becomes UNDO, what 되돌리기
+// restores. Clearing SAVED at commit lets the next burst snapshot afresh
+// instead of rewinding to the very first.
+let SAVED = null;
+let UNDO = null;
+let undoAt = 0;
+const UNDO_WINDOW = 30 * 60 * 1000;
+let saveTimer = null;
+
+function markDirty() { dDirty = true; stash(); paintSaveBar(); scheduleSave(); }
+function scheduleSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { saveTimer = null; commitAll(); }, 400);
+}
+function flushSave() {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; commitAll(); }
+}
+function canUndo() { return !!UNDO && (Date.now() - undoAt) < UNDO_WINDOW; }
 function paintSaveBar() {
   const b = $("saveState");
-  if (b) { b.textContent = dDirty ? "저장 전" : "저장됨"; b.classList.toggle("warn", dDirty); }
-  const s = $("saveBtn");
-  if (s) s.style.opacity = dDirty ? "1" : "0.45";
+  if (b) {
+    b.textContent = dDirty ? "저장 중" : "자동 저장됨";
+    b.classList.remove("warn");
+    b.title = dDirty ? "곧 저장됩니다" : "변경하면 자동으로 저장돼요";
+  }
   const r = $("revertBtn");
-  if (r) r.style.display = dDirty ? "inline-block" : "none";
+  if (r) r.style.display = canUndo() ? "inline-block" : "none";
 }
 function curDefs() { return dDefs || getDefs(); }
-function setDefs(d) { dDefs = d; markDirty(); }
-function commitAll() {
-  if (dDefs) { Store.set(DEFS_KEY, dDefs); dDefs = null; }
-  Object.keys(dDone).forEach(ds => {
+// Snapshot the day about to change, once per burst, before it is written.
+function snapshotDay(ds) {
+  if (!SAVED) SAVED = { defs: null, days: {} };
+  if (!(ds in SAVED.days)) {
     const s = dayData(ds);
-    s.habitDone = Object.assign({}, s.habitDone, dDone[ds]);
-    Store.set("d:" + ds, s);
-  });
+    SAVED.days[ds] = s.habitDone ? Object.assign({}, s.habitDone) : null;
+  }
+}
+function snapshotDefs() {
+  if (!SAVED) SAVED = { defs: null, days: {} };
+  if (SAVED.defs === null) SAVED.defs = getDefs().map(x => Object.assign({}, x));
+}
+function setDefs(d) { snapshotDefs(); dDefs = d; markDirty(); }
+function commitAll() {
+  if (!dDirty) { paintSaveBar(); return; }
+  try {
+    if (dDefs) { Store.set(DEFS_KEY, dDefs); dDefs = null; }
+    Object.keys(dDone).forEach(ds => {
+      const s = dayData(ds);
+      s.habitDone = Object.assign({}, s.habitDone, dDone[ds]);
+      Store.set("d:" + ds, s);
+    });
+  } catch (e) {
+    alert("저장에 실패했어요. 변경을 되돌렸어요.");
+    // Nothing was promoted to UNDO yet, so recover from this burst's snapshot.
+    if (SAVED) {
+      try {
+        if (SAVED.defs) Store.set(DEFS_KEY, SAVED.defs);
+        Object.keys(SAVED.days).forEach(ds => {
+          const s = dayData(ds);
+          if (SAVED.days[ds] === null) delete s.habitDone;
+          else s.habitDone = SAVED.days[ds];
+          Store.set("d:" + ds, s);
+        });
+      } catch (_) {}
+    }
+    SAVED = null;
+    dDefs = null; dDone = {}; dDirty = false;
+    stash(); paintSaveBar(); renderAll();
+    return;
+  }
   dDone = {};
   dDirty = false;
   stash();
+  // This burst's pre-write state becomes the undo target; the next burst
+  // starts from whatever is on disk right now.
+  UNDO = SAVED;
+  SAVED = null;
+  undoAt = Date.now();
   paintSaveBar();
 }
+// 되돌리기: restore the definitions and days captured before the last burst.
 function revertAll() {
-  if (!dDirty) return;
-  if (!confirm("저장하지 않은 습관 변경을 되돌릴까요?")) return;
+  if (!canUndo()) return;
+  if (!confirm("자동 저장된 습관 변경을 되돌릴까요?")) return;
+  const snap = UNDO;
+  try {
+    if (snap.defs) Store.set(DEFS_KEY, snap.defs);
+    Object.keys(snap.days).forEach(ds => {
+      const s = dayData(ds);
+      if (snap.days[ds] === null) delete s.habitDone;
+      else s.habitDone = snap.days[ds];
+      Store.set("d:" + ds, s);
+    });
+  } catch (e) {
+    alert("되돌리기에 실패했어요.");
+    return;
+  }
+  UNDO = null;
+  SAVED = null;
+  undoAt = 0;
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
   dDefs = null; dDone = {}; dDirty = false;
   stash(); paintSaveBar(); renderAll();
 }
-$("saveBtn").onclick = () => { if (!dDirty) return; commitAll(); renderAll(); };
 $("revertBtn").onclick = () => revertAll();
-window.addEventListener("beforeunload", (e) => {
-  if (!dDirty) return;
-  e.preventDefault(); e.returnValue = "";
+window.addEventListener("pagehide", () => flushSave());
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") flushSave();
 });
 // -----------------------------------------------------------------------
 
@@ -117,6 +193,7 @@ function isDone(ds, def) {
   return false;
 }
 function setDone(ds, def, v) {
+  snapshotDay(ds);
   dDone[ds] = Object.assign({}, dDone[ds]);
   dDone[ds][def.id] = v;
   markDirty();
@@ -338,7 +415,7 @@ function renderData() {
 }
 $("clearHabits").onclick = () => {
   if (!confirm("습관 체크를 모두 초기화할까요?")) return;
-  if (dDirty) commitAll();
+  flushSave();
   const pre = "ownmything:" + Store.profile() + ":d:";
   const keys = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -355,7 +432,10 @@ $("clearHabits").onclick = () => {
 };
 $("wipeDays").onclick = () => {
   if (!confirm("모든 기록을 삭제할까요? 되돌릴 수 없습니다.")) return;
-  if (dDirty) commitAll();
+  flushSave();
+  SAVED = null;
+  UNDO = null;
+  undoAt = 0;
   const pre = "ownmything:" + Store.profile() + ":d:";
   const keys = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -369,11 +449,16 @@ $("wipeDays").onclick = () => {
 function renderAll() { renderToday(); renderDefs(); renderWeek(); renderMonth(); renderReport(); renderData(); paintSaveBar(); }
 renderAll();
 // Auth switches Store.profile async; pages render before sync — re-render after guard.
-// Drafts snapshotted under the old profile are purged first.
+// Pending edits belong to the old profile — drop them rather than writing
+// another profile's data. Nothing is lost: autosave already persisted locally.
 window.refreshHabits = () => {
   if (draftsProfile !== Store.profile()) {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
     dDefs = null; dDone = {}; dDirty = false;
     stash();
+    SAVED = null;
+    UNDO = null;
+    undoAt = 0;
   }
   renderAll();
 };
@@ -382,5 +467,5 @@ if (window.Auth && Auth.onCloudChange) {
     if (isDirty()) return;
     renderAll();
   });
-  document.addEventListener("visibilitychange", () => { if (!document.hidden && !isDirty()) renderAll(); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && !dDirty) renderAll(); });
 }

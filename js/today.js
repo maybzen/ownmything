@@ -22,8 +22,8 @@ HOURS.forEach(h => {
 function load(d) {
   return Store.get("d:" + d, "ownmything:" + d) || {};
 }
-// Nothing is persisted until Save is pressed. Edits live in `drafts`
-// (mirrored to sessionStorage so an accidental reload doesn't lose them).
+// Every edit is persisted automatically (debounced). `snapshots` holds the
+// state as it was *before* the most recent autosave, so 되돌리기 can undo it.
 const DKEY = "omt:drafts";
 // Drafts belong to the profile that created them. A draft snapshotted under a
 // stale profile must never shadow fresh Store data (wrong-day timetable).
@@ -48,8 +48,35 @@ function stashDrafts() {
     else sessionStorage.removeItem(DKEY);
   } catch (e) {}
 }
-function isDirty() { return Object.keys(drafts).length > 0; }
-function markDirty() { drafts[date] = draftData(); stashDrafts(); paintSaveBar(); }
+// --- autosave -------------------------------------------------------------
+// SAVED snapshots `date` before the *current* burst of writes; on commit it
+// becomes UNDO, the state 되돌리기 restores. Clearing SAVED at commit is what
+// lets the next burst snapshot afresh instead of rewinding to the very first.
+let SAVED = null;
+let UNDO = null;
+let undoAt = 0;      // timestamp of the last autosave
+const UNDO_WINDOW = 30 * 60 * 1000; // 되돌리기 is offered for 30 min
+let saveTimer = null;
+
+function persistedFor(d) {
+  return { day: load(d), month: Store.get(monthKey(d)) || [] };
+}
+function markDirty() {
+  if (!SAVED) SAVED = persistedFor(date);
+  drafts[date] = draftData();
+  stashDrafts();
+  paintSaveBar();
+  scheduleSave();
+}
+function scheduleSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { saveTimer = null; commit(); }, 400);
+}
+function flushSave() {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; commit(); }
+}
+// Persist immediately: used where a later render depends on the write.
+function saveNow() { flushSave(); }
 function draftData() {
   return {
     lastSleep: logGet("lastSleep"), wake: logGet("wake"),
@@ -61,18 +88,17 @@ function draftData() {
     monthTodos: cleanTodos(monthTodos),
   };
 }
+function canUndo() { return !!UNDO && (Date.now() - undoAt) < UNDO_WINDOW; }
 function paintSaveBar() {
-  const n = Object.keys(drafts).length;
+  const pending = Object.keys(drafts).length;
   const b = $("saveState");
   if (b) {
-    b.textContent = n ? (n === 1 ? "저장 전" : `저장 전 ·${n}`) : "저장됨";
-    b.classList.toggle("warn", n > 0);
-    b.title = n ? "저장을 눌러야 기록됩니다" : "모두 저장됨";
+    b.textContent = pending ? "저장 중" : "자동 저장됨";
+    b.classList.remove("warn");
+    b.title = pending ? "곧 저장됩니다" : "입력하면 자동으로 저장돼요";
   }
-  const s = $("saveBtn");
-  if (s) s.style.opacity = n ? "1" : "0.45";
   const r = $("revertBtn");
-  if (r) r.style.display = n ? "inline-block" : "none";
+  if (r) r.style.display = canUndo() ? "inline-block" : "none";
 }
 function cleanTodos(arr) {
   return (Array.isArray(arr) ? arr : [])
@@ -85,34 +111,50 @@ function cleanTodos(arr) {
     });
 }
 function commit() {
+  const keys = Object.keys(drafts);
+  if (!keys.length) { paintSaveBar(); return true; }
+  // Snapshot the pre-write state once, so a burst of typing collapses into a
+  // single undo step rather than one per keystroke.
+  if (!SAVED) SAVED = persistedFor(date);
   try {
-    const keys = Object.keys(drafts);
-    if (keys.length) {
-      keys.forEach(k => {
-        const d = drafts[k];
-        Store.set("d:" + k, Object.assign({}, load(k), d));
-        Store.set(monthKey(k), d.monthTodos || []);
-      });
-      drafts[date] = drafts[date] || draftData();
-    }
-    const d = drafts[date] || draftData();
-    Store.set("d:" + date, Object.assign({}, load(date), d));
-    Store.set(monthKey(date), d.monthTodos || cleanTodos(monthTodos));
+    keys.forEach(k => {
+      const d = drafts[k];
+      Store.set("d:" + k, Object.assign({}, load(k), d));
+      Store.set(monthKey(k), d.monthTodos || []);
+    });
   } catch (e) {
     alert("저장에 실패했어요. 사진이 너무 크면 Night에서 사진을 지워주세요.");
     return false;
   }
-  Object.keys(drafts).forEach(k => delete drafts[k]);
+  keys.forEach(k => delete drafts[k]);
   stashDrafts();
+  // This burst's pre-write state becomes the undo target; the next burst
+  // starts from whatever is on disk right now.
+  UNDO = SAVED;
+  SAVED = null;
+  undoAt = Date.now();
   paintSaveBar();
   return true;
 }
+// 되돌리기: restore the snapshot taken before the last autosave burst.
 function revert() {
-  if (!isDirty()) return;
-  const keys = Object.keys(drafts);
-  if (!confirm(`저장하지 않은 변경을 되돌릴까요?${keys.length > 1 ? ` (${keys.length}일)` : ""}`)) return;
-  keys.forEach(k => delete drafts[k]);
+  if (!canUndo()) return;
+  if (!confirm("자동 저장된 내용을 되돌릴까요?")) return;
+  const snap = UNDO;
+  try {
+    Store.set("d:" + date, snap.day);
+    Store.set(monthKey(date), snap.month);
+  } catch (e) {
+    alert("되돌리기에 실패했어요.");
+    return;
+  }
+  UNDO = null;
+  SAVED = null;
+  undoAt = 0;
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  Object.keys(drafts).forEach(k => delete drafts[k]);
   stashDrafts();
+  paintSaveBar();
   apply(date);
 }
 // calendar auto-fill is machine data, not a user edit — keep it persisted
@@ -476,16 +518,14 @@ function moveItem(item, list) {
 }
 $("moveMonth").onclick = () => setMoveMode("month");
 $("moveToday").onclick = () => setMoveMode("today");
-$("saveBtn").onclick = () => {
-  if (!isDirty()) return;
-  commit();
-  paintSaveBar();
-};
 $("revertBtn").onclick = () => revert();
 $("wipeBtn").onclick = () => {
   if (!confirm(`${date} 기록을 전부 지울까요?`)) return;
+  flushSave();
+  UNDO = persistedFor(date);
   Store.set("d:" + date, {});
   Store.set(monthKey(date), []);
+  undoAt = Date.now();
   delete drafts[date];
   stashDrafts();
   paintSaveBar();
@@ -869,7 +909,8 @@ window.pullCalendar = async function () {
   s.autoLabels = autoLabels;
   s.allDay = allDay.map(e => ({ title: calTitle(e.title), cal: e.cal }));
   Store.set("d:" + reqDate, s);
-  if (isDirty()) drafts[reqDate] = draftData();
+  // Keep any in-flight local edits for this date on top of the auto layer.
+  if (reqDate === date && saveTimer) drafts[reqDate] = draftData();
   paintAll(); renderBlocks();
   renderReminders(res.todos || []);
   renderAllDay(allDay);
@@ -1032,23 +1073,34 @@ function paintWorkfillBtn() {
   logVals[id] = el.value;
   markDirty();
 }); });
-// date switching never writes — drafts stay in memory until Save is pressed
-picker.onchange = () => { date = picker.value; apply(date); if (window.pullCalendar) pullCalendar(); };
-$("goYest").onclick = () => {
-  const d = new Date(); d.setDate(d.getDate() - 1);
-  date = yestStr(); picker.value = date; apply(date); if (window.pullCalendar) pullCalendar();
-};
-$("goToday").onclick = () => { date = todayStr(); picker.value = date; apply(date); if (window.pullCalendar) pullCalendar(); };
+// Date switching flushes first so the previous date's autosave lands under
+// its own key, then resets the undo snapshot to the newly shown date.
+function gotoDate(d) {
+  flushSave();
+  date = d;
+  picker.value = d;
+  // Undo is per-date; the snapshot for the previous date is no longer reachable.
+  SAVED = null;
+  UNDO = null;
+  undoAt = 0;
+  apply(date);
+  if (window.pullCalendar) pullCalendar();
+  paintSaveBar();
+}
+picker.onchange = () => gotoDate(picker.value);
+$("goYest").onclick = () => gotoDate(yestStr());
+$("goToday").onclick = () => gotoDate(todayStr());
 if ($("carryBtn")) $("carryBtn").onclick = () => carryOver(true);
 if ($("routineBtn")) $("routineBtn").onclick = () => { if (confirm("평일 루틴(09:30–17:30)을 빈 칸에 채울까요?")) applyRoutine(); };
 if ($("workfillBtn")) $("workfillBtn").onclick = () => {
   try { Store.set("auto-workfill", !isWorkfillOn()); } catch (_) {}
   paintWorkfillBtn();
 };
-window.addEventListener("beforeunload", (e) => {
-  if (!isDirty()) return;
-  e.preventDefault();
-  e.returnValue = "";
+// Autosave means there's never unsaved work to warn about, but a pending
+// debounce could still be dropped when the tab closes. Flush instead.
+window.addEventListener("pagehide", () => flushSave());
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") flushSave();
 });
 
 // --- realtime sync: refresh when cloud data changes ---
@@ -1068,8 +1120,8 @@ if (window.Auth && Auth.onCloudChange) {
     // Rendering todos while the user types recreates the <input> and
     // causes flicker/shake + lost keystrokes. So: apply everything that
     // is NOT focused now, and defer the todo-list re-render until blur.
-    // The draft always wins: never let a cloud echo clobber unsaved edits.
-    if (isDirty()) return;
+    // Pending local edits always win: never let a cloud echo clobber them.
+    if (saveTimer) return;
     const s = merged(date);
     if (s.cells) { cells = s.cells; paintAll(); renderBlocks(); }
     if (s.labels) labels = s.labels;
@@ -1122,12 +1174,18 @@ if (window.Auth && Auth.onCloudChange) {
 
 apply(date);
 // Auth switches Store.profile (me → shared id) async; re-apply so the
-// timetable/habits/todos reload under the synced profile. Drafts snapshotted
-// under the old profile are purged first — they carry the wrong day's data.
+// timetable/habits/todos reload under the synced profile. Pending drafts
+// snapshotted under the old profile are discarded first — they'd write the
+// wrong profile's data. Nothing is lost: autosave already persisted locally.
 window.refreshToday = () => {
   if (draftsProfile !== Store.profile()) {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
     Object.keys(drafts).forEach(k => delete drafts[k]);
     stashDrafts();
+    SAVED = null;
+    UNDO = null;
+    undoAt = 0;
   }
   apply(date);
+  paintSaveBar();
 };

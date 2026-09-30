@@ -3,13 +3,24 @@ const todayStr = (d) => Store.day(d || new Date());
 const yestStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return Store.day(d); };
 let date = todayStr();
 let calYM = date.slice(0, 7);
-function setDate(ds) { date = ds; calYM = ds.slice(0, 7); apply(ds); renderCal(); }
+function setDate(ds) {
+  flushSave();
+  date = ds;
+  calYM = ds.slice(0, 7);
+  // Undo is per-date; the snapshot for the previous date is no longer reachable.
+  SAVED = null;
+  UNDO = null;
+  undoAt = 0;
+  apply(ds);
+  renderCal();
+  paintSaveBar();
+}
 
 function load(d) {
   return Store.get("d:" + d, "ownmything:" + d) || {};
 }
 
-// --- explicit save: oneline + photo both stay pending until Save is pressed ---
+// --- autosave: oneline + photo persist automatically (debounced) -----------
 const DKEY = "omt:night-draft";
 let draftsProfile = null;
 const drafts = (function () {
@@ -58,20 +69,56 @@ function autoGrow() {
   el.style.height = "auto";
   el.style.height = el.scrollHeight + "px";
 }
-function markDirty() { drafts[date] = $("oneline").value; stash(); paintSaveBar(); autoGrow(); }
-function markPhotoDirty() { stash(); stashPhoto(); paintSaveBar(); }
+// --- autosave -------------------------------------------------------------
+// SAVED snapshots `date` before the *current* burst of writes; on commit it
+// becomes UNDO, the state 되돌리기 restores. Clearing SAVED at commit lets the
+// next burst snapshot afresh instead of rewinding to the very first.
+// Photos make localStorage writes expensive, hence the longer debounce.
+let SAVED = null;
+let UNDO = null;
+let undoAt = 0;
+const UNDO_WINDOW = 30 * 60 * 1000;
+let saveTimer = null;
+
+function markDirty() {
+  if (!SAVED) SAVED = load(date);
+  drafts[date] = $("oneline").value;
+  stash();
+  paintSaveBar();
+  autoGrow();
+  scheduleSave();
+}
+function markPhotoDirty() {
+  if (!SAVED) SAVED = load(date);
+  stash();
+  stashPhoto();
+  paintSaveBar();
+  scheduleSave();
+}
+function scheduleSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { saveTimer = null; commit(); }, 600);
+}
+function flushSave() {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; commit(); }
+}
+function canUndo() { return !!UNDO && (Date.now() - undoAt) < UNDO_WINDOW; }
 function paintSaveBar() {
-  const n = isDirty();
+  const pending = isDirty();
   const b = $("saveState");
-  if (b) { b.textContent = n ? "저장 전" : "저장됨"; b.classList.toggle("warn", n); }
-  const s = $("saveBtn");
-  if (s) s.style.opacity = n ? "1" : "0.45";
+  if (b) {
+    b.textContent = pending ? "저장 중" : "자동 저장됨";
+    b.classList.remove("warn");
+    b.title = pending ? "곧 저장됩니다" : "입력하면 자동으로 저장돼요";
+  }
   const r = $("revertBtn");
-  if (r) r.style.display = n ? "inline-block" : "none";
+  if (r) r.style.display = canUndo() ? "inline-block" : "none";
 }
 function commit() {
+  const keys = new Set([...Object.keys(drafts), ...Object.keys(photoDraft)]);
+  if (!keys.size) { paintSaveBar(); return; }
+  if (!SAVED) SAVED = load(date);
   try {
-    const keys = new Set([...Object.keys(drafts), ...Object.keys(photoDraft)]);
     keys.forEach(k => {
       const s = load(k); // load first so timetable etc. are preserved
       if (drafts[k] !== undefined) s.oneline = drafts[k];
@@ -86,24 +133,32 @@ function commit() {
   Object.keys(photoDraft).forEach(k => delete photoDraft[k]);
   stash();
   stashPhoto();
+  UNDO = SAVED;
+  SAVED = null;
+  undoAt = Date.now();
   paintSaveBar();
-  apply(date);
   renderCal();
 }
+// 되돌리기: restore the snapshot taken before the last autosave burst.
 function revert() {
-  if (!isDirty()) return;
-  if (!confirm("저장하지 않은 내용을 되돌릴까요?")) return;
+  if (!canUndo()) return;
+  if (!confirm("자동 저장된 내용을 되돌릴까요?")) return;
+  try { Store.set("d:" + date, UNDO); } catch (e) { alert("되돌리기에 실패했어요."); return; }
+  UNDO = null;
+  SAVED = null;
+  undoAt = 0;
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
   Object.keys(drafts).forEach(k => delete drafts[k]);
   Object.keys(photoDraft).forEach(k => delete photoDraft[k]);
   stash();
   stashPhoto();
   apply(date);
+  renderCal();
 }
-$("saveBtn").onclick = () => { if (!isDirty()) return; commit(); };
 $("revertBtn").onclick = () => revert();
-window.addEventListener("beforeunload", (e) => {
-  if (!isDirty()) return;
-  e.preventDefault(); e.returnValue = "";
+window.addEventListener("pagehide", () => flushSave());
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") flushSave();
 });
 
 function curPhoto(d) {
@@ -185,7 +240,7 @@ function fileToPhotoDataUrl(file) {
 $("oneline").addEventListener("input", markDirty);
 $("oneline").addEventListener("keydown", (e) => {
   // 길어질 수 있으니 Enter는 줄바꿈, Cmd/Ctrl+Enter는 저장
-  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); if (isDirty()) commit(); $("oneline").blur(); }
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); flushSave(); $("oneline").blur(); }
 });
 $("goYest").onclick = () => setDate(yestStr());
 $("goTodayDate").onclick = () => setDate(Store.today());
@@ -241,11 +296,19 @@ $("calNext").onclick = () => {
 };
 apply(date);
 renderCal();
+// Pending edits belong to the old profile — drop them rather than writing
+// another profile's data. Nothing is lost: autosave already persisted locally.
 window.refreshNight = () => {
   if (draftsProfile !== Store.profile()) {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
     Object.keys(drafts).forEach(k => delete drafts[k]);
     Object.keys(photoDraft).forEach(k => delete photoDraft[k]);
     stash(); stashPhoto();
+    SAVED = null;
+    UNDO = null;
+    undoAt = 0;
   }
-  apply(date); renderCal();
+  apply(date);
+  renderCal();
+  paintSaveBar();
 };
