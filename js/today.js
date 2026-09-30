@@ -38,8 +38,8 @@ function isDirty() { return Object.keys(drafts).length > 0; }
 function markDirty() { drafts[date] = draftData(); stashDrafts(); paintSaveBar(); }
 function draftData() {
   return {
-    lastSleep: $("lastSleep").value, wake: $("wake").value,
-    weight: $("weight").value, sleepH: $("sleepH").value,
+    lastSleep: logGet("lastSleep"), wake: logGet("wake"),
+    weight: logGet("weight"), sleepH: logGet("sleepH"),
     braindump: $("braindump").value,
     cells: cells, labels: labels, autoSleep: autoSleepIds,
     todos: cleanTodos(todos),
@@ -156,6 +156,13 @@ function renderDateTitle() {
 
 let cells = {}, labels = {}, autoSleepIds = [], todos = [], monthTodos = [];
 
+// Log fields (sleep/weight) live on Stats page now. Today keeps memory copies
+// so the timetable sleep overlay still renders without the inputs.
+let logVals = { lastSleep: "", wake: "", weight: "", sleepH: "" };
+const LOGIDS = { lastSleep: "lastSleep", wake: "wake", weight: "weight", sleepH: "sleepH" };
+function logGet(k) { const el = $(LOGIDS[k]); return el ? el.value : (logVals[k] || ""); }
+function logSet(k, v) { logVals[k] = v || ""; const el = $(LOGIDS[k]); if (el) el.value = v || ""; }
+
 function isWorkday(d) {
   const day = new Date(d + "T12:00:00").getDay();
   if (day === 0 || day === 6) return false;
@@ -207,10 +214,8 @@ function merged(d) {
 function apply(d) {
   const s = merged(d);
   const f = drafts[d] || s;
-  $("lastSleep").value = f.lastSleep || "";
-  $("wake").value = f.wake || "";
-  $("weight").value = f.weight || "";
-  $("sleepH").value = f.sleepH || "";
+  logSet("lastSleep", f.lastSleep); logSet("wake", f.wake);
+  logSet("weight", f.weight); logSet("sleepH", f.sleepH);
   $("braindump").value = f.braindump || "";
   resizeBraindump();
   cells = f.cells || {};
@@ -235,14 +240,15 @@ function apply(d) {
   title.textContent = d;
   renderDateTitle();
   loadHolidays();
-  if (!$("sleepH").value) { autoSleepCalc(); paintSleepGrid(); }
+  if (!logGet("sleepH")) { autoSleepCalc(); paintSleepGrid(); }
   if (d === Store.today()) carryOver(false);
 }
 
-// --- time input: OS native ---
-["lastSleep", "wake"].forEach(id => $(id).addEventListener("change", () => {
+// --- time input: OS native (inputs live on Stats page; no-op on Today) ---
+["lastSleep", "wake"].forEach(id => { const el = $(id); if (el) el.addEventListener("change", () => {
+  logVals.lastSleep = $("lastSleep").value; logVals.wake = $("wake").value;
   autoSleepCalc(); paintSleepGrid(); save();
-}));
+}); });
 
 // --- sleep ---
 function toMin(t) {
@@ -251,11 +257,11 @@ function toMin(t) {
   return h * 60 + m;
 }
 function autoSleepCalc() {
-  const s = toMin($("lastSleep").value), w = toMin($("wake").value);
+  const s = toMin(logGet("lastSleep")), w = toMin(logGet("wake"));
   if (s === null || w === null) return;
   let diff = w - s;
   if (diff <= 0) diff += 24 * 60;
-  $("sleepH").value = (diff / 60).toFixed(1);
+  logSet("sleepH", (diff / 60).toFixed(1));
 }
 function slotsBetweenMin(a, b) {
   const out = [];
@@ -270,7 +276,7 @@ function slotsBetweenMin(a, b) {
 function paintSleepGrid() {
   autoSleepIds.forEach(id => { if (cells[id] === "sleep") delete cells[id]; });
   autoSleepIds = [];
-  const s = toMin($("lastSleep").value), w = toMin($("wake").value);
+  const s = toMin(logGet("lastSleep")), w = toMin(logGet("wake"));
   if (s === null || w === null) { paintAll(); renderBlocks(); return; }
   let e = w;
   if (e <= s) e += 24 * 60;
@@ -995,7 +1001,11 @@ function paintWorkfillBtn() {
 
 // --- photo moved to Night page ---
 
-["weight", "sleepH"].forEach(id => $(id).addEventListener("input", markDirty));
+// Log inputs live on Stats page now; sync here only if they exist on this page.
+["weight", "sleepH"].forEach(id => { const el = $(id); if (el) el.addEventListener("input", () => {
+  logVals[id] = el.value;
+  markDirty();
+}); });
 // date switching never writes — drafts stay in memory until Save is pressed
 picker.onchange = () => { date = picker.value; apply(date); if (window.pullCalendar) pullCalendar(); };
 $("goYest").onclick = () => {
@@ -1041,9 +1051,10 @@ if (window.Auth && Auth.onCloudChange) {
       $("braindump").value = s.braindump;
       if (typeof resizeBraindump === "function") resizeBraindump();
     }
-    if (document.activeElement !== $("lastSleep") && s.lastSleep !== undefined) $("lastSleep").value = s.lastSleep || "";
-    if (document.activeElement !== $("wake") && s.wake !== undefined) $("wake").value = s.wake || "";
-    if (document.activeElement !== $("weight") && s.weight !== undefined) $("weight").value = s.weight || "";
+    if (document.activeElement !== $("lastSleep") && s.lastSleep !== undefined) logSet("lastSleep", s.lastSleep);
+    if (document.activeElement !== $("wake") && s.wake !== undefined) logSet("wake", s.wake);
+    if (document.activeElement !== $("weight") && s.weight !== undefined) logSet("weight", s.weight);
+    if (s.sleepH !== undefined && !$(LOGIDS.sleepH)) logVals.sleepH = s.sleepH || "";
     if (editingTodo || focusInTodos || focusInMonth) {
       pendingTodoSync = true;
       return;

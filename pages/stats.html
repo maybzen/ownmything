@@ -18,8 +18,25 @@
       <div class="head-top">
         <a class="back" href="../menu.html">←</a>
         <h2>체중·수면</h2>
+        <span class="hint" id="recState">저장됨</span>
+      </div>
+      <div class="head-right">
+        <button id="recSave" class="btn sm">저장</button>
       </div>
     </header>
+
+    <section class="card log-card">
+      <div class="card-head">
+        <h3>오늘 기록</h3>
+        <input type="date" id="recDate" class="mini" />
+      </div>
+      <div class="row2 log-row">
+        <label><span>취침</span><input type="time" id="recSleep" /></label>
+        <label><span>기상</span><input type="time" id="recWake" /></label>
+        <label><span>체중</span><input id="recWeight" type="number" inputmode="decimal" step="0.1" placeholder="kg" /></label>
+        <label><span>시간</span><input id="recSleepH" type="number" inputmode="decimal" step="0.5" placeholder="자동" /></label>
+      </div>
+    </section>
 
     <section class="card">
       <h3>체중</h3>

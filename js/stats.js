@@ -79,4 +79,58 @@ function renderSleep() {
 
 renderWeight();
 renderSleep();
-window.refreshStats = () => { renderWeight(); renderSleep(); };
+window.refreshStats = () => { renderWeight(); renderSleep(); loadRec(); };
+
+// --- record editor (moved here from Today: log once in the morning) ---
+function recDay() { return ($("recDate") && $("recDate").value) || Store.today(); }
+function recLoad(ds) { return Store.get("d:" + ds, "ownmything:" + ds) || {}; }
+function loadRec() {
+  const d = $("recDate");
+  if (d && !d.value) d.value = Store.today();
+  const s = recLoad(recDay());
+  if ($("recSleep")) $("recSleep").value = s.lastSleep || "";
+  if ($("recWake")) $("recWake").value = s.wake || "";
+  if ($("recWeight")) $("recWeight").value = s.weight || "";
+  if ($("recSleepH")) $("recSleepH").value = s.sleepH || "";
+  paintRecState(false);
+}
+function paintRecState(dirty) {
+  const b = $("recState");
+  if (b) { b.textContent = dirty ? "저장 전" : "저장됨"; b.classList.toggle("warn", dirty); }
+}
+function recDirty() { paintRecState(true); }
+function recAuto() {
+  const toMin = (t) => {
+    if (!t || !t.includes(":")) return null;
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  };
+  const s = toMin($("recSleep").value), w = toMin($("recWake").value);
+  if (s === null || w === null) return;
+  let diff = w - s;
+  if (diff <= 0) diff += 24 * 60;
+  $("recSleepH").value = (diff / 60).toFixed(1);
+}
+if ($("recDate")) $("recDate").onchange = loadRec;
+["recSleep", "recWake", "recWeight", "recSleepH"].forEach(id => {
+  const el = $(id);
+  if (el) el.addEventListener("input", () => {
+    if (id === "recSleep" || id === "recWake") recAuto();
+    recDirty();
+  });
+});
+if ($("recSave")) $("recSave").onclick = () => {
+  const ds = recDay();
+  try {
+    Store.set("d:" + ds, Object.assign({}, recLoad(ds), {
+      lastSleep: $("recSleep").value, wake: $("recWake").value,
+      weight: $("recWeight").value, sleepH: $("recSleepH").value,
+    }));
+  } catch (e) {
+    alert("저장에 실패했어요. 사진이 너무 크면 Night에서 사진을 지워주세요.");
+    return;
+  }
+  paintRecState(false);
+  renderWeight(); renderSleep();
+};
+loadRec();
