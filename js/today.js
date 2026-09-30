@@ -25,12 +25,26 @@ function load(d) {
 // Nothing is persisted until Save is pressed. Edits live in `drafts`
 // (mirrored to sessionStorage so an accidental reload doesn't lose them).
 const DKEY = "omt:drafts";
+// Drafts belong to the profile that created them. A draft snapshotted under a
+// stale profile must never shadow fresh Store data (wrong-day timetable).
+let draftsProfile = null;
 const drafts = (function () {
-  try { return JSON.parse(sessionStorage.getItem(DKEY)) || {}; } catch (e) { return {}; }
+  try {
+    const raw = JSON.parse(sessionStorage.getItem(DKEY)) || {};
+    if (raw && typeof raw === "object" && raw.data) {
+      if (raw.profile && raw.profile !== Store.profile()) return {};
+      draftsProfile = raw.profile || Store.profile();
+      return raw.data || {};
+    }
+    draftsProfile = Store.profile();
+    return raw;
+  } catch (e) { draftsProfile = Store.profile(); return {}; }
 })();
+if (!draftsProfile) draftsProfile = Store.profile();
 function stashDrafts() {
   try {
-    if (Object.keys(drafts).length) sessionStorage.setItem(DKEY, JSON.stringify(drafts));
+    draftsProfile = Store.profile();
+    if (Object.keys(drafts).length) sessionStorage.setItem(DKEY, JSON.stringify({ profile: draftsProfile, data: drafts }));
     else sessionStorage.removeItem(DKEY);
   } catch (e) {}
 }
@@ -810,6 +824,7 @@ async function invokeCal(body) {
   }
 }
 window.pullCalendar = async function () {
+  const reqDate = date; // capture: a late response must never touch another date
   const st = null;
   const say = () => {};
   if (!window.Auth || !Auth.sb) { say(""); return; }
@@ -818,13 +833,14 @@ window.pullCalendar = async function () {
   if (!session) { say(""); return; }
   let res = null;
   try {
-    res = await invokeCal({ date });
+    res = await invokeCal({ date: reqDate });
   } catch (e) { say(""); return; }
   if (!res || res.error || !Array.isArray(res.events)) { say(""); return; }
+  if (reqDate !== date) return; // user switched dates mid-flight: drop it
   lastMonthPulled = "";
   const dayEvents = res.events;
   // clear previous auto-fill
-  const prev = load(date).autoCal || {};
+  const prev = load(reqDate).autoCal || {};
   Object.keys(prev).forEach(id => { if (cells[id] === prev[id]) delete cells[id]; });
   const autoCal = {};
   const autoLabels = {};
@@ -838,12 +854,12 @@ window.pullCalendar = async function () {
     ids.forEach(id => { cells[id] = color; autoCal[id] = color; });
     if (ids.length && memo && !labels[ids[0]]) { labels[ids[0]] = memo; autoLabels[ids[0]] = memo; }
   });
-  const s = load(date);
+  const s = load(reqDate);
   s.autoCal = autoCal;
   s.autoLabels = autoLabels;
   s.allDay = allDay.map(e => ({ title: calTitle(e.title), cal: e.cal }));
-  Store.set("d:" + date, s);
-  if (isDirty()) drafts[date] = draftData();
+  Store.set("d:" + reqDate, s);
+  if (isDirty()) drafts[reqDate] = draftData();
   paintAll(); renderBlocks();
   renderReminders(res.todos || []);
   renderAllDay(allDay);
@@ -1096,5 +1112,12 @@ if (window.Auth && Auth.onCloudChange) {
 
 apply(date);
 // Auth switches Store.profile (me → shared id) async; re-apply so the
-// timetable/habits/todos reload under the synced profile.
-window.refreshToday = () => apply(date);
+// timetable/habits/todos reload under the synced profile. Drafts snapshotted
+// under the old profile are purged first — they carry the wrong day's data.
+window.refreshToday = () => {
+  if (draftsProfile !== Store.profile()) {
+    Object.keys(drafts).forEach(k => delete drafts[k]);
+    stashDrafts();
+  }
+  apply(date);
+};

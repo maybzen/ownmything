@@ -11,21 +11,33 @@ function load(d) {
 
 // --- explicit save: oneline + photo both stay pending until Save is pressed ---
 const DKEY = "omt:night-draft";
+let draftsProfile = null;
 const drafts = (function () {
-  try { return JSON.parse(sessionStorage.getItem(DKEY)) || {}; } catch (e) { return {}; }
+  try {
+    const raw = JSON.parse(sessionStorage.getItem(DKEY)) || {};
+    if (raw && typeof raw === "object" && raw.data) {
+      if (raw.profile && raw.profile !== Store.profile()) return {};
+      draftsProfile = raw.profile || Store.profile();
+      return raw.data || {};
+    }
+    draftsProfile = Store.profile();
+    return raw;
+  } catch (e) { draftsProfile = Store.profile(); return {}; }
 })();
+if (!draftsProfile) draftsProfile = Store.profile();
 // date -> dataUrl string (new/changed), "" (delete), undefined (no change).
 // Persisted to sessionStorage when it fits; otherwise kept in memory.
 // (beforeunload still guards the in-memory case.)
 const photoDraft = {};
 const PKEY = "omt:night-photo-draft";
 try {
-  const raw = JSON.parse(sessionStorage.getItem(PKEY) || "{}");
-  Object.keys(raw).forEach(k => { if (typeof raw[k] === "string") photoDraft[k] = raw[k]; });
+  const praw = JSON.parse(sessionStorage.getItem(PKEY) || "null");
+  const pdata = praw && praw.data ? (praw.profile && praw.profile !== Store.profile() ? {} : praw.data) : (praw || {});
+  Object.keys(pdata).forEach(k => { if (typeof pdata[k] === "string") photoDraft[k] = pdata[k]; });
 } catch (e) {}
 function stashPhoto() {
   try {
-    if (Object.keys(photoDraft).length) sessionStorage.setItem(PKEY, JSON.stringify(photoDraft));
+    if (Object.keys(photoDraft).length) sessionStorage.setItem(PKEY, JSON.stringify({ profile: Store.profile(), data: photoDraft }));
     else sessionStorage.removeItem(PKEY);
   } catch (e) {
     // Too big for sessionStorage: keep in memory only.
@@ -34,7 +46,8 @@ function stashPhoto() {
 }
 function stash() {
   try {
-    if (Object.keys(drafts).length) sessionStorage.setItem(DKEY, JSON.stringify(drafts));
+    draftsProfile = Store.profile();
+    if (Object.keys(drafts).length) sessionStorage.setItem(DKEY, JSON.stringify({ profile: draftsProfile, data: drafts }));
     else sessionStorage.removeItem(DKEY);
   } catch (e) {}
 }
@@ -228,4 +241,11 @@ $("calNext").onclick = () => {
 };
 apply(date);
 renderCal();
-window.refreshNight = () => { apply(date); renderCal(); };
+window.refreshNight = () => {
+  if (draftsProfile !== Store.profile()) {
+    Object.keys(drafts).forEach(k => delete drafts[k]);
+    Object.keys(photoDraft).forEach(k => delete photoDraft[k]);
+    stash(); stashPhoto();
+  }
+  apply(date); renderCal();
+};

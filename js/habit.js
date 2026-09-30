@@ -49,13 +49,18 @@ const DKEY = "omt:habit-draft";
 let dDefs = null;
 let dDone = {};
 let dDirty = false;
+let draftsProfile = Store.profile();
 try {
   const raw = JSON.parse(sessionStorage.getItem(DKEY) || "null");
-  if (raw) { dDefs = raw.defs || null; dDone = raw.done || {}; dDirty = true; }
+  if (raw) {
+    if (raw.profile && raw.profile !== Store.profile()) { /* stale profile: drop */ }
+    else { dDefs = raw.defs || null; dDone = raw.done || {}; dDirty = true; draftsProfile = raw.profile || Store.profile(); }
+  }
 } catch (e) {}
 function stash() {
   try {
-    if (dDirty) sessionStorage.setItem(DKEY, JSON.stringify({ defs: dDefs, done: dDone }));
+    draftsProfile = Store.profile();
+    if (dDirty) sessionStorage.setItem(DKEY, JSON.stringify({ profile: draftsProfile, defs: dDefs, done: dDone }));
     else sessionStorage.removeItem(DKEY);
   } catch (e) {}
 }
@@ -364,7 +369,14 @@ $("wipeDays").onclick = () => {
 function renderAll() { renderToday(); renderDefs(); renderWeek(); renderMonth(); renderReport(); renderData(); paintSaveBar(); }
 renderAll();
 // Auth switches Store.profile async; pages render before sync — re-render after guard.
-window.refreshHabits = renderAll;
+// Drafts snapshotted under the old profile are purged first.
+window.refreshHabits = () => {
+  if (draftsProfile !== Store.profile()) {
+    dDefs = null; dDone = {}; dDirty = false;
+    stash();
+  }
+  renderAll();
+};
 if (window.Auth && Auth.onCloudChange) {
   Auth.onCloudChange(() => {
     if (isDirty()) return;
